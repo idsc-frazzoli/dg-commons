@@ -41,6 +41,7 @@ setup(
     name=package,
     author="Alessandro Zanardi",
     author_email="azanardi@ethz.ch",
+    url="https://github.com/idsc-frazzoli/dg-commons",
     description='Common tools and utilities related to Driving Games',
     long_description=(pathlib.Path(__file__).parent / "README.md").read_text(),
     long_description_content_type="text/markdown",
