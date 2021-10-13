@@ -64,18 +64,11 @@ jobs:
           path: out/docs
           destination: docs
       - run:
-          name: Notebooks
-          command: |
-            make -C notebooks cleanup all
-      - run:
           name: Run tests
           command: |
             make test
       - store_test_results:
           path: out/test-results
-      - store_artifacts:
-          path: out/tests
-          destination: tests
       - run:
           name: Coverage report
           when: always

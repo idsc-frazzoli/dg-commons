@@ -18,13 +18,6 @@ xunitmp=--with-xunitmp --xunitmp-file=$(xunit_output)
 extra=--rednose --immediate
 
 
-all:
-	@echo "You can try:"
-	@echo
-	@echo "  make build run"
-	@echo "  make docs "
-	@echo "  make test coverage-combine coverage-report"
-
 clean:
 	coverage erase
 	rm -rf $(out) $(coverage_dir) $(tr)
@@ -46,11 +39,6 @@ test-parallel-circle:
 coverage-combine:
 	coverage combine
 
-run:
-	mkdir -p $(out-docker)
-	docker run -it --user $$(id -u) \
-		-v $(PWD)/$(out-docker):/out $(tag) \
-		dg-demo -o /out/result --reset -c "rparmake"
 
 black:
 	black -l 120 --target-version py38 src
