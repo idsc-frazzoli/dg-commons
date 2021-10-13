@@ -4,7 +4,7 @@ from typing import Sequence, List
 
 import numpy as np
 from cachetools import cached, LRUCache
-from commonroad.scenario.lanelet import Lanelet
+from commonroad.scenario.lanelet import Lanelet, LaneletNetwork
 from geometry import (
     SO2value,
     SO2_from_angle,
@@ -88,7 +88,7 @@ class DgLanelet:
 
     @classmethod
     def from_vertices(
-        cls, left_vertices: np.ndarray, right_vertices: np.ndarray, center_vertices: np.ndarray
+            cls, left_vertices: np.ndarray, right_vertices: np.ndarray, center_vertices: np.ndarray
     ) -> "DgLanelet":
         ctr_points = []
         for i, center in enumerate(center_vertices):
@@ -105,55 +105,7 @@ class DgLanelet:
         lane_ids = lane_network.find_lanelet_by_position(point_list=points)
         return [lane_network.find_lanelet_by_id(lid[0]) for lid in lane_ids]
 
-    @classmethod
-    def from_start(cls, lane_network: LaneletNetwork, start: np.ndarray, max_length: float = 50.0) -> List["DgLanelet"]:
-        init_lane: Lanelet = cls.get_lanelets(lane_network=lane_network, points=[start])[0]
-        lanes_all, _ = Lanelet.all_lanelets_by_merging_successors_from_lanelet(
-            lanelet=init_lane, network=lane_network, max_length=max_length
-        )
-        return [cls.from_commonroad_lanelet(lane) for lane in lanes_all]
-
-    @classmethod
-    def from_ends(
-        cls, lane_network: LaneletNetwork, start: np.ndarray, goals: Sequence[np.ndarray], n_interp: int = 5
-    ) -> List["DgLanelet"]:
-        init_lane: Lanelet = cls.get_lanelets(lane_network=lane_network, points=[start])[0]
-        goal_lanes: List[Lanelet] = cls.get_lanelets(lane_network=lane_network, points=list(goals))
-
-        def get_qmatrices(cv, lv, rv) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-            normal = rv - lv
-            tangent = _rot90 @ normal
-            heading = atan2(tangent[1], tangent[0])
-
-            def get_q(value):
-                return Matrix2D(geometry.SE2_from_translation_angle(value, heading)).m
-
-            return get_q(lv), get_q(cv), get_q(rv)
-
-        def interpolate(q0, q1, p_init, p_last):
-            def get_xy(alpha: float):
-                xy, _, _ = geometry.translation_angle_scale_from_E2(SE2_interpolate(q0, q1, alpha))
-                return xy
-
-            mid = np.array([get_xy(n / n_interp) for n in range(1, n_interp)])
-            return np.concatenate((p_init, mid, p_last), axis=0)
-
-        q0_l, q0_c, q0_r = get_qmatrices(
-            cv=init_lane.center_vertices[-1], lv=init_lane.left_vertices[-1], rv=init_lane.right_vertices[-1]
-        )
-        all_lanes: List[DgLanelet] = []
-        for goal_lane in goal_lanes:
-            q1_l, q1_c, q1_r = get_qmatrices(
-                cv=goal_lane.center_vertices[0], lv=goal_lane.left_vertices[0], rv=goal_lane.right_vertices[0]
-            )
-
-            left = interpolate(q0=q0_l, q1=q1_l, p_init=init_lane.left_vertices, p_last=goal_lane.left_vertices)
-            right = interpolate(q0=q0_r, q1=q1_r, p_init=init_lane.right_vertices, p_last=goal_lane.right_vertices)
-            center = interpolate(q0=q0_c, q1=q1_c, p_init=init_lane.center_vertices, p_last=goal_lane.center_vertices)
-            all_lanes.append(cls.from_vertices(left_vertices=left, right_vertices=right, center_vertices=center))
-        return all_lanes
-
-    @memoized_reset
+    @cached(LRUCache(maxsize=128))
     def get_lane_lengths(self) -> List[float]:
         res = []
         for i in range(len(self.control_points) - 1):

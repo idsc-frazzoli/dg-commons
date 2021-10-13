@@ -3,8 +3,7 @@ from typing import NewType, AbstractSet, Mapping, Tuple
 
 import numpy as np
 
-from games.utils import fd
-from dg_commons import Color
+from dg_commons import Color, fd
 
 __all__ = [
     "LightsCmd",

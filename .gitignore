@@ -1,6 +1,7 @@
 #
 out/
 out-docker/
+test-results/
 .idea/
 
 # Byte-compiled / optimized / DLL files

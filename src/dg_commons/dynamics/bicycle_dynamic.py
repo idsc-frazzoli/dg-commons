@@ -1,22 +1,24 @@
 import math
 from dataclasses import replace
 from decimal import Decimal as D
-from typing import Mapping, Any, FrozenSet
+from typing import Mapping, FrozenSet, TypeVar
 
 import numpy as np
 from scipy.integrate import solve_ivp
 
 from dg_commons import Timestamp, U, X
-from games import Dynamics, SR
-from possibilities import Poss
 from sim.models.vehicle import VehicleState, VehicleCommands
 from sim.models.vehicle_structures import VehicleGeometry
 from sim.models.vehicle_utils import VehicleParameters
 
 __all__ = ["BicycleDynamics"]
 
+SR = TypeVar("SR")
 
-class BicycleDynamics(Dynamics[VehicleState, VehicleCommands, Any]):
+
+# todo this is temporary
+
+class BicycleDynamics:
 
     def __init__(self, vg: VehicleGeometry, vp: VehicleParameters):
         self.vg: VehicleGeometry = vg
@@ -27,7 +29,7 @@ class BicycleDynamics(Dynamics[VehicleState, VehicleCommands, Any]):
         pass
 
     def successors(self, x: VehicleState, u0: VehicleCommands, dt: D = None) \
-            -> Mapping[VehicleCommands, Poss[VehicleState]]:
+            -> Mapping[VehicleCommands, VehicleState]:
         """ For each state, returns a dictionary U -> Possible Xs """
         # todo
         pass
