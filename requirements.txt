@@ -8,11 +8,8 @@ numpy>=1.21.2
 scipy>=1.7.1
 matplotlib==3.4.3
 shapely>=1.7.0
-# networkx>=2.6.3
 
 PyGeometry-z6>=2.0
-#zuper-commons-z6>=6.1.5
-#reprep-z6>=6.0.5,<7
 
 commonroad-io==2021.3
 

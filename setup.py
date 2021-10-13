@@ -27,10 +27,8 @@ install_requires = [
     "scipy>=1.7.1",
     "matplotlib==3.4.3",
     "shapely>=1.7.0",
-    # "networkx>=2.6.3",
     "PyGeometry-z6>=2.0",
     "zuper-commons-z6>=6.1.5",
-    # "zuper-typing-z6>=6.1.0",
 ]
 
 module = "dg_commons"
@@ -41,7 +39,7 @@ version = get_version(filename=f"src/{module}/__init__.py")
 
 setup(
     name=package,
-    author="Alessandro Znaardi",
+    author="Alessandro Zanardi",
     author_email="azanardi@ethz.ch",
     description='Common tools and utilities related to Driving Games',
     long_description=(pathlib.Path(__file__).parent / "README.md").read_text(),
