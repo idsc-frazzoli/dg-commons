@@ -1,0 +1,98 @@
+version: 2.1
+
+executors:
+  dg_exec:
+    environment:
+      CODECOV_TOKEN: "57e9ba77-4973-4033-8b0e-9bb65f6724aa"
+      COLUMNS: 160
+      # default is /usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      PATH: /root/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    docker:
+      - image: alezana/dg_base:<< parameters.tag >>
+    parameters:
+      tag:
+        default: "3.8"
+        description: The `cimg/python` Docker image version tag.
+        type: string
+
+
+jobs:
+  install_docs_tests:
+    executor:
+      name: dg_exec
+      tag: << parameters.version >>
+    parameters:
+      version:
+        default: "3.8"
+        description: |
+          A full version tag must be specified. Example: "3.8"
+        type: string
+    working_directory: ~/repo
+    resource_class: large
+    steps:
+      - checkout
+      - run:
+          name: Pull lfs files
+          command: |
+            git lfs pull
+      - run:
+          name: Pull submodules (commonroadscenarios)
+          command: |
+            git submodule update --init
+      - run:
+          name: Install deps
+          command: |
+            echo PATH=$PATH
+            pip install -q --user --upgrade -r requirements.txt
+      - run:
+          name: List deps
+          command: |
+            mkdir -p artifacts
+            pip list | tee artifacts/pip-list.txt
+            pipdeptree | tee artifacts/pipdeptree.txt
+      - store_artifacts:
+          path: artifacts/
+      - run:
+          name: setup.py develop
+          command: |
+            python setup.py develop --prefix ~/.local --no-deps
+      - run:
+          name: Make docs
+          command: |
+            make docs
+      - store_artifacts:
+          path: out/docs
+          destination: docs
+      - run:
+          name: Run tests
+          command: |
+            make test
+      - store_test_results:
+          path: out/test-results
+      - run:
+          name: Coverage report
+          when: always
+          command: |
+            make coverage-combine
+            make coverage-report
+            coverage xml
+      - store_artifacts:
+          path: out/coverage
+          destination: coverage
+      - run:
+          name: CodeCov
+          when: always
+          command: |
+            codecov
+
+
+workflows:
+  version: 2
+  dg_commons_ci:
+    jobs:
+      - install_docs_tests:
+          name: "DGcommonsCI:3.8"
+          version: "3.8"
+      - install_docs_tests:
+          name: "DGcommonsCI:3.9"
+          version: "3.9"

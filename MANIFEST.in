@@ -1,0 +1,2 @@
+prune src/dg_commons_tests
+prune src/sim_tests

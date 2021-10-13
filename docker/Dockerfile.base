@@ -1,0 +1,19 @@
+ARG PYTHON_VERSION_
+
+FROM python:${PYTHON_VERSION_}
+ARG PYTHON_VERSION_
+
+# Copy dependencies file
+COPY dependencies-apt.txt /tmp/
+
+# Install prerequisites for commonroad
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    $(awk -F: '/^[^#]/ { print $1 }' /tmp/dependencies-apt.txt | uniq) \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install commonroad
+RUN git clone https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker.git
+RUN cd commonroad-drivability-checker && bash build.sh -e /usr/local -v ${PYTHON_VERSION_} --cgal --serializer -i -j 3 --no-root
+
+LABEL maintainer="A. Zanardi (azanardi@ethz.ch)"

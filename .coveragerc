@@ -1,0 +1,42 @@
+[run]
+
+branch = true
+
+disable_warnings =
+    module-not-measured
+    no-data-collected
+    module-not-imported
+
+
+concurrency = multiprocessing
+
+parallel = true
+
+[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+    if TYPE_CHECKING
+    if enable_type_checking
+    if not GameConstants.checks:
+    \.\.\.
+    pass
+
+    do_extra_checks()
+    # Don't complain if tests don't hit defensive assertion code:
+    assert False
+    raise AssertionError
+    raise NotImplementedError
+
+    # Don't complain if non-runnable code isn't run:
+    if 0:
+    if False:
+    if __name__ == .__main__.:
+
+#\.\.\.
+
+sort = Miss
+
+[html]
+directory = out/coverage
