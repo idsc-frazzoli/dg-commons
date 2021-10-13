@@ -8,8 +8,8 @@ tr=$(out)/test-results
 xunit_output=$(tr)/nose-$(CIRCLE_NODE_INDEX)-xunit.xml
 
 
-test_packages=dg_commons_tests,sim_tests
-cover_packages=$(test_packages),dg_commons,sim
+test_packages=dg_commons_tests,dg_sim_tests
+cover_packages=$(test_packages),dg_commons,dg_sim
 
 parallel=--processes=8 --process-timeout=1000 --process-restartworker
 coverage=--cover-html --cover-html-dir=$(coverage_dir) --cover-tests --with-coverage --cover-package=$(cover_packages)
