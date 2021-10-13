@@ -9,16 +9,12 @@ scipy>=1.7.1
 matplotlib==3.4.3
 shapely>=1.7.0
 networkx>=2.6.3
-#PyYAML~=5.4.1
-#imageio~=2.9.0
 
 PyGeometry-z6>=2.0
 zuper-commons-z6>=6.1.5
-#quickapp-z6>=6.0.5,<7
 reprep-z6>=6.0.5,<7
-#zuper-typing-z6>=6.1.0
 
-commonroad-io==2021.2
+commonroad-io==2021.3
 
 # extra
 jupyter

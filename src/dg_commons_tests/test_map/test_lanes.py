@@ -37,5 +37,5 @@ def test_lane_vis():
             plt.plot(*left, "o")
             plt.plot(*right, "x")
             plt.gca().set_aspect("equal")
-        plt.savefig(f"out/debug{lanelet.lanelet_id}.png")
+        plt.savefig(f"out/test-results/debug{lanelet.lanelet_id}.png")
         plt.close()
