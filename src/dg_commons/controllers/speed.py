@@ -7,8 +7,8 @@ from geometry import SE2value
 
 from dg_commons import PlayerName, relative_pose, SE2Transform, valmap
 from dg_commons.controllers.pid import PIDParam, PID
-from sim.models import extract_pose_from_state, kmh2ms, extract_vel_from_state
-from sim.simulator_structures import PlayerObservations
+from dg_sim.models import extract_pose_from_state, kmh2ms, extract_vel_from_state
+from dg_sim.simulator_structures import PlayerObservations
 
 __all__ = ["SpeedControllerParam", "SpeedController", "SpeedBehavior"]
 

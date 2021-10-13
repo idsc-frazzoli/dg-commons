@@ -6,7 +6,7 @@ from numpy import linspace
 
 from dg_commons import SE2_apply_T2
 from dg_commons.maps.lanes import DgLanelet
-from sim.scenarios import load_commonroad_scenario
+from dg_sim.scenarios import load_commonroad_scenario
 
 
 def test_lane_is_hashable():

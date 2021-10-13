@@ -7,9 +7,9 @@ import numpy as np
 from scipy.integrate import solve_ivp
 
 from dg_commons import Timestamp, U, X
-from sim.models.vehicle import VehicleState, VehicleCommands
-from sim.models.vehicle_structures import VehicleGeometry
-from sim.models.vehicle_utils import VehicleParameters
+from dg_sim.models.vehicle import VehicleState, VehicleCommands
+from dg_sim.models.vehicle_structures import VehicleGeometry
+from dg_sim.models.vehicle_utils import VehicleParameters
 
 __all__ = ["BicycleDynamics"]
 

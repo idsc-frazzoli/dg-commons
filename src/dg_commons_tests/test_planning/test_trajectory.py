@@ -3,7 +3,7 @@ from time import process_time
 from numpy import deg2rad
 
 from dg_commons.planning.trajectory import Trajectory
-from sim.models.vehicle import VehicleState
+from dg_sim.models.vehicle import VehicleState
 
 
 def test_trajectory():

@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 from dg_commons import DgSampledSequence
 from dg_commons.controllers.speed import SpeedController, SpeedControllerParam
 from dg_commons.controllers.steer import SteerControllerParam, SteerController
-from sim.models import kmh2ms
-from sim.models.vehicle import VehicleCommands
-from sim.models.vehicle_dynamic import VehicleModelDyn, VehicleStateDyn
+from dg_sim.models import kmh2ms
+from dg_sim.models.vehicle import VehicleCommands
+from dg_sim.models.vehicle_dynamic import VehicleModelDyn, VehicleStateDyn
 
 
 def sim_step_response(model, sp_controller, st_controller):

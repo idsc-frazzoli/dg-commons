@@ -3,8 +3,8 @@ from typing import Callable, Set, Optional, Union
 
 from dg_commons import Timestamp
 from dg_commons.planning.trajectory import Trajectory, TrajectoryGraph
-from sim.models.vehicle import VehicleState, VehicleCommands
-from sim.models.vehicle_utils import VehicleParameters
+from dg_sim.models.vehicle import VehicleState, VehicleCommands
+from dg_sim.models.vehicle_utils import VehicleParameters
 
 
 class TrajGenerator(ABC):
