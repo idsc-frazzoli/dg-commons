@@ -3,7 +3,7 @@ version: 2.1
 executors:
   dg_exec:
     environment:
-      CODECOV_TOKEN: "82512efc-b166-4477-b755-7763d56f261c"
+      CODECOV_TOKEN: "57e9ba77-4973-4033-8b0e-9bb65f6724aa"
       COLUMNS: 160
       # default is /usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
       PATH: /root/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
