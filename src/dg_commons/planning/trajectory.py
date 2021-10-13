@@ -8,8 +8,8 @@ from networkx import DiGraph
 
 from dg_commons import SE2Transform, PlayerName, X
 from dg_commons.seq.sequence import DgSampledSequence, iterate_with_dt
-from dg_sim.models import extract_pose_from_state
-from dg_sim.models.vehicle import VehicleState, VehicleCommands
+from dg_commons.sim.models import extract_pose_from_state
+from dg_commons.sim.models.vehicle import VehicleState, VehicleCommands
 
 __all__ = ["Trajectory", "JointTrajectories", "TrajectoryGraph", "commands_plan_from_trajectory"]
 

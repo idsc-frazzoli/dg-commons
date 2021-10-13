@@ -2,10 +2,9 @@ import matplotlib.pyplot as plt
 
 from dg_commons.dynamics import BicycleDynamics
 from dg_commons.planning import *
-from dg_sim.models.vehicle import VehicleState
-from dg_sim.models.vehicle_structures import VehicleGeometry
-from dg_sim.models.vehicle_utils import VehicleParameters
-from dg_sim.simulator_visualisation import plot_trajectories
+from dg_commons.sim.models.vehicle import VehicleState
+from dg_commons.sim.models.vehicle_structures import VehicleGeometry
+from dg_commons.sim.simulator_visualisation import plot_trajectories
 
 
 def _viz(trajectories, name=""):

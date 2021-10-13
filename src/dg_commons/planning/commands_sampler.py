@@ -5,13 +5,14 @@ from typing import Set, List, Callable, Optional
 
 import numpy as np
 
-from dg_commons import Timestamp, logger,LinSpaceTuple
+from dg_commons import Timestamp, logger, LinSpaceTuple
 from dg_commons.planning.trajectory import Trajectory
 from dg_commons.planning.trajectory_generator_abc import TrajGenerator
-from dg_sim.models.vehicle import VehicleState, VehicleCommands
-from dg_sim.models.vehicle_utils import VehicleParameters
+from dg_commons.sim.models.vehicle import VehicleState, VehicleCommands
+from dg_commons.sim.models.vehicle_utils import VehicleParameters
 
 __all__ = ["CommandsSampler", "CommandsSamplerParam"]
+
 
 
 @dataclass
