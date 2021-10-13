@@ -43,7 +43,7 @@ version = get_version(filename=f"src/{module}/__init__.py")
 setup(
     name=package,
     package_dir={"": src},
-    packages=[module],
+    packages=[module, "sim"],
     version=version,
     zip_safe=False,
     install_requires=install_requires,
