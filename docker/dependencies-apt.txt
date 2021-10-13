@@ -1,0 +1,17 @@
+build-essential
+libssl-dev
+libffi-dev
+python-dev
+cmake
+
+libeigen3-dev
+
+libboost-dev
+libboost-thread-dev
+libboost-test-dev
+libboost-filesystem-dev
+
+libomp-dev
+libcgal-dev
+
+git-lfs

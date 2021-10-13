@@ -1,0 +1,48 @@
+setuptools>=57.4.0
+# general utils
+frozendict>=2.0.6
+cytoolz>=0.11.0
+cachetools~=4.2.1
+# libraries
+numpy>=1.21.2
+scipy>=1.7.1
+matplotlib==3.4.3
+shapely>=1.7.0
+networkx>=2.6.3
+#PyYAML~=5.4.1
+#imageio~=2.9.0
+
+PyGeometry-z6>=2.0
+zuper-commons-z6>=6.1.5
+compmake-z6>=6.0.8,<7
+quickapp-z6>=6.0.5,<7
+reprep-z6>=6.0.3,<7
+zuper-typing-z6>=6.1.0
+
+commonroad-io==2021.2
+
+# extra
+jupyter
+
+# testing and coverage 
+nose==1.3.7
+nose2>=0.9.2
+nose2-html-report==0.6.0
+nose-parallel>=0.4.0
+nose_xunitmp==0.4.1
+pipdeptree>=2.1.0
+pre-commit==2.15.0
+rednose>=1.3.0
+parameterized>=0.7.4
+
+codecov>=2.1.9
+coverage>=5.2.1
+
+# docs
+sphinx>=4.2.0
+sphinx-rtd-theme>=1.0.0
+sphinx-autodoc-typehints
+sphinx-autodoc-annotation
+
+
+
