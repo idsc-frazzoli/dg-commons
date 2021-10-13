@@ -48,7 +48,8 @@ setup(
     packages=[module],
     version=version,
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 3 - Alpha',
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     ],
     install_requires=install_requires,
 )
