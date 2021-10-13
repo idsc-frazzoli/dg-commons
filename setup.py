@@ -1,6 +1,6 @@
 import pathlib
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 def get_version(filename):
@@ -45,8 +45,9 @@ setup(
     long_description=(pathlib.Path(__file__).parent / "README.md").read_text(),
     long_description_content_type="text/markdown",
     package_dir={"": src},
-    packages=[module],
+    packages=find_packages("src"),
     version=version,
+    python_requires='>=3.8',
     classifiers=[
         'Development Status :: 3 - Alpha',
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
