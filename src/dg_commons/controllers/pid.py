@@ -46,9 +46,9 @@ class PID:
         self.last_request_at = at
         p_error = self.reference - self.measurement
         self.last_integral_error += self.params.kI * p_error * dt
-        self.last_integral_error = np.clip(self.last_integral_error,
-                                           self.params.antiwindup[0],
-                                           self.params.antiwindup[1])
+        self.last_integral_error = np.clip(
+            self.last_integral_error, self.params.antiwindup[0], self.params.antiwindup[1]
+        )
         # d part
         d_error = (p_error - self.last_proportional_error) / dt if not dt == 0 else 0
         self.last_proportional_error = p_error

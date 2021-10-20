@@ -6,7 +6,7 @@ from dg_commons import logger
 
 
 def time_function(func: Callable):
-    """ Decorator to time the execution time of a function/method call"""
+    """Decorator to time the execution time of a function/method call"""
 
     @wraps(func)
     def _time_it(*args, **kwargs):
@@ -15,7 +15,7 @@ def time_function(func: Callable):
             return func(*args, **kwargs)
         finally:
             delta = process_time() - start
-            msg = f"Execution time of \"{func.__qualname__}\" defined in \"{func.__module__}\": {delta} s"
+            msg = f'Execution time of "{func.__qualname__}" defined in "{func.__module__}": {delta} s'
             logger.info(msg)
 
     return _time_it

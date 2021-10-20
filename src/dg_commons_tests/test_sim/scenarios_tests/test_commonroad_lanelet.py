@@ -6,8 +6,7 @@ from dg_commons.sim.scenarios.factory import get_scenario_commonroad_replica
 
 
 def test_commonroad_lanelet():
-    sim_context = get_scenario_commonroad_replica(
-        scenario_name="USA_Lanker-1_1_T-1.xml")
+    sim_context = get_scenario_commonroad_replica(scenario_name="USA_Lanker-1_1_T-1.xml")
     test = sim_context.models["P0"].get_state()
     lanelet_net = sim_context.scenario.lanelet_network
     laneletid = lanelet_net.find_lanelet_by_position([np.array([test.x, test.y])])[0][0]

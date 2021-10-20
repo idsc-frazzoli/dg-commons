@@ -114,8 +114,8 @@ class Simulator:
     def _maybe_terminate_simulation(sim_context: SimContext):
         """Evaluates if the simulation needs to terminate based on the expiration of times"""
         termination_condition: bool = (
-                sim_context.time > sim_context.param.max_sim_time
-                or sim_context.time > sim_context.first_collision_ts + sim_context.param.sim_time_after_collision
+            sim_context.time > sim_context.param.max_sim_time
+            or sim_context.time > sim_context.first_collision_ts + sim_context.param.sim_time_after_collision
         )
         sim_context.sim_terminated = termination_condition
 

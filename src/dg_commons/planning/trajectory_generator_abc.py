@@ -8,10 +8,11 @@ from dg_commons.sim.models.vehicle_utils import VehicleParameters
 
 
 class TrajGenerator(ABC):
-
-    def __init__(self,
-                 vehicle_dynamics: Callable[[VehicleState, VehicleCommands, Timestamp], VehicleState],
-                 vehicle_param: VehicleParameters):
+    def __init__(
+        self,
+        vehicle_dynamics: Callable[[VehicleState, VehicleCommands, Timestamp], VehicleState],
+        vehicle_param: VehicleParameters,
+    ):
         self.vehicle_dynamics = vehicle_dynamics
         self.vehicle_param = vehicle_param
 

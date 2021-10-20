@@ -7,9 +7,16 @@ from shapely.geometry import Polygon
 from dg_commons import PlayerName
 from dg_commons.sim import ImpactLocation, CollisionReport, logger, SimModel
 from dg_commons.sim.collision_structures import CollisionReportPlayer
-from dg_commons.sim.collision_utils import compute_impact_geometry, \
-    velocity_after_collision, kinetic_energy, compute_impulse_response, rot_velocity_after_collision, \
-    velocity_of_P_given_A, CollisionException, chek_who_is_at_fault
+from dg_commons.sim.collision_utils import (
+    compute_impact_geometry,
+    velocity_after_collision,
+    kinetic_energy,
+    compute_impulse_response,
+    rot_velocity_after_collision,
+    velocity_of_P_given_A,
+    CollisionException,
+    chek_who_is_at_fault,
+)
 from dg_commons.sim.simulator import SimContext
 
 
@@ -66,20 +73,19 @@ def resolve_collision(a: PlayerName, b: PlayerName, sim_context: SimContext) -> 
     b_locations = impact_locations_from_polygons(b_model, a_model)
 
     # Check who is at fault
-    who_is_at_fault = chek_who_is_at_fault({a: a_model.get_pose(), b: b_model.get_pose()},
-                                           impact_point=impact_point,
-                                           lanelet_network=sim_context.scenario.lanelet_network)
+    who_is_at_fault = chek_who_is_at_fault(
+        {a: a_model.get_pose(), b: b_model.get_pose()},
+        impact_point=impact_point,
+        lanelet_network=sim_context.scenario.lanelet_network,
+    )
     a_fault, b_fault = who_is_at_fault[a], who_is_at_fault[b]
 
     # Compute impulse resolution
     a_geom = a_model.get_geometry()
     b_geom = b_model.get_geometry()
-    j_n = compute_impulse_response(n=impact_normal,
-                                   vel_ab=rel_velocity_atP,
-                                   r_ap=r_ap,
-                                   r_bp=r_bp,
-                                   a_geom=a_geom,
-                                   b_geom=b_geom)
+    j_n = compute_impulse_response(
+        n=impact_normal, vel_ab=rel_velocity_atP, r_ap=r_ap, r_bp=r_bp, a_geom=a_geom, b_geom=b_geom
+    )
     # Apply impulse to models
     a_vel_after = velocity_after_collision(impact_normal, a_vel, a_geom.m, j_n)
     b_vel_after = velocity_after_collision(-impact_normal, b_vel, b_geom.m, j_n)
@@ -92,20 +98,25 @@ def resolve_collision(a: PlayerName, b: PlayerName, sim_context: SimContext) -> 
     a_kenergy_delta = kinetic_energy(a_vel_after, a_geom.m) - kinetic_energy(a_vel, a_geom.m)
     b_kenergy_delta = kinetic_energy(b_vel_after, b_geom.m) - kinetic_energy(b_vel, b_geom.m)
     # todo rotational energy
-    a_report = CollisionReportPlayer(locations=a_locations,
-                                     at_fault=a_fault,
-                                     footprint=a_shape,
-                                     velocity=(a_vel, a_omega),
-                                     velocity_after=(a_vel_after, a_omega_after),
-                                     energy_delta=a_kenergy_delta)
-    b_report = CollisionReportPlayer(locations=b_locations,
-                                     at_fault=b_fault,
-                                     footprint=b_shape,
-                                     velocity=(b_vel, b_omega),
-                                     velocity_after=(b_vel_after, b_omega_after),
-                                     energy_delta=b_kenergy_delta)
-    return CollisionReport(players={a: a_report, b: b_report},
-                           impact_point=impact_point,
-                           impact_normal=impact_normal,
-                           at_time=sim_context.time,
-                           )
+    a_report = CollisionReportPlayer(
+        locations=a_locations,
+        at_fault=a_fault,
+        footprint=a_shape,
+        velocity=(a_vel, a_omega),
+        velocity_after=(a_vel_after, a_omega_after),
+        energy_delta=a_kenergy_delta,
+    )
+    b_report = CollisionReportPlayer(
+        locations=b_locations,
+        at_fault=b_fault,
+        footprint=b_shape,
+        velocity=(b_vel, b_omega),
+        velocity_after=(b_vel_after, b_omega_after),
+        energy_delta=b_kenergy_delta,
+    )
+    return CollisionReport(
+        players={a: a_report, b: b_report},
+        impact_point=impact_point,
+        impact_normal=impact_normal,
+        at_time=sim_context.time,
+    )

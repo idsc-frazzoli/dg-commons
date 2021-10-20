@@ -8,7 +8,15 @@ from shapely.geometry import Polygon
 from zuper_commons.types import ZValueError
 
 from dg_commons import Color
-from dg_commons.sim.models.model_structures import ModelGeometry, ModelType, CAR, BICYCLE, MOTORCYCLE, TRUCK, FourWheelsTypes
+from dg_commons.sim.models.model_structures import (
+    ModelGeometry,
+    ModelType,
+    CAR,
+    BICYCLE,
+    MOTORCYCLE,
+    TRUCK,
+    FourWheelsTypes,
+)
 
 __all__ = ["VehicleGeometry"]
 

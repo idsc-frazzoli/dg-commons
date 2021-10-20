@@ -18,8 +18,8 @@ SR = TypeVar("SR")
 
 # todo this is temporary
 
-class BicycleDynamics:
 
+class BicycleDynamics:
     def __init__(self, vg: VehicleGeometry, vp: VehicleParameters):
         self.vg: VehicleGeometry = vg
         self.vp: VehicleParameters = vp
@@ -28,19 +28,18 @@ class BicycleDynamics:
     def all_actions(self) -> FrozenSet[U]:
         pass
 
-    def successors(self, x: VehicleState, u0: VehicleCommands, dt: D = None) \
-            -> Mapping[VehicleCommands, VehicleState]:
-        """ For each state, returns a dictionary U -> Possible Xs """
+    def successors(self, x: VehicleState, u0: VehicleCommands, dt: D = None) -> Mapping[VehicleCommands, VehicleState]:
+        """For each state, returns a dictionary U -> Possible Xs"""
         # todo
         pass
 
     def successor(self, x0: VehicleState, u: VehicleCommands, dt: Timestamp) -> VehicleState:
-        """ Perform Euler forward integration to propagate state using actions for time dt.
-         This method is very inaccurate for integration steps above 0.1[s]"""
+        """Perform Euler forward integration to propagate state using actions for time dt.
+        This method is very inaccurate for integration steps above 0.1[s]"""
         dt = float(dt)
         # input constraints
         acc = float(np.clip(u.ddelta, self.vp.acc_limits[0], self.vp.acc_limits[1]))
-        ddelta = float(np.clip(u.ddelta, - self.vp.ddelta_max, self.vp.ddelta_max))
+        ddelta = float(np.clip(u.ddelta, -self.vp.ddelta_max, self.vp.ddelta_max))
 
         state_rate = self.dynamics(x0, replace(u, acc=acc, ddelta=ddelta))
         x0 += state_rate * dt
@@ -60,8 +59,9 @@ class BicycleDynamics:
         def _stateactions_from_array(y: np.ndarray) -> [VehicleState, VehicleCommands]:
             n_states = VehicleState.get_n_states()
             state = VehicleState.from_array(y[0:n_states])
-            actions = VehicleCommands(acc=y[VehicleCommands.idx["acc"] + n_states],
-                                      ddelta=y[VehicleCommands.idx["ddelta"] + n_states])
+            actions = VehicleCommands(
+                acc=y[VehicleCommands.idx["acc"] + n_states], ddelta=y[VehicleCommands.idx["ddelta"] + n_states]
+            )
             return state, actions
 
         def _dynamics(t, y):
@@ -81,7 +81,7 @@ class BicycleDynamics:
         return new_state
 
     def dynamics(self, x0: VehicleState, u: VehicleCommands) -> VehicleState:
-        """ Get rate of change of states for given control inputs """
+        """Get rate of change of states for given control inputs"""
 
         dx = x0.vx
         dtheta = dx * math.tan(x0.delta) / self.vg.length

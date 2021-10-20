@@ -16,6 +16,7 @@ __all__ = ["SpeedControllerParam", "SpeedController", "SpeedBehavior"]
 @dataclass
 class SpeedControllerParam(PIDParam):
     """Default values are tuned roughly for a default car model"""
+
     kP: float = 4
     kI: float = 0.01
     kD: float = 0.1
@@ -90,8 +91,9 @@ class SpeedBehavior:
             other_vel = extract_vel_from_state(self.agents[other_name].state)
             rel_distance = np.linalg.norm(rel.p)
             # todo improve with SPOT predictions
-            coming_from_the_right: bool = pi / 4 <= rel.theta <= pi * 3 / 4 and \
-                                          other_vel > self.params.minimum_yield_vel
+            coming_from_the_right: bool = (
+                pi / 4 <= rel.theta <= pi * 3 / 4 and other_vel > self.params.minimum_yield_vel
+            )
             if coming_from_the_right and rel_distance < self.params.yield_distance:
                 return True
         return False
@@ -104,12 +106,14 @@ class SpeedBehavior:
             rel = agents_rel_pose[other_name]
             other_vel = extract_vel_from_state(self.agents[other_name].state)
             rel_distance = np.linalg.norm(rel.p)
-            coming_from_the_left: bool = -3 * pi / 4 <= rel.theta <= -pi / 4 and \
-                                         other_vel > self.params.minimum_yield_vel
-            in_front_of_me: bool = rel.p[0] > 0 and - 1.2 <= rel.p[1] <= 1.2
+            coming_from_the_left: bool = (
+                -3 * pi / 4 <= rel.theta <= -pi / 4 and other_vel > self.params.minimum_yield_vel
+            )
+            in_front_of_me: bool = rel.p[0] > 0 and -1.2 <= rel.p[1] <= 1.2
             coming_from_the_front: bool = 3 * pi / 4 <= abs(rel.theta) <= pi * 5 / 4 and in_front_of_me
             if (coming_from_the_left and rel_distance < self.params.yield_distance) or (
-                    coming_from_the_front and rel_distance < self.params.safety_time_braking * (myvel + other_vel)):
+                coming_from_the_front and rel_distance < self.params.safety_time_braking * (myvel + other_vel)
+            ):
                 return True
         return False
 
@@ -119,7 +123,9 @@ class SpeedBehavior:
          that allows maintaining a safe distance between the vehicles
         """
         myvel = self.agents[self.my_name].state.vx
-        candidate_speed_ref = [self.params.nominal_speed, ]
+        candidate_speed_ref = [
+            self.params.nominal_speed,
+        ]
         for other_name, _ in self.agents.items():
             if other_name == self.my_name:
                 continue

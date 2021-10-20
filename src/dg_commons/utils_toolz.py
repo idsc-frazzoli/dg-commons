@@ -1,8 +1,8 @@
 import itertools
 from typing import Callable, Collection, Dict, FrozenSet, Iterator, Mapping, TypeVar
 
-from frozendict import frozendict
 from cytoolz import keyfilter, valmap as valmap_
+from frozendict import frozendict
 
 K = TypeVar("K")
 V = TypeVar("V")

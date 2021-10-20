@@ -1,25 +1,49 @@
+from abc import abstractmethod, ABC
 from dataclasses import dataclass
-from typing import Optional
 
-from shapely.geometry import Polygon
+import numpy as np
+from geometry import translation_from_SE2
+from shapely.geometry import Polygon, Point
 
-from dg_commons import SE2Transform
+from dg_commons import SE2Transform, X
 from dg_commons.maps import DgLanelet
+from dg_commons.sim.models import extract_pose_from_state
 
-__all__ = ["PlanningGoal"]
+__all__ = ["PlanningGoal", "RefLaneGoal", "PolygonGoal", "PoseGoal"]
 
 
 @dataclass
-class PlanningGoal:
-    ref_lane: Optional[DgLanelet] = None
-    goal_region: Optional[Polygon] = None
-    goal_pose: Optional[SE2Transform] = None
+class PlanningGoal(ABC):
+    @abstractmethod
+    def is_fulfilled(self, state: X) -> bool:
+        pass
 
-    def __post_init__(self):
-        if self.ref_lane:
-            assert isinstance(self.ref_lane, DgLanelet)
-        if self.goal_region:
-            assert isinstance(self.goal_region, Polygon)
-        if self.goal_pose:
-            assert isinstance(self.goal_region, SE2Transform)
-        # todo some consistency checks? on not having conflicting goals
+
+@dataclass
+class RefLaneGoal(PlanningGoal):
+    ref_lane: DgLanelet
+    goal_progress: float
+
+    def is_fulfilled(self, state: X) -> bool:
+        pose = extract_pose_from_state(state)
+        return self.ref_lane.lane_pose_from_SE2_generic(pose).along_lane >= self.goal_progress
+
+
+@dataclass
+class PolygonGoal(PlanningGoal):
+    goal: Polygon
+
+    def is_fulfilled(self, state: X) -> bool:
+        pose = extract_pose_from_state(state)
+        xy = translation_from_SE2(pose)
+        return self.goal.contains(Point(xy))
+
+
+@dataclass
+class PoseGoal(PlanningGoal):
+    goal_pose: SE2Transform
+
+    def is_fulfilled(self, state: X, tol: float = 1e-7) -> bool:
+        pose = extract_pose_from_state(state)
+        goal_pose = self.goal_pose.as_SE2()
+        return np.linalg.norm(pose - goal_pose) <= tol

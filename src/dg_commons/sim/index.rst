@@ -10,6 +10,3 @@ Basic structures
 .. automodule:: sim.agents
    :members:
    :undoc-members:
-
-
-

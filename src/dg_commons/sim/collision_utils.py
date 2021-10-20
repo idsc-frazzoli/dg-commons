@@ -21,7 +21,7 @@ _rot90: SO2value = SO2_from_angle(pi / 2)
 
 
 def velocity_of_P_given_A(vel: T2value, omega: float, vec_ap: T2value) -> T2value:
-    """ Compute velocity of point P given velocity at A, rotational velocity of the rigid body and vector AP"""
+    """Compute velocity of point P given velocity at A, rotational velocity of the rigid body and vector AP"""
     # rotate by 90 to be equivalent to cross product omega x r_ap
     return vel + omega * (_rot90 @ vec_ap)
 
@@ -37,6 +37,7 @@ def _find_intersection_points(a_shape: Polygon, b_shape: Polygon) -> List[Tuple[
     points = list(remove(is_contained_in_aorb, points))
     if not len(points) == 2:
         from matplotlib import pyplot as plt
+
         plt.figure()
         plt.plot(*a_shape.exterior.xy, "b")
         plt.plot(*b_shape.exterior.xy, "r")
@@ -76,12 +77,9 @@ def compute_impact_geometry(a: Polygon, b: Polygon) -> (np.ndarray, Point):
     return normal, impact_point
 
 
-def compute_impulse_response(n: np.ndarray,
-                             vel_ab: np.ndarray,
-                             r_ap: np.ndarray,
-                             r_bp: np.ndarray,
-                             a_geom: ModelGeometry,
-                             b_geom: ModelGeometry) -> float:
+def compute_impulse_response(
+    n: np.ndarray, vel_ab: np.ndarray, r_ap: np.ndarray, r_bp: np.ndarray, a_geom: ModelGeometry, b_geom: ModelGeometry
+) -> float:
     """
     The impulse J is defined in terms of force F and time period ∆t
     J = F*∆t = ma*∆t = m *∆v/∆t *∆t = m*∆v
@@ -97,7 +95,7 @@ def compute_impulse_response(n: np.ndarray,
     e = min(a_geom.e, b_geom.e)
     j = -(1 + e) * np.dot(vel_ab, n)
     rot_part = (np.cross(r_ap, n) ** 2 / a_geom.Iz) + (np.cross(r_bp, n) ** 2 / b_geom.Iz)
-    j /= (1 / a_geom.m + 1 / b_geom.m + rot_part)
+    j /= 1 / a_geom.m + 1 / b_geom.m + rot_part
     return j
 
 
@@ -113,8 +111,7 @@ def velocity_after_collision(n: np.ndarray, velocity: np.ndarray, m: float, j: f
     return velocity + (j * n) / m
 
 
-def rot_velocity_after_collision(r: np.ndarray, n: np.ndarray, omega: np.ndarray,
-                                 Iz: float, j: float) -> float:
+def rot_velocity_after_collision(r: np.ndarray, n: np.ndarray, omega: np.ndarray, Iz: float, j: float) -> float:
     """
     This computes the velocity after the collision based on the impulse resolution method
     :param r: Contact vector
@@ -135,12 +132,12 @@ def kinetic_energy(velocity: np.ndarray, m: float) -> float:
     :return:
     """
     # todo also rotational components?
-    return .5 * m * np.linalg.norm(velocity) ** 2
+    return 0.5 * m * np.linalg.norm(velocity) ** 2
 
 
-def chek_who_is_at_fault(p_poses: Mapping[PlayerName, SE2value],
-                         impact_point: Point,
-                         lanelet_network: LaneletNetwork) -> Mapping[PlayerName, bool]:
+def chek_who_is_at_fault(
+    p_poses: Mapping[PlayerName, SE2value], impact_point: Point, lanelet_network: LaneletNetwork
+) -> Mapping[PlayerName, bool]:
     """
     This functions checks who is at fault in a collision.
     First_check who was in an illegal state, if you were in an illegal state you are at fault.
@@ -152,8 +149,9 @@ def chek_who_is_at_fault(p_poses: Mapping[PlayerName, SE2value],
     """
     # first_check who is in an illegal state, if you are in an illegal state you are at fault
     lanesid_at_impact = lanelet_network.find_lanelet_by_position([np.array([impact_point.x, impact_point.y])])[0]
-    dglanes_at_impact = [DgLanelet.from_commonroad_lanelet(lanelet_network.find_lanelet_by_id(id)) for id in
-                         lanesid_at_impact]
+    dglanes_at_impact = [
+        DgLanelet.from_commonroad_lanelet(lanelet_network.find_lanelet_by_id(id)) for id in lanesid_at_impact
+    ]
     who_is_at_fault: Dict[PlayerName, bool] = {p: False for p in p_poses}
     for p, p_pose in p_poses.items():
         dglane_poses = [dglane.lane_pose_from_SE2_generic(p_pose) for dglane in dglanes_at_impact]

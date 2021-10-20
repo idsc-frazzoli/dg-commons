@@ -14,7 +14,6 @@ from dg_commons.sim.models.vehicle_utils import VehicleParameters
 __all__ = ["CommandsSampler", "CommandsSamplerParam"]
 
 
-
 @dataclass
 class CommandsSamplerParam:
     dt: Decimal
@@ -28,8 +27,9 @@ class CommandsSamplerParam:
         assert self.n_steps == 1
 
     @classmethod
-    def from_vehicle_parameters(cls, dt: Decimal, n_steps: int, n_acc: int, n_steer_rate: int,
-                                vp: VehicleParameters) -> "CommandsSamplerParam":
+    def from_vehicle_parameters(
+        cls, dt: Decimal, n_steps: int, n_acc: int, n_steer_rate: int, vp: VehicleParameters
+    ) -> "CommandsSamplerParam":
         """
         :param dt:
         :param n_steps:
@@ -40,18 +40,16 @@ class CommandsSamplerParam:
         """
         vel_linspace = (vp.vx_limits[0], vp.vx_limits[1], n_acc)
         steer_linspace = (-vp.delta_max, vp.delta_max, n_steer_rate)
-        return CommandsSamplerParam(dt=dt,
-                                    n_steps=n_steps,
-                                    acc=vel_linspace,
-                                    steer_rate=steer_linspace)
+        return CommandsSamplerParam(dt=dt, n_steps=n_steps, acc=vel_linspace, steer_rate=steer_linspace)
 
 
 class CommandsSampler(TrajGenerator):
-
-    def __init__(self,
-                 param: CommandsSamplerParam,
-                 vehicle_dynamics: Callable[[VehicleState, VehicleCommands, Timestamp], VehicleState],
-                 vehicle_param: VehicleParameters):
+    def __init__(
+        self,
+        param: CommandsSamplerParam,
+        vehicle_dynamics: Callable[[VehicleState, VehicleCommands, Timestamp], VehicleState],
+        vehicle_param: VehicleParameters,
+    ):
         super(CommandsSampler, self).__init__(vehicle_dynamics=vehicle_dynamics, vehicle_param=vehicle_param)
         self._param: Optional[CommandsSamplerParam] = None
         self.update_params(param)
@@ -60,8 +58,12 @@ class CommandsSampler(TrajGenerator):
         acc_samples, dsteer_samples = self.generate_samples()
         trajectories = set()
         for acc, steer_rate in product(acc_samples, dsteer_samples):
-            timestamps = [Decimal(0), ]
-            states = [x0, ]
+            timestamps = [
+                Decimal(0),
+            ]
+            states = [
+                x0,
+            ]
             next_state = x0
             cmds = VehicleCommands(acc=acc, ddelta=steer_rate)
             next_state = self.vehicle_dynamics(next_state, cmds, float(self._param.dt))
@@ -73,8 +75,12 @@ class CommandsSampler(TrajGenerator):
 
     def update_params(self, param: CommandsSamplerParam):
         assert self.vehicle_param.acc_limits[0] <= param.acc[0] <= param.acc[1] <= self.vehicle_param.acc_limits[1]
-        assert -self.vehicle_param.ddelta_max <= param.steer_rate[0] <= param.steer_rate[
-            1] <= self.vehicle_param.ddelta_max
+        assert (
+            -self.vehicle_param.ddelta_max
+            <= param.steer_rate[0]
+            <= param.steer_rate[1]
+            <= self.vehicle_param.ddelta_max
+        )
         self._param = param
 
     def generate_samples(self) -> (List, List):

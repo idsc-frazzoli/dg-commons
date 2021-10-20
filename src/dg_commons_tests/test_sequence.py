@@ -54,7 +54,7 @@ def test_dg_sampledsequence():
     assert_raises(ZValueError, illegal_timestamps)
 
 
-class TestHash():
+class TestHash:
     def __init__(self):
         self.wow = [1, 2, 3]
 
