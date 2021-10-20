@@ -15,7 +15,7 @@ __all__ = ["PlanningGoal", "RefLaneGoal", "PolygonGoal", "PoseGoal"]
 @dataclass
 class PlanningGoal(ABC):
     @abstractmethod
-    def has_been_reached(self, state: X) -> bool:
+    def is_fulfilled(self, state: X) -> bool:
         pass
 
 
@@ -24,7 +24,7 @@ class RefLaneGoal(PlanningGoal):
     ref_lane: DgLanelet
     goal_progress: float
 
-    def has_been_reached(self, state: X) -> bool:
+    def is_fulfilled(self, state: X) -> bool:
         pose = extract_pose_from_state(state)
         return self.ref_lane.lane_pose_from_SE2_generic(pose).along_lane >= self.goal_progress
 
@@ -33,7 +33,7 @@ class RefLaneGoal(PlanningGoal):
 class PolygonGoal(PlanningGoal):
     goal: Polygon
 
-    def has_been_reached(self, state: X) -> bool:
+    def is_fulfilled(self, state: X) -> bool:
         pose = extract_pose_from_state(state)
         xy = translation_from_SE2(pose)
         return self.goal.contains(Point(xy))
@@ -43,7 +43,7 @@ class PolygonGoal(PlanningGoal):
 class PoseGoal(PlanningGoal):
     goal_pose: SE2Transform
 
-    def has_been_reached(self, state: X, tol: float = 1e-7) -> bool:
+    def is_fulfilled(self, state: X, tol: float = 1e-7) -> bool:
         pose = extract_pose_from_state(state)
         goal_pose = self.goal_pose.as_SE2()
         return np.linalg.norm(pose - goal_pose) <= tol
