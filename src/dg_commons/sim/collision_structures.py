@@ -9,21 +9,22 @@ from zuper_commons.types import ZValueError
 from dg_commons import PlayerName
 from dg_commons.sim import SimTime, ImpactLocation
 
-__all__ = ["IMPACT_EVERYWHERE",
-           "IMPACT_FRONT",
-           "IMPACT_BACK",
-           "IMPACT_LEFT",
-           "IMPACT_RIGHT",
-           "CollisionReportPlayer",
-           "CollisionReport",
-           "combine_collision_reports"
-           ]
+__all__ = [
+    "IMPACT_EVERYWHERE",
+    "IMPACT_FRONT",
+    "IMPACT_BACK",
+    "IMPACT_LEFT",
+    "IMPACT_RIGHT",
+    "CollisionReportPlayer",
+    "CollisionReport",
+    "combine_collision_reports",
+]
 
 IMPACT_EVERYWHERE = ImpactLocation("everywhere")
 IMPACT_FRONT = ImpactLocation("front")
 IMPACT_BACK = ImpactLocation("back")
 IMPACT_LEFT = ImpactLocation("left")
-IMPACT_RIGHT = ImpactLocation('right')
+IMPACT_RIGHT = ImpactLocation("right")
 
 
 @dataclass(frozen=True, unsafe_hash=True)
@@ -55,13 +56,12 @@ class CollisionReport:
 
 
 def combine_collision_reports(r1: CollisionReport, r2: CollisionReport) -> CollisionReport:
-    """ This function "sums" collision reports.
+    """This function "sums" collision reports.
     While the simulation generates a collision report at every simulation step, oftentimes it's convenient to
     reduce them to an "accident" report.
     """
     if r1.players.keys() != r2.players.keys():
-        raise ZValueError("Cannot combine collision reports with different players",
-                          report1=r1, report2=r2)
+        raise ZValueError("Cannot combine collision reports with different players", report1=r1, report2=r2)
     # impact point, normal are propagated according to the first report
     first_report, second_report = (r1, r2) if r1.at_time <= r2.at_time else (r2, r1)
     combined_players_report: Dict[PlayerName, CollisionReportPlayer] = {}
@@ -71,6 +71,6 @@ def combine_collision_reports(r1: CollisionReport, r2: CollisionReport) -> Colli
             r1_player,
             locations=r1_player.locations + r2_player.locations,
             velocity_after=r2_player.velocity_after,
-            energy_delta=r1_player.energy_delta + r2_player.energy_delta)
-    return replace(first_report,
-                   players=combined_players_report)
+            energy_delta=r1_player.energy_delta + r2_player.energy_delta,
+        )
+    return replace(first_report, players=combined_players_report)

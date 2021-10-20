@@ -27,4 +27,3 @@ General utils
 
 .. automodule:: dg_commons.seq_op
    :members:
-

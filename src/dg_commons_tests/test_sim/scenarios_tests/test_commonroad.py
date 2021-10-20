@@ -12,7 +12,7 @@ from dg_commons.sim.scenarios.agent_from_commonroad import model_agent_from_dyna
 
 def test_commonroad_scenario_viz():
     # generate path of the file to be opened
-    scenario_name = "USA_Lanker-1_1_T-1.xml"#"USA_Peach-1_1_T-1"
+    scenario_name = "USA_Lanker-1_1_T-1.xml"  # "USA_Peach-1_1_T-1"
     scenario, planning_problem_set = load_commonroad_scenario(scenario_name)
     scenario.translate_rotate(translation=np.array([0, 0]), angle=-pi / 2)
     rnd = MPRenderer(figsize=(20, 10))

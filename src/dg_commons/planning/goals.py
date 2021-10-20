@@ -14,7 +14,6 @@ __all__ = ["PlanningGoal", "RefLaneGoal", "PolygonGoal", "PoseGoal"]
 
 @dataclass
 class PlanningGoal(ABC):
-
     @abstractmethod
     def has_been_reached(self, state: X) -> bool:
         pass

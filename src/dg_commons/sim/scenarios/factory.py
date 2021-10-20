@@ -7,10 +7,12 @@ from dg_commons.sim.scenarios.agent_from_commonroad import model_agent_from_dyna
 from dg_commons.sim.simulator import SimContext
 
 
-def get_scenario_commonroad_replica(scenario_name: str,
-                                    scenarios_dir: Optional[str] = None,
-                                    sim_param: Optional[SimParameters] = None,
-                                    ego_player: Optional[PlayerName] = None) -> SimContext:
+def get_scenario_commonroad_replica(
+    scenario_name: str,
+    scenarios_dir: Optional[str] = None,
+    sim_param: Optional[SimParameters] = None,
+    ego_player: Optional[PlayerName] = None,
+) -> SimContext:
     """
     This functions load a commonroad scenario and tries to convert the dynamic obstacles into the Model/Agent paradigm
     used by the driving-game simulator.
@@ -37,9 +39,10 @@ def get_scenario_commonroad_replica(scenario_name: str,
             logger.warn("Unable to convert commonroad dynamic obstacle due to " + e.args[0] + " skipping...")
     logger.info(f"Managed to load {len(players)}")
     sim_param = SimParameters() if sim_param is None else sim_param
-    return SimContext(scenario=scenario,
-                      models=models,
-                      players=players,
-                      log=SimLog(),
-                      param=sim_param,
-                      )
+    return SimContext(
+        scenario=scenario,
+        models=models,
+        players=players,
+        log=SimLog(),
+        param=sim_param,
+    )

@@ -27,14 +27,9 @@ def test_generate_motion_primitives():
     vp = VehicleParameters.default_car()
     vg = VehicleGeometry.default_car()
 
-    params = MPGParam(dt=Decimal(".2"),
-                      n_steps=3,
-                      velocity=(0, 50, 3),
-                      steering=(-vp.delta_max, vp.delta_max, 3))
+    params = MPGParam(dt=Decimal(".2"), n_steps=3, velocity=(0, 50, 3), steering=(-vp.delta_max, vp.delta_max, 3))
     vehicle = BicycleDynamics(vg=vg, vp=vp)
-    mpg = MotionPrimitivesGenerator(param=params,
-                                    vehicle_dynamics=vehicle.successor_ivp,
-                                    vehicle_param=vp)
+    mpg = MotionPrimitivesGenerator(param=params, vehicle_dynamics=vehicle.successor_ivp, vehicle_param=vp)
 
     traject = mpg.generate()
     _viz(traject, "MotionPrimitivesGenerator")
@@ -44,14 +39,11 @@ def test_commands_sampler():
     vp = VehicleParameters.default_car()
     vg = VehicleGeometry.default_car()
 
-    params = CommandsSamplerParam(dt=Decimal(".5"),
-                                  n_steps=1,
-                                  acc=(-5, 4, 5),
-                                  steer_rate=(-vp.ddelta_max, vp.ddelta_max, 5))
+    params = CommandsSamplerParam(
+        dt=Decimal(".5"), n_steps=1, acc=(-5, 4, 5), steer_rate=(-vp.ddelta_max, vp.ddelta_max, 5)
+    )
     vehicle = BicycleDynamics(vg=vg, vp=vp)
-    mpg = CommandsSampler(param=params,
-                          vehicle_dynamics=vehicle.successor_ivp,
-                          vehicle_param=vp)
+    mpg = CommandsSampler(param=params, vehicle_dynamics=vehicle.successor_ivp, vehicle_param=vp)
 
     x0 = VehicleState(x=0, y=0, theta=0, vx=5, delta=0)
 

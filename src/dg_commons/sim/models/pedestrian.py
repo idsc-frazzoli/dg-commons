@@ -19,10 +19,9 @@ from dg_commons.sim.models.pedestrian_utils import PedestrianParameters, rotatio
 
 @dataclass(frozen=True)
 class PedestrianGeometry(ModelGeometry):
-
     @cached_property
     def outline(self) -> Sequence[Tuple[float, float]]:
-        circle = Point(0, 0).buffer(.5)  # type(circle)=polygon
+        circle = Point(0, 0).buffer(0.5)  # type(circle)=polygon
         ellipse = affinity.scale(circle, 1, 1.5)  # not sure, maybe just a circle?
         return tuple(ellipse.exterior.coords)
 
@@ -68,10 +67,7 @@ class PedestrianCommands:
         return self * (1 / val)
 
     def as_ndarray(self) -> np.ndarray:
-        return np.array([
-            self.acc,
-            self.dtheta
-        ])
+        return np.array([self.acc, self.dtheta])
 
     @classmethod
     def from_array(cls, z: np.ndarray):
@@ -102,14 +98,15 @@ class PedestrianState:
 
     def __add__(self, other: "PedestrianState") -> "PedestrianState":
         if type(other) == type(self):
-            return replace(self,
-                           x=self.x + other.x,
-                           y=self.y + other.y,
-                           theta=self.theta + other.theta,
-                           vx=self.vx + other.vx,
-                           vy=self.vy + other.vy,
-                           dtheta=self.dtheta + other.dtheta
-                           )
+            return replace(
+                self,
+                x=self.x + other.x,
+                y=self.y + other.y,
+                theta=self.theta + other.theta,
+                vx=self.vx + other.vx,
+                vy=self.vy + other.vy,
+                dtheta=self.dtheta + other.dtheta,
+            )
         else:
             raise NotImplementedError
 
@@ -119,14 +116,15 @@ class PedestrianState:
         return self + (other * -1.0)
 
     def __mul__(self, val: float) -> "PedestrianState":
-        return replace(self,
-                       x=self.x * val,
-                       y=self.y * val,
-                       theta=self.theta * val,
-                       vx=self.vx * val,
-                       vy=self.vy * val,
-                       dtheta=self.dtheta * val
-                       )
+        return replace(
+            self,
+            x=self.x * val,
+            y=self.y * val,
+            theta=self.theta * val,
+            vx=self.vx * val,
+            vy=self.vy * val,
+            dtheta=self.dtheta * val,
+        )
 
     __rmul__ = __mul__
 
@@ -137,29 +135,22 @@ class PedestrianState:
         return str({k: round(float(v), 2) for k, v in self.__dict__.items() if not k.startswith("idx")})
 
     def as_ndarray(self) -> np.ndarray:
-        return np.array([
-            self.x,
-            self.y,
-            self.theta,
-            self.vx,
-            self.vy,
-            self.dtheta
-        ])
+        return np.array([self.x, self.y, self.theta, self.vx, self.vy, self.dtheta])
 
     @classmethod
     def from_array(cls, z: np.ndarray):
         assert cls.get_n_states() == z.size == z.shape[0], f"z vector {z} cannot initialize VehicleState."
-        return PedestrianState(x=z[cls.idx["x"]],
-                               y=z[cls.idx["y"]],
-                               theta=z[cls.idx["theta"]],
-                               vx=z[cls.idx["vx"]],
-                               vy=z[cls.idx["vy"]],
-                               dtheta=z[cls.idx["dtheta"]]
-                               )
+        return PedestrianState(
+            x=z[cls.idx["x"]],
+            y=z[cls.idx["y"]],
+            theta=z[cls.idx["theta"]],
+            vx=z[cls.idx["vx"]],
+            vy=z[cls.idx["vy"]],
+            dtheta=z[cls.idx["dtheta"]],
+        )
 
 
 class PedestrianModel(SimModel[SE2value, float]):
-
     def __init__(self, x0: PedestrianState, pg: PedestrianGeometry, pp: PedestrianParameters):
         assert isinstance(x0, PedestrianState)
         self._state: PedestrianState = x0
@@ -187,8 +178,10 @@ class PedestrianModel(SimModel[SE2value, float]):
             if self.has_collided:
                 actions = PedestrianCommands(acc=0, dtheta=0)
             else:
-                actions = PedestrianCommands(acc=y[PedestrianCommands.idx["acc"] + n_states],
-                                             dtheta=y[PedestrianCommands.idx["dtheta"] + n_states])
+                actions = PedestrianCommands(
+                    acc=y[PedestrianCommands.idx["acc"] + n_states],
+                    dtheta=y[PedestrianCommands.idx["dtheta"] + n_states],
+                )
             return state, actions
 
         def _dynamics(t, y):
@@ -209,7 +202,7 @@ class PedestrianModel(SimModel[SE2value, float]):
         return
 
     def dynamics(self, x0: PedestrianState, u: PedestrianCommands) -> PedestrianState:
-        """ Simple double integrator with friction after collision to simulate a "bag of potato" effect """
+        """Simple double integrator with friction after collision to simulate a "bag of potato" effect"""
         dtheta = rotation_constraint(rot_velocity=u.dtheta, pp=self.pp)
         acc = acceleration_constraint(speed=x0.vx, acceleration=u.acc, p=self.pp)
 
@@ -221,7 +214,7 @@ class PedestrianModel(SimModel[SE2value, float]):
             theta=dtheta,
             vx=acc + frictionx,
             vy=frictiony,
-            dtheta=frictiontheta
+            dtheta=frictiontheta,
         )
 
     def get_footprint(self) -> Polygon:
@@ -251,7 +244,7 @@ class PedestrianModel(SimModel[SE2value, float]):
 
     def set_velocity(self, vel: T2value, omega: float, in_model_frame: bool):
         if not in_model_frame:
-            rot: SO2value = SO2_from_angle(- self._state.theta)
+            rot: SO2value = SO2_from_angle(-self._state.theta)
             vel = rot @ vel
         self._state.vx = vel[0]
         self._state.vy = vel[1]
@@ -267,9 +260,9 @@ class PedestrianModel(SimModel[SE2value, float]):
     def get_extra_collision_friction_acc(self):
         magic_mu = 2.0
         if self.has_collided:
-            frictionx = - magic_mu * self._state.vx
-            frictiony = - magic_mu * self._state.vy
-            frictiontheta = - magic_mu * self._state.dtheta
+            frictionx = -magic_mu * self._state.vx
+            frictiony = -magic_mu * self._state.vy
+            frictiontheta = -magic_mu * self._state.dtheta
             return frictionx, frictiony, frictiontheta
         else:
             return 0, 0, 0

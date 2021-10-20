@@ -9,8 +9,9 @@ from commonroad.scenario.scenario import Scenario
 __all__ = ["load_commonroad_scenario"]
 
 
-def load_commonroad_scenario(scenario_name: str, scenarios_dir: Optional[str] = None) -> Tuple[
-    Scenario, PlanningProblemSet]:
+def load_commonroad_scenario(
+    scenario_name: str, scenarios_dir: Optional[str] = None
+) -> Tuple[Scenario, PlanningProblemSet]:
     """Loads a commonroad scenario.
     If no directory is provided it looks for a scenarios folder at the src level of the project."""
     if scenarios_dir is None:
@@ -32,6 +33,7 @@ def load_commonroad_scenario(scenario_name: str, scenarios_dir: Optional[str] = 
     if scenario_path is None:
         raise FileNotFoundError(
             f"Unable to find commonroad scenario {scenario_name} within {scenarios_dir}.\n"
-            f"Be aware that currently interactive scenarios cannot be loaded.")
+            f"Be aware that currently interactive scenarios cannot be loaded."
+        )
     # read in the scenario and planning problem set
     return CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)

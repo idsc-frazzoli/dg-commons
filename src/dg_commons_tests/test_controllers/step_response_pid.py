@@ -14,12 +14,14 @@ from dg_commons.sim.models.vehicle_dynamic import VehicleModelDyn, VehicleStateD
 
 def sim_step_response(model, sp_controller, st_controller):
     t, sim_step = 0, 0.05
-    speed_ref = DgSampledSequence[float](timestamps=[0, 10, 20, 30, 40, 50, 60],
-                                         values=[0, kmh2ms(20), kmh2ms(0), kmh2ms(50), kmh2ms(0), kmh2ms(130),
-                                                 kmh2ms(0)])
+    speed_ref = DgSampledSequence[float](
+        timestamps=[0, 10, 20, 30, 40, 50, 60],
+        values=[0, kmh2ms(20), kmh2ms(0), kmh2ms(50), kmh2ms(0), kmh2ms(130), kmh2ms(0)],
+    )
 
-    steer_ref = DgSampledSequence[float](timestamps=[0, 10, 20, 30, 40, 50, 60],
-                                         values=[0, pi / 12, pi / 6, -pi / 12, 0, -pi / 12, 0])
+    steer_ref = DgSampledSequence[float](
+        timestamps=[0, 10, 20, 30, 40, 50, 60], values=[0, pi / 12, pi / 6, -pi / 12, 0, -pi / 12, 0]
+    )
 
     times, speeds, accs, speed_refs, steer, dsteers, steer_refs = [], [], [], [], [], [], []
     while t < 70:
@@ -48,7 +50,7 @@ def sim_step_response(model, sp_controller, st_controller):
         # update observations
 
     # do plot
-    fig, (ax1, ax2,ax3,ax4) = plt.subplots(4)
+    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4)
     fig.suptitle("Step Response PID Controller for Vehicle Speed")
     ax1.plot(times, speeds, label="actual speed")
     ax1.plot(times, speed_refs, "r", label="ref. speed")
@@ -57,17 +59,17 @@ def sim_step_response(model, sp_controller, st_controller):
     ax3.plot(times, steer_refs, "r", label="ref. steer ")
     ax4.plot(times, dsteers)
 
-    ax1.set(ylabel='Velocity')
-    ax2.set(xlabel='Time', ylabel='Acceleration Command')
-    ax3.set(ylabel='Steering angle')
-    ax2.set(xlabel='Time', ylabel='Steering derivative')
+    ax1.set(ylabel="Velocity")
+    ax2.set(xlabel="Time", ylabel="Acceleration Command")
+    ax3.set(ylabel="Steering angle")
+    ax2.set(xlabel="Time", ylabel="Steering derivative")
 
     ax1.legend()
     ax3.legend()
     plt.savefig("out/stepresponse")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         os.mkdir("out/")
     except FileExistsError:
