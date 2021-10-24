@@ -73,7 +73,7 @@ def create_animation(
         with sim_viz.plot_arena(ax=ax):
             init_log_entry: Mapping[PlayerName, LogEntry] = sim_context.log.at_interp(time_begin)
             for pname, plog in init_log_entry.items():
-                lights_colors: LightsColors = _get_lights_colors_from_cmds(init_log_entry[pname].commands, t=0)
+                lights_colors: LightsColors = get_lights_colors_from_cmds(init_log_entry[pname].commands, t=0)
                 states[pname], actions[pname] = sim_viz.plot_player(
                     ax=ax,
                     state=plog.state,
@@ -109,7 +109,7 @@ def create_animation(
         logger.info(f"Plotting t = {t}\r")
         log_at_t: Mapping[PlayerName, LogEntry] = sim_context.log.at_interp(t)
         for pname, box_handle in states.items():
-            lights_colors: LightsColors = _get_lights_colors_from_cmds(log_at_t[pname].commands, t=t)
+            lights_colors: LightsColors = get_lights_colors_from_cmds(log_at_t[pname].commands, t=t)
             states[pname], actions[pname] = sim_viz.plot_player(
                 ax=ax,
                 player_name=pname,
@@ -182,7 +182,7 @@ def adjust_axes_limits(ax: Axes, plot_limits: Union[str, Sequence[Sequence[float
     return
 
 
-def _get_lights_colors_from_cmds(cmds: VehicleCommands, t: Timestamp) -> LightsColors:
+def get_lights_colors_from_cmds(cmds: VehicleCommands, t: Timestamp) -> LightsColors:
     """Note that braking lights are out of the agent's control"""
     try:
         phases = lightscmd2phases[cmds.lights]
