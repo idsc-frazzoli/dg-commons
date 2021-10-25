@@ -9,7 +9,7 @@ from commonroad.visualization.mp_renderer import MPRenderer
 from decorator import contextmanager
 from geometry import SE2_from_xytheta, SE2value
 from matplotlib.axes import Axes
-from matplotlib.collections import LineCollection, PathCollection
+from matplotlib.collections import LineCollection, PathCollection, PolyCollection
 from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon, Circle
 
@@ -129,6 +129,25 @@ class SimRenderer(SimRendererABC):
             alpha=alpha,
         )
 
+    def plot_polygons(
+        self,
+        ax: Axes,
+        player_name: PlayerName,
+        polygons: List[PolygonSequence],
+        colors: Optional[List[Color]] = None,
+        alpha: float = 1,
+    ) -> List[PolyCollection]:
+        # mg = self.sim_context.models[player_name].get_geometry()
+        assert colors is None or len(colors) == len(polygons)
+        # colors = mg.color if colors is None else colors
+        return plot_polygons(
+            ax=ax,
+            polygons=polygons,
+            player_name=player_name,
+            colors=colors,
+            alpha=alpha,
+        )
+
 
 def plot_trajectories(
     ax: Axes,
@@ -159,6 +178,30 @@ def plot_trajectories(
     # traj_points.set_facecolor(mcolor) # todo adjust color based on velocity
     # https://stackoverflow.com/questions/23966121/updating-the-positions-and-colors-of-pyplot-scatter
     return traj_lines, traj_points
+
+
+def plot_polygons(
+    ax: Axes,
+    player_name: PlayerName,
+    alpha: float,
+    polygons: Optional[List[PolygonSequence]] = None,
+    colors: List[Color] = None
+) -> List[PolyCollection]:
+    """"""
+    verts = []
+    for polygon in polygons:
+        for poly in polygon.values:
+            verts.append(np.array(poly.exterior.xy).T)
+
+    poly_collection = PolyCollection(verts)
+    print("mine", colors)
+    poly_collection.set_color(colors)
+    print("other", poly_collection.get_edgecolor(), poly_collection.get_facecolor())
+    poly_collection.set_animated(True)
+    poly_collection.set_visible(True)
+    poly_collection.set_linewidth(10)
+    ax.add_collection(poly_collection)
+    return poly_collection
 
 
 def plot_vehicle(
