@@ -129,30 +129,6 @@ class SimRenderer(SimRendererABC):
             alpha=alpha,
         )
 
-    def plot_polygons(
-        self,
-        ax: Axes,
-        player_name: PlayerName,
-        polygons: Sequence[PolygonSequence],
-        # traj_lines: Optional[List[LineCollection]] = None,
-        # traj_points: Optional[List[PathCollection]] = None,
-        colors: Optional[List[Color]] = None,
-        width: float = 1,
-        alpha: float = 1,
-    ) -> Tuple[List[LineCollection], List[PathCollection]]:
-        mg = self.sim_context.models[player_name].get_geometry()
-        assert colors is None or len(colors) == len(trajectories)
-        colors = mg.color if colors is None else colors
-        return plot_trajectories(
-            ax=ax,
-            trajectories=trajectories,
-            traj_lines=traj_lines,
-            traj_points=traj_points,
-            colors=colors,
-            width=width,
-            alpha=alpha,
-        )
-
 
 def plot_trajectories(
     ax: Axes,
@@ -183,43 +159,6 @@ def plot_trajectories(
     # traj_points.set_facecolor(mcolor) # todo adjust color based on velocity
     # https://stackoverflow.com/questions/23966121/updating-the-positions-and-colors-of-pyplot-scatter
     return traj_lines, traj_points
-
-
-(
-    (-self.lr - backbumper, -self.w_half - tyre_halfw),
-    (-self.lr - backbumper, +self.w_half + tyre_halfw),
-    (+self.lf + frontbumper, +self.w_half + tyre_halfw),
-    (+self.lf + frontbumper, -self.w_half - tyre_halfw),
-    (-self.lr - backbumper, -self.w_half - tyre_halfw),
-)
-
-def plot_polygons(
-    ax: Axes,
-    player_name: PlayerName,
-    state: VehicleState,
-    alpha: float,
-    polygon: Optional[List[Polygon]] = None,
-    colors: List[Color] = None
-) -> List[Polygon]:
-    """"""
-    vehicle_outline: Sequence[Tuple[float, float], ...] = vg.outline
-    vehicle_color: Color = colors
-    q = SE2_from_xytheta((state.x, state.y, state.theta))
-
-    if polygon is None:
-        vehicle_box = ax.fill([], [], color=vehicle_color, alpha=alpha, zorder=ZOrders.MODEL)[0]
-        vehicle_poly = [
-            vehicle_box,
-        ]
-        x4, y4 = transform_xy(q, ((0, 0),))[0]
-        ax.text(
-            x4, y4, player_name, zorder=ZOrders.PLAYER_NAME, horizontalalignment="center", verticalalignment="center"
-        )
-
-    outline = transform_xy(q, vehicle_outline)
-    polygon[0].set_xy(outline)
-
-    return vehicle_poly
 
 
 def plot_vehicle(
