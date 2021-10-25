@@ -7,15 +7,22 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.axes import Axes
 from toolz.sandbox import unzip
 
-from dg_commons import Timestamp
-from dg_commons.time import time_function
 from dg_commons import PlayerName, X
+from dg_commons import Timestamp
 from dg_commons.sim import logger
 from dg_commons.sim.models.vehicle import VehicleCommands
-from dg_commons.sim.models.vehicle_ligths import lightscmd2phases, get_phased_lights, red, red_more, LightsColors
+from dg_commons.sim.models.vehicle_ligths import (
+    lightscmd2phases,
+    get_phased_lights,
+    red,
+    red_more,
+    LightsColors,
+    LightsCmd,
+)
 from dg_commons.sim.simulator import SimContext
 from dg_commons.sim.simulator_structures import LogEntry
 from dg_commons.sim.simulator_visualisation import SimRenderer, approximate_bounding_box_players, ZOrders
+from dg_commons.time import time_function
 
 
 @time_function
@@ -185,14 +192,19 @@ def adjust_axes_limits(ax: Axes, plot_limits: Union[str, Sequence[Sequence[float
 def get_lights_colors_from_cmds(cmds: VehicleCommands, t: Timestamp) -> LightsColors:
     """Note that braking lights are out of the agent's control"""
     try:
-        phases = lightscmd2phases[cmds.lights]
-        lights_colors = get_phased_lights(phases, float(t))
-        if cmds.acc < 0:  # and cmds == NO_LIGHTS:
-            if lights_colors.back_left == red:
-                lights_colors.back_left = red_more
-            if lights_colors.back_right == red:
-                lights_colors.back_right = red_more
+        lights_colors = lights_colors_from_lights_cmd(cmds.lights, cmds.acc, t)
     except AttributeError:
         # in case the model commands does not have lights command
         lights_colors = None
+    return lights_colors
+
+
+def lights_colors_from_lights_cmd(lights_cmd: LightsCmd, acc: float, t: Timestamp) -> LightsColors:
+    phases = lightscmd2phases[lights_cmd]
+    lights_colors = get_phased_lights(phases, float(t))
+    if acc < 0:  # and cmds == NO_LIGHTS:
+        if lights_colors.back_left == red:
+            lights_colors.back_left = red_more
+        if lights_colors.back_right == red:
+            lights_colors.back_right = red_more
     return lights_colors
