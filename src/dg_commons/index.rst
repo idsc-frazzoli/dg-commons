@@ -27,3 +27,12 @@ General utils
 
 .. automodule:: dg_commons.seq_op
    :members:
+
+.. automodule:: dg_commons.maps
+   :members:
+
+
+The Simulator
+--------------
+.. automodule:: dg_commons.sim
+   :members:

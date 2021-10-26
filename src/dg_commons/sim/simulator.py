@@ -45,7 +45,7 @@ class Simulator:
         - A post-update function that checks the new states of all the models and resolves collisions
     """
 
-    # fixme check if this is okay once you have multple simulators running together
+    # fixme check if this is okay once you have multiple simulators running together
     last_observations: Optional[SimObservations] = SimObservations(players={}, time=Decimal(0))
     last_get_commands_ts: SimTime = SimTime("-Infinity")
     last_commands: Dict[PlayerName, U] = {}
