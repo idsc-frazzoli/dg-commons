@@ -56,6 +56,7 @@ class SimRenderer(SimRendererABC):
     def __init__(self, sim_context: SimContext, ax: Axes = None, *args, **kwargs):
         self.sim_context = sim_context
         self.commonroad_renderer: MPRenderer = MPRenderer(ax=ax, *args, **kwargs)
+        self.current_poly = None
 
     @contextmanager
     def plot_arena(self, ax: Axes):
@@ -137,16 +138,19 @@ class SimRenderer(SimRendererABC):
         colors: Optional[List[Color]] = None,
         alpha: float = 1,
     ) -> List[PolyCollection]:
+        if self.current_poly is not None:
+            self.current_poly.remove()
         # mg = self.sim_context.models[player_name].get_geometry()
         assert colors is None or len(colors) == len(polygons)
         # colors = mg.color if colors is None else colors
-        return plot_polygons(
+        self.current_poly = plot_polygons(
             ax=ax,
             polygons=polygons,
             player_name=player_name,
             colors=colors,
             alpha=alpha,
         )
+        return self.current_poly
 
 
 def plot_trajectories(
@@ -193,13 +197,14 @@ def plot_polygons(
         for poly in polygon.values:
             verts.append(np.array(poly.exterior.xy).T)
 
+    alpha = 0.5
     poly_collection = PolyCollection(verts)
-    print("mine", colors)
     poly_collection.set_color(colors)
-    print("other", poly_collection.get_edgecolor(), poly_collection.get_facecolor())
     poly_collection.set_animated(True)
     poly_collection.set_visible(True)
-    poly_collection.set_linewidth(10)
+    poly_collection.set_alpha(alpha)
+    poly_collection.set_linewidth(1)
+    poly_collection.set_zorder(ZOrders.TRAJECTORY)
     ax.add_collection(poly_collection)
     return poly_collection
 

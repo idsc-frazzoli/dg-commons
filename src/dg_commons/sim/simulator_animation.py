@@ -101,7 +101,6 @@ def create_animation(
                         elif isinstance(drawable_list[0], Point):
                             pass
                         elif isinstance(drawable_list[0], PolygonSequence):
-                            print("GOT 1")
                             polygons[pname] = sim_viz.plot_polygons(
                                 ax=ax,
                                 player_name=pname,
