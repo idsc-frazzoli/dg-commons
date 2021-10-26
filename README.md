@@ -36,6 +36,9 @@ focus on multi-agent planning and decision-making.
 
 ### Simulator
 todo...
+This simulator builds on a clear separation between the agent and the corresponding model.
+
+Philosophy: Every dynamic entity of the simulation has a model and a corresponding agent
 
 ### Collision resolution
 todo...
@@ -53,3 +56,6 @@ pip install dg-commons
 
 ## Contributors
 ...
+
+## Publications
+The tools contained in this package have contributed to the following publications:
