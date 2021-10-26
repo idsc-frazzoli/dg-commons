@@ -18,8 +18,6 @@ from dg_commons.sim.models.vehicle_ligths import lightscmd2phases, get_phased_li
 from dg_commons.sim.simulator import SimContext
 from dg_commons.sim.simulator_structures import LogEntry
 from dg_commons.sim.simulator_visualisation import SimRenderer, approximate_bounding_box_players, ZOrders
-from dg_commons.planning.polygon import PolygonSequence
-from shapely.geometry import Point
 
 
 @time_function
@@ -96,25 +94,25 @@ def create_animation(
                         drawable, tcolors = unzip(plog.extra)
                         drawable_list, colors_list = list(drawable), list(tcolors)
 
-                        trajectories, tcolors = unzip(plog.extra)
-                        if isinstance(drawable_list[0], Trajectory):
+                        traj_list, traj_colors = [], []
+                        patch_list, patch_colors = [], []
+                        for i, item in enumerate(drawable_list):
+                            if isinstance(item, Trajectory):
+                                traj_list.append(item)
+                                traj_colors.append(colors_list[i])
+                            elif isinstance(item, Patch):
+                                patch_list.append(item)
+                                patch_colors.append(colors_list[i])
+
+                        if traj_list:
                             traj_lines[pname], traj_points[pname] = sim_viz.plot_trajectories(
-                                ax=ax, player_name=pname, trajectories=list(trajectories), colors=list(tcolors)
+                                ax=ax, player_name=pname, trajectories=traj_list, colors=traj_colors
                             )
-                            '''elif isinstance(drawable_list[0], Point):
-                                pass
-                            elif isinstance(drawable_list[0], PolygonSequence):
-                                polygons[pname] = sim_viz.plot_polygons(
-                                    ax=ax,
-                                    player_name=pname,
-                                    polygons=drawable_list,
-                                    colors=colors_list,
-                                )'''
-                        elif isinstance(drawable_list[0], Patch):
+                        if patch_list:
                             patches[pname] = sim_viz.plot_patches(
                                 ax=ax,
-                                patches=drawable_list,
-                                colors=colors_list,
+                                patches=patch_list,
+                                colors=patch_colors,
                             )
                     except:
                         logger.warn(f"Cannot plot extra", extra=plog.extra)
@@ -152,29 +150,30 @@ def create_animation(
                     drawable, tcolors = unzip(log_at_t[pname].extra)
                     drawable_list, colors_list = list(drawable), list(tcolors)
 
-                    if isinstance(drawable_list[0], Trajectory):
+                    traj_list, traj_colors = [], []
+                    patch_list, patch_colors = [], []
+                    for i, item in enumerate(drawable_list):
+                        if isinstance(item, Trajectory):
+                            traj_list.append(item)
+                            traj_colors.append(colors_list[i])
+                        elif isinstance(item, Patch):
+                            patch_list.append(item)
+                            patch_colors.append(colors_list[i])
+
+                    if traj_list:
                         traj_lines[pname], traj_points[pname] = sim_viz.plot_trajectories(
                             ax=ax,
                             player_name=pname,
-                            trajectories=drawable_list,
+                            trajectories=traj_list,
                             traj_lines=traj_lines[pname],
                             traj_points=traj_points[pname],
-                            colors=colors_list,
+                            colors=traj_colors,
                         )
-                        '''elif isinstance(drawable_list[0], Point):
-                            pass
-                        elif isinstance(drawable_list[0], PolygonSequence):
-                            polygons[pname] = sim_viz.plot_polygons(
-                                ax=ax,
-                                player_name=pname,
-                                polygons=drawable_list,
-                                colors=colors_list,
-                            )'''
-                    elif isinstance(drawable_list[0], Patch):
+                    if patch_list:
                         patches[pname] = sim_viz.plot_patches(
                             ax=ax,
-                            patches=drawable_list,
-                            colors=colors_list,
+                            patches=patch_list,
+                            colors=patch_colors,
                         )
                 except Exception as e:
                     logger.warn(f"Cannot plot extra", extra=log_at_t[pname].extra)

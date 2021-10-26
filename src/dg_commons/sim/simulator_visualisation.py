@@ -15,7 +15,6 @@ from matplotlib.patches import Polygon, Circle, Patch
 
 from dg_commons import PlayerName, X, U
 from dg_commons.planning.trajectory import Trajectory
-from dg_commons.planning.polygon import PolygonSequence
 from dg_commons.sim.models.pedestrian import PedestrianState, PedestrianGeometry
 from dg_commons.sim.models.vehicle import VehicleState, VehicleGeometry
 from dg_commons.sim.models.vehicle_ligths import LightsColors
@@ -56,7 +55,6 @@ class SimRenderer(SimRendererABC):
     def __init__(self, sim_context: SimContext, ax: Axes = None, *args, **kwargs):
         self.sim_context = sim_context
         self.commonroad_renderer: MPRenderer = MPRenderer(ax=ax, *args, **kwargs)
-        #self.current_poly = None
         self.current_patchcollection = None
 
     @contextmanager
@@ -131,28 +129,6 @@ class SimRenderer(SimRendererABC):
             alpha=alpha,
         )
 
-    '''def plot_polygons(
-        self,
-        ax: Axes,
-        player_name: PlayerName,
-        polygons: List[PolygonSequence],
-        colors: Optional[List[Color]] = None,
-        alpha: float = 1,
-    ) -> List[PolyCollection]:
-        if self.current_poly is not None:
-            self.current_poly.remove()
-        # mg = self.sim_context.models[player_name].get_geometry()
-        assert colors is None or len(colors) == len(polygons)
-        # colors = mg.color if colors is None else colors
-        self.current_poly = plot_polygons(
-            ax=ax,
-            polygons=polygons,
-            player_name=player_name,
-            colors=colors,
-            alpha=alpha,
-        )
-        return self.current_poly'''
-
     def plot_patches(
         self,
         ax: Axes,
@@ -174,10 +150,6 @@ class SimRenderer(SimRendererABC):
             alpha=alpha,
         )
         return self.current_patchcollection
-
-
-
-
 
 
 def plot_trajectories(
@@ -211,42 +183,21 @@ def plot_trajectories(
     return traj_lines, traj_points
 
 
-'''def plot_polygons(
-    ax: Axes,
-    alpha: float,
-    polygons: Optional[List[PolygonSequence]] = None,
-    colors: List[Color] = None
-) -> List[PolyCollection]:
-    """"""
-    verts = []
-    for polygon in polygons:
-        for poly in polygon.values:
-            verts.append(np.array(poly.exterior.xy).T)
-
-    alpha = 0.5
-    poly_collection = PolyCollection(verts)
-    poly_collection.set_color(colors)
-    poly_collection.set_animated(True)
-    poly_collection.set_visible(True)
-    poly_collection.set_alpha(alpha)
-    poly_collection.set_linewidth(1)
-    poly_collection.set_zorder(ZOrders.TRAJECTORY)
-    ax.add_collection(poly_collection)
-    return poly_collection'''
-
-
 def plot_patches(
     ax: Axes,
-    alpha: float =1,
+    alpha: float = 1,
     patches: Optional[List[Patch]] = None,
     colors: List[Color] = None
 ) -> List[PatchCollection]:
 
+    alpha = 0.5
     patch = PatchCollection(patches, alpha=alpha)
     patch.set_color(colors)
+    patch.set_zorder(ZOrders.TRAJECTORY)
     ax.add_collection(patch)
 
     return patch
+
 
 def plot_vehicle(
     ax: Axes,
