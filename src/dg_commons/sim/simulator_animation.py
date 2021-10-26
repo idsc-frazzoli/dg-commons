@@ -6,6 +6,7 @@ from dg_commons.planning.trajectory import Trajectory
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.axes import Axes
+from matplotlib.patches import Patch
 from toolz.sandbox import unzip
 
 from dg_commons import Timestamp
@@ -55,6 +56,7 @@ def create_animation(
     states, actions, extra, texts = {}, {}, {}, {}
     traj_lines, traj_points = {}, {}
     polygons = {}
+    patches = {}
     history = {}
     # some parameters
     plot_wheels: bool = True
@@ -69,8 +71,9 @@ def create_animation(
             + list(extra.values())
             + list(traj_lines.values())
             + list(traj_points.values())
-            + list(polygons.values())
+            #+ list(polygons.values())
             + list(texts.values())
+            + list(patches.values())
         )
 
     def init_plot():
@@ -98,13 +101,19 @@ def create_animation(
                             traj_lines[pname], traj_points[pname] = sim_viz.plot_trajectories(
                                 ax=ax, player_name=pname, trajectories=list(trajectories), colors=list(tcolors)
                             )
-                        elif isinstance(drawable_list[0], Point):
-                            pass
-                        elif isinstance(drawable_list[0], PolygonSequence):
-                            polygons[pname] = sim_viz.plot_polygons(
+                            '''elif isinstance(drawable_list[0], Point):
+                                pass
+                            elif isinstance(drawable_list[0], PolygonSequence):
+                                polygons[pname] = sim_viz.plot_polygons(
+                                    ax=ax,
+                                    player_name=pname,
+                                    polygons=drawable_list,
+                                    colors=colors_list,
+                                )'''
+                        elif isinstance(drawable_list[0], Patch):
+                            patches[pname] = sim_viz.plot_patches(
                                 ax=ax,
-                                player_name=pname,
-                                polygons=drawable_list,
+                                patches=drawable_list,
                                 colors=colors_list,
                             )
                     except:
@@ -152,13 +161,19 @@ def create_animation(
                             traj_points=traj_points[pname],
                             colors=colors_list,
                         )
-                    elif isinstance(drawable_list[0], Point):
-                        pass
-                    elif isinstance(drawable_list[0], PolygonSequence):
-                        polygons[pname] = sim_viz.plot_polygons(
+                        '''elif isinstance(drawable_list[0], Point):
+                            pass
+                        elif isinstance(drawable_list[0], PolygonSequence):
+                            polygons[pname] = sim_viz.plot_polygons(
+                                ax=ax,
+                                player_name=pname,
+                                polygons=drawable_list,
+                                colors=colors_list,
+                            )'''
+                    elif isinstance(drawable_list[0], Patch):
+                        patches[pname] = sim_viz.plot_patches(
                             ax=ax,
-                            player_name=pname,
-                            polygons=drawable_list,
+                            patches=drawable_list,
                             colors=colors_list,
                         )
                 except Exception as e:
