@@ -3,33 +3,50 @@ from abc import ABC, abstractmethod
 from typing import Callable, List, Optional, Union
 
 
-class PathApproximationTechnique(ABC):
+class CurveApproximationTechnique(ABC):
+    """
+    The classes inheriting from this class provide tools for approximating a curve based on three points on it and the
+    angles between the curve and the x-axis at the previously mentioned points.
+    The method closest_point_on_path needs furthermore to be numpy-free in order to be used with casadi library.
+    """
+
     parameters: Optional[List[float]]
+    """ Parameters of the model in use """
     n_params: int
+    """ Min # of parameters required """
 
     @property
     @abstractmethod
     def n_params(self) -> int:
+        """ Returns the min number of parameters required """
         pass
 
     @abstractmethod
     def function(self, x_val: float) -> Optional[Callable[[float], float]]:
+        """
+        y = f(x)
+        Given the x value, this function returns the y value.
+        """
         pass
 
     @abstractmethod
     def closest_point_on_path(self, pos: List[float]) -> List[float]:
+        """ Function returning the closest point on the approximated curve to pos """
         pass
 
     @abstractmethod
     def update_from_data(self, pos1, angle1, pos2, angle2, pos3, angle3):
+        """ Function updating the parameters based on the provided data """
         pass
 
     @abstractmethod
     def update_from_parameters(self, params):
+        """ Function updating the parameters """
         pass
 
 
-class LinearPath(PathApproximationTechnique):
+class LinearCurve(CurveApproximationTechnique):
+    """ Class for linear approximations """
 
     @property
     def n_params(self) -> int:
@@ -71,7 +88,8 @@ class LinearPath(PathApproximationTechnique):
         self.parameters: List[float] = [m, b, angle]
 
 
-class QuadraticPath(PathApproximationTechnique):
+class QuadraticCurve(CurveApproximationTechnique):
+    """ Class for quadratic approximations """
 
     @property
     def n_params(self) -> int:
@@ -136,7 +154,8 @@ class QuadraticPath(PathApproximationTechnique):
         self.parameters: List[float] = [a, b, c]
 
 
-class CubicPath(PathApproximationTechnique):
+class CubicCurve(CurveApproximationTechnique):
+    """ Class for cubic approximations """
 
     @property
     def n_params(self) -> int:
@@ -171,7 +190,7 @@ class CubicPath(PathApproximationTechnique):
         self.parameters = [a, b, c, d]
 
 
-PathApproximationTechniques = Union[PathApproximationTechnique, LinearPath, QuadraticPath, CubicPath]
+CurveApproximationTechniques = Union[CurveApproximationTechnique, LinearCurve, QuadraticCurve, CubicCurve]
 
 
 def cuberoot(x):
