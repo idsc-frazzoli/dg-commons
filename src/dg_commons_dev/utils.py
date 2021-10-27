@@ -101,6 +101,10 @@ class BaseParams(ABC, Generic[R]):
     """
 
     condition: Callable[[R], bool] = func
+    """ 
+    This function is a filter for instances of the inheriting dataclasses. 
+    Takes an instance as input argument and returns true if the instance is approved.
+    """
 
     def __post_init__(self):
         lists: List[Any] = []
