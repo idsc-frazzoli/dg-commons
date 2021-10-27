@@ -20,7 +20,13 @@ def valmap(f: Callable[[V], W], d: Mapping[K, V]) -> Dict[K, W]:
 
 @dataclass
 class SemiDef:
-    """ Positive Semi-definite Matrices """
+    """
+    Positive Semi-definite Matrices
+
+    The order induced by eq, lt le is as follows:
+    Semidef1 <= Semidef2 if sort(eig(Semidef1))_i <= sort(eig(Semidef2))_i for all i meaning that the ellipse induced
+    by the quadratic form of Semidef1 is included or equal to the ellipse induced by the quadratic form of Semidef2.
+    """
 
     eig: Optional[List[float]] = None
 
