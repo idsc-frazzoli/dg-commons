@@ -103,14 +103,14 @@ class BaseParams(ABC, Generic[R]):
 
         example = 1DLQRParams()
 
-        for item in example:
+        for item in example.gen():
             print(item.q, item.r)
 
         would print:
-            1, 3
-            1, 3
-            2, 3
-            2, 4
+            1 3
+            1 3
+            2 3
+            2 4
 
         You can furthermore add a condition:
 
@@ -122,11 +122,11 @@ class BaseParams(ABC, Generic[R]):
 
         example.condition = func
 
-        for item in example:
+        for item in example.gen():
             print(item.q, item.r)
 
         would print:
-            2, 4
+            2 4
 
         the only case in our example satisfying ex.r - ex.q == 2
     
