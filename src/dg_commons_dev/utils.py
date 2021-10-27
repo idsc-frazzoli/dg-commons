@@ -5,7 +5,7 @@ import scipy.linalg
 from abc import ABC
 import itertools
 import copy
-import toolz
+import cytoolz
 
 
 K = TypeVar("K")
@@ -15,7 +15,7 @@ W = TypeVar("W")
 
 def valmap(f: Callable[[V], W], d: Mapping[K, V]) -> Dict[K, W]:
     """ Wrapper around `toolz.valmap`. Helps with type inference."""
-    return toolz.valmap(f, d)
+    return cytoolz.valmap(f, d)
 
 
 @dataclass
@@ -36,22 +36,22 @@ class SemiDef:
             self.eig: List[float] = self.eig.tolist()
 
         if defined_eig and defined_mat:
-            mat_eig: List[float] = SemiDef.eig_from_semidef(self.matrix)
+            mat_eig: List[float] = SemiDef.eig_from_matrix(self.matrix)
             mat_eig.sort()
             self.eig.sort()
 
             assert mat_eig == self.eig
         elif defined_eig:
-            self.matrix: np.ndarray = SemiDef.semidef_from_eigenvalues(self.eig)
+            self.matrix: np.ndarray = SemiDef.matrix_from_eigenvalues(self.eig)
         else:
-            self.eig: List[float] = SemiDef.eig_from_semidef(self.matrix)
+            self.eig: List[float] = SemiDef.eig_from_matrix(self.matrix)
 
         assert all(i >= 0 for i in self.eig)
 
         assert np.allclose(self.matrix, self.matrix.T)
 
     @staticmethod
-    def semidef_from_eigenvalues(eigenvalues):
+    def matrix_from_eigenvalues(eigenvalues: List[float]) -> np.ndarray:
         n: int = len(eigenvalues)
         s: np.ndarray = np.diag(eigenvalues)
         q, _ = scipy.linalg.qr(np.random.rand(n, n))
@@ -59,15 +59,13 @@ class SemiDef:
         return semidef
 
     @staticmethod
-    def eig_from_semidef(semidef) -> List[float]:
+    def eig_from_matrix(semidef: np.ndarray) -> List[float]:
         eig = np.linalg.eigvalsh(semidef).tolist()
         eig: List[float] = [round(i, 6) for i in eig]
         return eig
 
     def __eq__(self, other):
-        self.eig.sort()
-        other.eig.sort()
-        return self.eig == other.eig
+        return self.matrix == other.matrix
 
     def __lt__(self, other):
         self.eig.sort()
