@@ -87,13 +87,53 @@ class BaseParams(ABC, Generic[R]):
     """
     Base dataclass every parameter dataclasses are inheriting from.
     Creates the baseline for iterating over different set of parameters.
+
+    Assuming a dataclass inheriting from BaseParameters and with attributes satisfying:
+
+    attribute_i: Union[List[X], X] = [valx1, valx2]
+    attribute_j: Union[List[Y], Y] = [valy1, valy2],
+
+    where a single instance of the dataclass is one with a single value per attribute. This baseclass provides a
+    generator to iterate over all combinations if "condition" is satisfied.
+
+    Example:
+        dataclass ExampleParams(BaseParams):
+            q: Union[List[float], float] = [1, 2]
+            r: Union[List[float], float] = [3, 4]
+
+        example = 1DLQRParams()
+
+        for item in example:
+            print(item.q, item.r)
+
+        would print:
+            1, 3
+            1, 3
+            2, 3
+            2, 4
+
+        You can furthermore add a condition:
+
+        def func(ex: ExampleParams):
+            if ex.r - ex.q == 2:
+                return True
+            else:
+                return False
+
+        example.condition = func
+
+        for item in example:
+            print(item.q, item.r)
+
+        would print:
+            2, 4
+
+        the only case in our example satisfying ex.r - ex.q == 2
+    
+    The whole thing can be nested but does not help if the expected single combination instance is a list.
     """
 
     condition: Callable[[R], bool] = func
-    """ 
-    This function is a filter for instances of the inheriting dataclasses. 
-    Takes an instance as input argument and returns true if the instance is approved.
-    """
 
     def __post_init__(self):
         lists: List[Any] = []
