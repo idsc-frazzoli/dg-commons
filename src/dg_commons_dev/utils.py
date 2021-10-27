@@ -5,17 +5,6 @@ import scipy.linalg
 from abc import ABC
 import itertools
 import copy
-import cytoolz
-
-
-K = TypeVar("K")
-V = TypeVar("V")
-W = TypeVar("W")
-
-
-def valmap(f: Callable[[V], W], d: Mapping[K, V]) -> Dict[K, W]:
-    """ Wrapper around `toolz.valmap`. Helps with type inference."""
-    return cytoolz.valmap(f, d)
 
 
 @dataclass
