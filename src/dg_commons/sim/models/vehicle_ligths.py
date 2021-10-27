@@ -14,6 +14,10 @@ __all__ = [
     "LIGHTS_HAZARD",
     "LightsValues",
     "LightsColors",
+    "lightscmd2phases",
+    "get_phased_lights",
+    "red",
+    "red_more",
 ]
 
 LightsCmd = NewType("LightsCmd", str)

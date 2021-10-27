@@ -9,15 +9,22 @@ from matplotlib.axes import Axes
 from matplotlib.patches import Patch
 from toolz.sandbox import unzip
 
-from dg_commons import Timestamp
-from dg_commons.time import time_function
 from dg_commons import PlayerName, X
+from dg_commons import Timestamp
 from dg_commons.sim import logger
 from dg_commons.sim.models.vehicle import VehicleCommands
-from dg_commons.sim.models.vehicle_ligths import lightscmd2phases, get_phased_lights, red, red_more, LightsColors
+from dg_commons.sim.models.vehicle_ligths import (
+    lightscmd2phases,
+    get_phased_lights,
+    red,
+    red_more,
+    LightsColors,
+    LightsCmd,
+)
 from dg_commons.sim.simulator import SimContext
 from dg_commons.sim.simulator_structures import LogEntry
 from dg_commons.sim.simulator_visualisation import SimRenderer, approximate_bounding_box_players, ZOrders
+from dg_commons.time import time_function
 
 
 @time_function
@@ -79,7 +86,7 @@ def create_animation(
         with sim_viz.plot_arena(ax=ax):
             init_log_entry: Mapping[PlayerName, LogEntry] = sim_context.log.at_interp(time_begin)
             for pname, plog in init_log_entry.items():
-                lights_colors: LightsColors = _get_lights_colors_from_cmds(init_log_entry[pname].commands, t=0)
+                lights_colors: LightsColors = get_lights_colors_from_cmds(init_log_entry[pname].commands, t=0)
                 states[pname], actions[pname] = sim_viz.plot_player(
                     ax=ax,
                     state=plog.state,
@@ -134,7 +141,7 @@ def create_animation(
         logger.info(f"Plotting t = {t}\r")
         log_at_t: Mapping[PlayerName, LogEntry] = sim_context.log.at_interp(t)
         for pname, box_handle in states.items():
-            lights_colors: LightsColors = _get_lights_colors_from_cmds(log_at_t[pname].commands, t=t)
+            lights_colors: LightsColors = get_lights_colors_from_cmds(log_at_t[pname].commands, t=t)
             states[pname], actions[pname] = sim_viz.plot_player(
                 ax=ax,
                 player_name=pname,
@@ -226,17 +233,22 @@ def adjust_axes_limits(ax: Axes, plot_limits: Union[str, Sequence[Sequence[float
     return
 
 
-def _get_lights_colors_from_cmds(cmds: VehicleCommands, t: Timestamp) -> LightsColors:
+def get_lights_colors_from_cmds(cmds: VehicleCommands, t: Timestamp) -> LightsColors:
     """Note that braking lights are out of the agent's control"""
     try:
-        phases = lightscmd2phases[cmds.lights]
-        lights_colors = get_phased_lights(phases, float(t))
-        if cmds.acc < 0:  # and cmds == NO_LIGHTS:
-            if lights_colors.back_left == red:
-                lights_colors.back_left = red_more
-            if lights_colors.back_right == red:
-                lights_colors.back_right = red_more
+        lights_colors = lights_colors_from_lights_cmd(cmds.lights, cmds.acc, t)
     except AttributeError:
         # in case the model commands does not have lights command
         lights_colors = None
+    return lights_colors
+
+
+def lights_colors_from_lights_cmd(lights_cmd: LightsCmd, acc: float, t: Timestamp) -> LightsColors:
+    phases = lightscmd2phases[lights_cmd]
+    lights_colors = get_phased_lights(phases, float(t))
+    if acc < 0:  # and cmds == NO_LIGHTS:
+        if lights_colors.back_left == red:
+            lights_colors.back_left = red_more
+        if lights_colors.back_right == red:
+            lights_colors.back_right = red_more
     return lights_colors

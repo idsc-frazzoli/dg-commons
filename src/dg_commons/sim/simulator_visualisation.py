@@ -13,15 +13,15 @@ from matplotlib.collections import LineCollection, PathCollection, PatchCollecti
 from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon, Circle, Patch
 
+from dg_commons import Color
 from dg_commons import PlayerName, X, U
 from dg_commons.planning.trajectory import Trajectory
 from dg_commons.sim.models.pedestrian import PedestrianState, PedestrianGeometry
 from dg_commons.sim.models.vehicle import VehicleState, VehicleGeometry
 from dg_commons.sim.models.vehicle_ligths import LightsColors
 from dg_commons.sim.simulator import SimContext
-from dg_commons import Color
 
-__all__ = ["SimRenderer"]
+__all__ = ["SimRenderer", "plot_vehicle", "plot_pedestrian", "plot_trajectories"]
 
 
 class SimRendererABC(Generic[X, U], ABC):
