@@ -26,8 +26,12 @@ class DgLaneletControl:
     class ControlSolParams:
         """ Parameters required by the search function to make a guess """
         current_v: float
+        """ Current vehicle velocity """
         dt: float
+        """ Time interval between two subsequent searches """
         safety_factor: float = 1.2
+        """ The look ahead distance gets multiplied by this value in the end. 
+        This makes the search more conservative """
 
     def lane_pose_from_SE2_generic(self, q: SE2value, tol: float = 1e-4,
                                    control_sol: Optional[ControlSolParams] = None) -> DgLanePose:
