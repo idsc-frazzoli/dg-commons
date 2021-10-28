@@ -64,7 +64,7 @@ class ExtendedKalmanKin(Estimator):
         self.belief_meas_noise: np.ndarray = params.belief_meas_var.matrix
         self.p: np.ndarray = params.initial_variance.matrix
 
-        self.dropping = params.dropping_technique(params.dropping_params)
+        self.dropping: DroppingTechniques = params.dropping_technique(params.dropping_params)
 
         self.state: Optional[X] = x0
         self.dt: float = self.params.t_step
