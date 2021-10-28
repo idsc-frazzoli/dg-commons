@@ -6,7 +6,7 @@ Welcome to DG Commons' documentation!
    :caption: Contents:
 
    dg_commons/index
-   sim/index
+   dg_commons/sim/index
 
 
 Indices and tables
