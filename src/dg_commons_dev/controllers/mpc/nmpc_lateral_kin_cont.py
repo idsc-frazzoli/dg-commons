@@ -1,4 +1,4 @@
-from dg_commons_dev.controllers.mpc.lateral_mpc_base import LatMPCKinBase, LatMPCKinBaseParam
+from dg_commons_dev.controllers.mpc.mpc_base_classes.lateral_mpc_base import LatMPCKinBase, LatMPCKinBaseParam
 from casadi import *
 from dataclasses import dataclass
 

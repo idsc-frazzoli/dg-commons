@@ -2,7 +2,7 @@ from typing import Union, List, Dict, Any, Optional, Tuple
 from abc import ABC, abstractmethod
 import do_mpc
 from dataclasses import dataclass
-from dg_commons_dev.controllers.cost_functions import CostFunctions, QuadraticCost, CostParameters, \
+from dg_commons_dev.controllers.utils.cost_functions import CostFunctions, QuadraticCost, CostParameters, \
     MapCostParam, QuadraticParams
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 from dg_commons_dev.utils import BaseParams

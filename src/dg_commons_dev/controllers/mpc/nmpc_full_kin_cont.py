@@ -1,4 +1,4 @@
-from dg_commons_dev.controllers.mpc.full_mpc_base import FullMPCKinBase, FullMPCKinBaseParam
+from dg_commons_dev.controllers.mpc.mpc_base_classes.full_mpc_base import FullMPCKinBase, FullMPCKinBaseParam
 from casadi import *
 from dataclasses import dataclass
 

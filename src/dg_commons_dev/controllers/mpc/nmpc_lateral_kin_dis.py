@@ -1,5 +1,5 @@
-from dg_commons_dev.controllers.discretization_techniques import discretizations
-from dg_commons_dev.controllers.mpc.lateral_mpc_base import LatMPCKinBaseParam, LatMPCKinBase
+from dg_commons_dev.controllers.utils.discretization_techniques import discretizations
+from dg_commons_dev.controllers.mpc.mpc_base_classes.lateral_mpc_base import LatMPCKinBaseParam, LatMPCKinBase
 from typing import List, Union
 from dataclasses import dataclass
 from casadi import *

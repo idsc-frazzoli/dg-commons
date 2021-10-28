@@ -1,8 +1,8 @@
 from typing import Tuple, Callable
 from geometry import translation_angle_from_SE2, SE2_from_translation_angle, T2value
 from dg_commons import X
-from dg_commons_dev.controllers.mpc.mpc_base import MPCKinBAseParam, MPCKinBase
-from dg_commons_dev.controllers.cost_functions import CostFunctions, CostParameters, \
+from dg_commons_dev.controllers.mpc.mpc_base_classes.mpc_base import MPCKinBAseParam, MPCKinBase
+from dg_commons_dev.controllers.utils.cost_functions import CostFunctions, CostParameters, \
     QuadraticCost, QuadraticParams
 from duckietown_world.utils import SE2_apply_R2
 from dg_commons.sim.models.vehicle_utils import VehicleParameters

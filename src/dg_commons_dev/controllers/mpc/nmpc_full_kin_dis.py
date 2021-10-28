@@ -1,5 +1,5 @@
-from dg_commons_dev.controllers.mpc.full_mpc_base import FullMPCKinBaseParam, FullMPCKinBase
-from dg_commons_dev.controllers.discretization_techniques import discretizations
+from dg_commons_dev.controllers.mpc.mpc_base_classes.full_mpc_base import FullMPCKinBaseParam, FullMPCKinBase
+from dg_commons_dev.controllers.utils.discretization_techniques import discretizations
 from typing import List, Union
 from dataclasses import dataclass
 from casadi import *
