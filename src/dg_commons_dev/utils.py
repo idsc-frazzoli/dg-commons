@@ -10,18 +10,24 @@ import copy
 @dataclass
 class SemiDef:
     """
-    Positive Semi-definite Matrices
+    Positive Semi-definite Matrices with Ellipse Inclusion Order
 
     The order induced by eq, lt le is as follows:
     Semidef1 <= Semidef2 if sort(eig(Semidef1))_i <= sort(eig(Semidef2))_i for all i meaning that the ellipse induced
     by the quadratic form of Semidef1 is included or equal to the ellipse induced by the quadratic form of Semidef2.
     """
 
-    eig: Optional[List[float]] = None
+    eig: List[float] = None
+    """ List of eigenvalues """
 
-    matrix: Optional[np.ndarray] = None
+    matrix: np.ndarray = None
+    """ Matrix as n x n numpy array """
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
+        """
+        Checks that either the eigenvalues or the matrix itself is defined.
+        If both of them are passed, it is checked that they match.
+        """
         defined_eig: bool = self.eig is not None
         defined_mat: bool = self.matrix is not None
 
@@ -47,6 +53,11 @@ class SemiDef:
 
     @staticmethod
     def matrix_from_eigenvalues(eigenvalues: List[float]) -> np.ndarray:
+        """
+        Creates a random matrix with the eigenvalues passed as arguments.
+        @param eigenvalues: The desired eigenvalues.
+        @return: The computed matrix.
+        """
         n: int = len(eigenvalues)
         s: np.ndarray = np.diag(eigenvalues)
         q, _ = scipy.linalg.qr(np.random.rand(n, n))
@@ -55,6 +66,11 @@ class SemiDef:
 
     @staticmethod
     def eig_from_matrix(semidef: np.ndarray) -> List[float]:
+        """
+        Computes the eigenvalues
+        @param semidef: nxn matrix.
+        @return: its eigenvalues
+        """
         eig = np.linalg.eigvalsh(semidef).tolist()
         eig: List[float] = [round(i, 6) for i in eig]
         return eig
@@ -136,6 +152,8 @@ class BaseParams(ABC, Generic[R]):
     condition: Callable[[R], bool] = func
 
     def __post_init__(self):
+        """ Type checking and creation of xplets """
+
         lists: List[Any] = []
         single_list: List[bool] = []
         for field in fields(self):
@@ -161,6 +179,11 @@ class BaseParams(ABC, Generic[R]):
             self.n_total: int = len(self.xplets)
 
     def process_mutually_exclusive_values(self, values: Any) -> Any:
+        """
+        Finds all possible values of a single parameter.
+        @param values: the values of interest
+        @return: list of all possible values
+        """
         return_values = []
 
         def process_single_value(inst):
@@ -179,6 +202,11 @@ class BaseParams(ABC, Generic[R]):
 
     @staticmethod
     def is_nested(value: Any) -> bool:
+        """
+        Returns whether the value of interest inherits in turn from BaseParams
+        @param value: The value of interest
+        @return: True if nested, false otherwise
+        """
         try:
             value.get_count()
             return True
@@ -186,6 +214,10 @@ class BaseParams(ABC, Generic[R]):
             return False
 
     def get_count(self) -> int:
+        """
+
+        @return: number of possible combinations
+        """
         return self.n_total
 
     def gen(self) -> R:
