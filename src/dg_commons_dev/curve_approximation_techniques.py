@@ -2,6 +2,8 @@ from casadi import *
 from abc import ABC, abstractmethod
 from typing import Callable, List, Optional, Union
 
+""" closest_point_on_path methods are fully compatible with casadi """
+
 
 class CurveApproximationTechnique(ABC):
     """
@@ -10,7 +12,7 @@ class CurveApproximationTechnique(ABC):
     The method closest_point_on_path needs furthermore to be numpy-free in order to be used with casadi library.
     """
 
-    parameters: Optional[List[float]]
+    parameters: List[float]
     """ Parameters of the model in use """
     n_params: int
     """ Min # of parameters required """
@@ -35,12 +37,12 @@ class CurveApproximationTechnique(ABC):
         pass
 
     @abstractmethod
-    def update_from_data(self, pos1, angle1, pos2, angle2, pos3, angle3):
+    def update_from_data(self, pos1, angle1, pos2, angle2, pos3, angle3) -> None:
         """ Function updating the parameters based on the provided data """
         pass
 
     @abstractmethod
-    def update_from_parameters(self, params):
+    def update_from_parameters(self, params) -> None:
         """ Function updating the parameters """
         pass
 
@@ -52,7 +54,7 @@ class LinearCurve(CurveApproximationTechnique):
     def n_params(self) -> int:
         return 3
 
-    def vertical_line_param(self, pos1, pos2):
+    def vertical_line_param(self, pos1, pos2) -> None:
         s: float = sign(pos2[1] - pos1[1])
         angle: float = pi / 2 * s
         angle: float = 2 * pi + angle if angle < 0 else angle  # returns a value in [0, 2pi]
@@ -61,7 +63,7 @@ class LinearCurve(CurveApproximationTechnique):
 
         self.update_from_parameters(np.array([[m], [b], [angle]]))
 
-    def update_from_data(self, pos1, angle1, pos2, angle2, pos3, angle3):
+    def update_from_data(self, pos1, angle1, pos2, angle2, pos3, angle3) -> None:
         if abs(pos1[0] - pos2[0]) == 0:
             return self.vertical_line_param(pos1, pos2)
 
@@ -82,7 +84,7 @@ class LinearCurve(CurveApproximationTechnique):
         y_val: float = (m ** 2 * pos[1] + m * pos[0] + b) / (1 + m ** 2)
         return [x_val, y_val]
 
-    def update_from_parameters(self, params):
+    def update_from_parameters(self, params) -> None:
         m, b, angle = params[0, 0], params[1, 0], params[2, 0]
 
         self.parameters: List[float] = [m, b, angle]
@@ -95,7 +97,7 @@ class QuadraticCurve(CurveApproximationTechnique):
     def n_params(self) -> int:
         return 3
 
-    def update_from_data(self, pos1, angle1, pos2, angle2, pos3, angle3):
+    def update_from_data(self, pos1, angle1, pos2, angle2, pos3, angle3) -> None:
         # if abs(pos1[0] - pos2[0]) == 0 and abs(pos2[0] - pos3[0]): # TODO: fix
         #     return vertical_line_param(pos1, pos2)
 
@@ -149,7 +151,7 @@ class QuadraticCurve(CurveApproximationTechnique):
 
         return [x_sol, func(x_sol)]
 
-    def update_from_parameters(self, *args):
+    def update_from_parameters(self, *args) -> None:
         a, b, c = args[0], args[1], args[2]
         self.parameters: List[float] = [a, b, c]
 
@@ -169,7 +171,7 @@ class CubicCurve(CurveApproximationTechnique):
         y_val: float = a * x_val ** 3 + b * x_val ** 2 + c * x_val + d
         return y_val
 
-    def update_from_data(self, pos1, angle1, pos2, angle2, pos3, angle3):
+    def update_from_data(self, pos1, angle1, pos2, angle2, pos3, angle3) -> None:
         # if abs(pos1[0] - pos2[0]) == 0 and abs(pos2[0] - pos3[0]): # TODO: fix
         #     return vertical_line_param(pos1, pos2)
 
@@ -185,7 +187,7 @@ class CubicCurve(CurveApproximationTechnique):
 
         self.update_from_parameters(a, b, c, d)
 
-    def update_from_parameters(self, *args):
+    def update_from_parameters(self, *args) -> None:
         a, b, c, d = args[0], args[0], args[0], args[0]
         self.parameters = [a, b, c, d]
 
@@ -193,19 +195,32 @@ class CubicCurve(CurveApproximationTechnique):
 CurveApproximationTechniques = Union[CurveApproximationTechnique, LinearCurve, QuadraticCurve, CubicCurve]
 
 
-def cuberoot(x):
-    s: float = sign(x)
+def cuberoot(x: SX) -> SX:
+    """
+    casadi-compatible cube-root
+    @param x: value
+    @return: cube-root of x
+    """
+    s: SX = sign(x)
     return s * (s * x) ** (1/3)
 
 
-def solve_quadratic(a, b, c, d):
+def solve_quadratic(a: float, b: float, c: float, d: float) -> List[float]:
+    """
+    Casadi-compatible solve ax^3 + bx^2 + cx + d = 0
+    @param a: param1
+    @param b: param2
+    @param c: param3
+    @param d: param4
+    @return: solutions of interest for point closest to a quadratic curve
+    """
     p: float = (3 * a * c - b ** 2) / (3 * (a ** 2))
     q: float = (2 * b ** 3 - 9 * a * b * c + 27 * a ** 2 * d) / (27 * a ** 3)
     summand: float = -b / (3 * a)
     sol: List[SX] = []
 
-    val1: float = -q / 2 - sqrt(q ** 2 / 4 + p ** 3 / 27)
-    val2: float = -q / 2 + sqrt(q ** 2 / 4 + p ** 3 / 27)
+    val1: SX = -q / 2 - sqrt(q ** 2 / 4 + p ** 3 / 27)
+    val2: SX = -q / 2 + sqrt(q ** 2 / 4 + p ** 3 / 27)
 
     sol.append(cuberoot(val1) + cuberoot(val2) + summand)
 
@@ -218,8 +233,13 @@ def solve_quadratic(a, b, c, d):
     return sol
 
 
-def mat_mul(x, y):
-
+def mat_mul(x: List[List[float]], y: List[List[float]]) -> List[List[float]]:
+    """
+    Computes casadi compatible matrix multiplication
+    @param x: n x m matrix
+    @param y: m x k matrix
+    @return n x k matrix
+    """
     result: List[List[float]] = [([0]*len(y[0]))*len(x)]
 
     # iterate through rows of X
@@ -229,3 +249,5 @@ def mat_mul(x, y):
             # iterate through rows of Y
             for k in range(len(y)):
                 result[i][j] += x[i][k] * y[k][j]
+
+    return result
