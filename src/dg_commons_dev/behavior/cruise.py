@@ -58,7 +58,7 @@ class Cruise(Situation[SituationObservations, CruiseDescription]):
         self.params = params
         self.safety_time_braking = safety_time_braking
 
-        self.obs: SituationObservations
+        self.obs: Optional[SituationObservations] = None
         self.cruise_situation: CruiseDescription = CruiseDescription()
         self.polygon_plotter = SituationPolygons(plot=plot)
 

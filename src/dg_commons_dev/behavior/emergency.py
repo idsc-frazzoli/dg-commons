@@ -1,6 +1,6 @@
 from dg_commons_dev.behavior.behavior_types import Situation
 from dataclasses import dataclass
-from typing import Union, List, Tuple, MutableMapping
+from typing import Union, List, Tuple, MutableMapping, Optional
 from dg_commons_dev.behavior.utils import SituationObservations, \
     occupancy_prediction, entry_exit_t, SituationPolygons, Polygon, PlayerObservations
 from dg_commons.sim.models import kmh2ms, extract_vel_from_state
@@ -57,7 +57,7 @@ class Emergency(Situation[SituationObservations, EmergencyDescription]):
         self.safety_time_braking = safety_time_braking
         self.acc_limits: Tuple[float, float] = vehicle_params.acc_limits
 
-        self.obs: SituationObservations
+        self.obs: Optional[SituationObservations] = None
         self.emergency_situation: EmergencyDescription = EmergencyDescription()
         self.polygon_plotter = SituationPolygons(plot=plot)
         self.counter = 0
