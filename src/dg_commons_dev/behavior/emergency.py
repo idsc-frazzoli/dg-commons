@@ -11,14 +11,22 @@ from dg_commons import PlayerName, X
 @dataclass
 class EmergencyDescription:
     """ Important parameters describing an emergency """
+
     is_emergency: bool = False
 
     drac: Optional[Tuple[float, float]] = None
+    """ deceleration to avoid a crash """
     ttc: Optional[float] = None
+    """ time-to-collision """
     pet: Optional[float] = None
+    """ post encroachment time """
 
-    my_player: Optional[PlayerName] = None
-    other_player: Optional[PlayerName] = None
+    """ Reference: https://sumo.dlr.de/docs/Simulation/Output/SSM_Device.html """
+
+    my_player: PlayerName = None
+    """ My PlayerName """
+    other_player: PlayerName = None
+    """ Other Playername """
 
     def __post_init__(self):
         if self.is_emergency:
@@ -36,7 +44,11 @@ class EmergencyParams(SituationParams):
 
 
 class Emergency(Situation[SituationObservations, EmergencyDescription]):
-    """ Emergency situation """
+    """
+    Emergency situation, provides tools for:
+     1) establishing whether an emergency is occurring
+     2) computing important parameters describing the emergency situation
+    """
 
     def __init__(self, params: EmergencyParams, safety_time_braking: float,
                  vehicle_params: VehicleParameters = VehicleParameters.default_car(),
@@ -45,7 +57,7 @@ class Emergency(Situation[SituationObservations, EmergencyDescription]):
         self.safety_time_braking = safety_time_braking
         self.acc_limits: Tuple[float, float] = vehicle_params.acc_limits
 
-        self.obs: Optional[SituationObservations] = None
+        self.obs: SituationObservations
         self.emergency_situation: EmergencyDescription = EmergencyDescription()
         self.polygon_plotter = SituationPolygons(plot=plot)
         self.counter = 0
@@ -59,7 +71,7 @@ class Emergency(Situation[SituationObservations, EmergencyDescription]):
         my_state: X = agents[my_name].state
         my_vel: float = my_state.vx
         my_occupancy: Polygon = agents[my_name].occupancy
-        my_polygon, _ = occupancy_prediction(agents[my_name].state, self.safety_time_braking, my_occupancy)
+        my_polygon, _ = occupancy_prediction(agents[my_name].state, self.safety_time_braking)
 
         for other_name, _ in agents.items():
             if other_name == my_name:
@@ -67,7 +79,7 @@ class Emergency(Situation[SituationObservations, EmergencyDescription]):
             other_state: X = agents[other_name].state
             other_vel: float = extract_vel_from_state(other_state)
             other_occupancy: Polygon = agents[other_name].occupancy
-            other_polygon, _ = occupancy_prediction(agents[other_name].state, self.safety_time_braking, other_occupancy)
+            other_polygon, _ = occupancy_prediction(agents[other_name].state, self.safety_time_braking)
 
             intersection: Polygon = my_polygon.intersection(other_polygon)
             if intersection.is_empty:
@@ -124,8 +136,8 @@ class Emergency(Situation[SituationObservations, EmergencyDescription]):
                         self.emergency_situation.is_emergency = True
                         self.emergency_situation.other_player = other_name
 
-                        other_occupancy, _ = occupancy_prediction(agents[other_name].state, 0.1, other_occupancy)
-                        my_occupancy, _ = occupancy_prediction(agents[my_name].state, 0.1, my_occupancy)
+                        other_occupancy, _ = occupancy_prediction(agents[other_name].state, 0.1)
+                        my_occupancy, _ = occupancy_prediction(agents[my_name].state, 0.1)
                         self.polygon_plotter.plot_polygon(my_occupancy,
                                                           SituationPolygons.PolygonClass(collision=True))
                         self.polygon_plotter.plot_polygon(other_occupancy,

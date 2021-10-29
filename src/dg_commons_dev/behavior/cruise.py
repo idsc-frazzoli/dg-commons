@@ -61,7 +61,7 @@ class Cruise(Situation[SituationObservations, CruiseDescription]):
         my_state: X = agents[my_name].state
         my_vel: float = my_state.vx
         my_occupancy: Polygon = agents[my_name].occupancy
-        my_polygon, _ = occupancy_prediction(agents[my_name].state, self._get_look_ahead_time(my_vel), my_occupancy)
+        my_polygon, _ = occupancy_prediction(agents[my_name].state, self._get_look_ahead_time(my_vel))
         self.polygon_plotter.plot_polygon(my_polygon, SituationPolygons.PolygonClass(dangerous_zone=True))
 
         self.cruise_situation = CruiseDescription(is_cruise=True, is_following=False,
@@ -89,8 +89,8 @@ class Cruise(Situation[SituationObservations, CruiseDescription]):
                 self.cruise_situation = CruiseDescription(True, is_following=True, speed_ref=speed_ref,
                                                           my_player=my_name, other_player=other_name)
 
-                other_occupancy, _ = occupancy_prediction(agents[other_name].state, 0.1, other_occupancy)
-                my_occupancy, _ = occupancy_prediction(agents[my_name].state, 0.1, my_occupancy)
+                other_occupancy, _ = occupancy_prediction(agents[other_name].state, 0.1)
+                my_occupancy, _ = occupancy_prediction(agents[my_name].state, 0.1)
                 self.polygon_plotter.plot_polygon(my_occupancy, SituationPolygons.PolygonClass(following=True))
                 self.polygon_plotter.plot_polygon(other_occupancy, SituationPolygons.PolygonClass(following=True))
                 # This is only for plotting purposes

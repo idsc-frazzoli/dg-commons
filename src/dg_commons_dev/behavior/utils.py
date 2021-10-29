@@ -4,7 +4,7 @@ from dg_commons import PlayerName, SE2Transform
 from dg_commons.sim import PlayerObservations
 from typing import MutableMapping, Dict, Optional, Tuple, Callable, List
 from shapely.geometry import Polygon
-from dg_commons.geo import SE2_apply_T2, T2value
+from dg_commons.geo import SE2_apply_T2, T2value, SE2value
 from dg_commons import X, U
 from scipy.integrate import solve_ivp
 import math
@@ -21,23 +21,38 @@ from shapely import geometry
 
 @dataclass
 class SituationObservations:
+    """ This dataclass formalize the observations each agent is getting to formulate a decision on the situation """
+
     my_name: PlayerName
+    """ My PlayerName """
 
     agents: Optional[MutableMapping[PlayerName, PlayerObservations]] = None
+    """ PlayerObservations for each player """
 
     rel_poses: Optional[Dict[PlayerName, SE2Transform]] = None
+    """ Relative poses between me and the other players """
 
     dt_commands: Optional[float] = None
+    """ Time interval between two subsequent calls """
 
 
-def relative_velocity(my_vel: float, other_vel: float, transform):
-    print(other_vel)
-    other_vel_wrt_other = [float(other_vel), 0.0]
+def relative_velocity(my_vel: float, other_vel: float, transform: SE2value) -> float:
+    """
+    @param my_vel: My absolute velocity
+    @param other_vel: Other Absolute velocity
+    @param transform: Other pose wrt to mine
+    @return: Absolute relative velocity
+    """
+    other_vel_wrt_other = np.array([float(other_vel), 0.0])
     other_vel_wrt_myself = SE2_apply_T2(transform, other_vel_wrt_other)
     return my_vel - other_vel_wrt_myself[0]
 
 
-def l_w_from_rectangle(occupacy: Polygon):
+def l_w_from_rectangle(occupacy: Polygon) -> Tuple[float, float]:
+    """
+    @param occupacy: Polygon describing a rectangle
+    @return: Length and width of the rectangle
+    """
     x, y = occupacy.exterior.xy[0], occupacy.exterior.xy[1]
     length = np.linalg.norm(np.array([x[0], y[0]]) - np.array([x[3], y[3]]))
     width = np.linalg.norm(np.array([x[0], y[0]]) - np.array([x[1], y[1]]))
@@ -45,8 +60,18 @@ def l_w_from_rectangle(occupacy: Polygon):
 
 
 def states_prediction(current_state: X, time_span: float, dt: float,
-                      vg=VehicleGeometry.default_car(), vp: VehicleParameters = VehicleParameters.default_car()):
-
+                      vg=VehicleGeometry.default_car(), vp: VehicleParameters = VehicleParameters.default_car())\
+        -> List[X]:
+    """
+    Kinematic Model x' = f(x, t), x0 = current_state is integrated until time_span and
+    [x(0), x(dt), x(2*dt), ..., x(time_span)] is returned.
+    @param current_state: Current state of the vehicle
+    @param time_span: How far in time it should be looked
+    @param dt: Time interval between two returned states
+    @param vg: Vehicle geometry
+    @param vp: Vehicle Parameters
+    @return: List of states
+    """
     model = VehicleModel(current_state, vg, vp)
     commands = VehicleCommands(acc=0.0, ddelta=0.0)
     n, rest = int(time_span/dt), time_span % dt
@@ -62,10 +87,25 @@ def states_prediction(current_state: X, time_span: float, dt: float,
 
 
 SAFETY_FACTOR = 0.5
+""" 
+This is an enlargement factor. When the vehicle area is projected ahead of time to evaluate the collision risk, 
+not just its area lenght * width is considered but (length + 2 * SAFETY_FACTOR) * (width + SAFETY_FACTOR)."""
 
 
-def occupancy_prediction(current_state: X, time_span: float, occupacy: Polygon,
-                         vg=VehicleGeometry.default_car(), vp: VehicleParameters = VehicleParameters.default_car()):
+def occupancy_prediction(current_state: X, time_span: float,
+                         vg=VehicleGeometry.default_car(), vp: VehicleParameters = VehicleParameters.default_car()) \
+        -> Polygon:
+    """
+    Computes the polygon describing the integral area occupied by a car starting at current_state and proceeding with
+    constant steering angle and velocity up until time_span.
+    The underlying vehicle model is the kinematic bicycle model
+
+    @param current_state: Current vehicle state
+    @param time_span: How far in time it should be looked
+    @param vg: Vehicle Geometry
+    @param vp: Vehicle Parameters
+    @return: Integral Area
+    """
     dt = 0.2
     l_polygon, r_polygon = [], []
 
@@ -98,7 +138,23 @@ def occupancy_prediction(current_state: X, time_span: float, occupacy: Polygon,
 
 
 def entry_exit_t(intersection: Polygon, current_state, occupacy: Polygon, safety_t, vel,
-                 vg=VehicleGeometry.default_car(), vp=VehicleParameters.default_car(), tol=0.01):
+                 vg=VehicleGeometry.default_car(), vp=VehicleParameters.default_car(), tol=0.01) \
+        -> Tuple[float, float]:
+    """
+    Computes with a tolerance of tol when a certain vehicle enters and exites intersection based on predictions
+    formulated with its current_state and assuming the steering angle and the velocity to be constant.
+    The underlying vehicle model is the kinematic bicycle model.
+
+    @param intersection: Query area
+    @param current_state: Current vehicle state
+    @param occupacy: Vehicle occupancy
+    @param safety_t: Safety time braking
+    @param vel: Vehicle velocity
+    @param vg: Vehicle Geometry
+    @param vp: Vehicle Parameters
+    @param tol: Search tolerance [s]
+    @return: Prediction time vehicle enters and exites the query area
+    """
     stopped_inside: bool = vel <= 10e-6
     going: bool = vel > 10e-6
     assert going or stopped_inside
@@ -153,8 +209,11 @@ def entry_exit_t(intersection: Polygon, current_state, occupacy: Polygon, safety
 
 
 class SituationPolygons:
+    """ This class is used to generate the data required to visualize situations """
+
     @dataclass
     class PolygonClass:
+        """ This class describes help visualizing polygons through their nature """
         collision: bool = False
         following: bool = False
         dangerous_zone: bool = False
@@ -183,14 +242,24 @@ class SituationPolygons:
         self.current_frame: List[Polygon] = []
         self.current_class: List[SituationPolygons.PolygonClass] = []
 
-    def plot_polygon(self, p: Polygon, polygon_class: PolygonClass):
+    def plot_polygon(self, p: Polygon, polygon_class: PolygonClass) -> None:
+        """
+        Plot polygon p in the current frame with the characteristics provided by its class.
+        @param p: Polygon to plot
+        @param polygon_class: Class of p
+        @return: None
+        """
         if p.is_empty or not self.plot:
             return
 
         self.current_frame.append(p)
         self.current_class.append(polygon_class)
 
-    def next_frame(self):
+    def next_frame(self) -> Tuple[List[Polygon], List[PolygonClass]]:
+        """
+        Changes frame and returns the data of the current one.
+        @return: Polygons and polygon classes of this frame
+        """
         current_frame = self.current_frame
         current_classes = self.current_class
         assert len(current_classes) == len(current_frame)
@@ -199,6 +268,7 @@ class SituationPolygons:
         return current_frame, current_classes
 
 
+# TODO: Remove
 '''class PolygonPlotter:
     @dataclass
     class PolygonClass:

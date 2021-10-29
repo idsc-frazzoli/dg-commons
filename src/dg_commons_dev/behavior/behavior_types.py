@@ -29,12 +29,12 @@ class Situation(ABC, Generic[Obs, SParams]):
 
     @abstractmethod
     def is_true(self) -> bool:
-        """ Returns whether this particular situation is occurring """
+        """ Returns whether the considered situation is occurring """
         pass
 
     @abstractmethod
     def infos(self) -> SParams:
-        """ Returns important parameters describing this situation """
+        """ Returns important parameters describing the considered """
         pass
 
 
