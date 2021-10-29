@@ -6,12 +6,13 @@ from dg_commons import PlayerName
 from dg_commons.utils_toolz import valmap
 from dg_commons.sim.models import extract_pose_from_state
 from dg_commons.sim.simulator_structures import PlayerObservations
-from dg_commons_dev.behavior.behavior_types import Behavior, BehaviorParams, Situation
+from dg_commons_dev.behavior.behavior_types import Behavior, Situation
 from dg_commons_dev.behavior.emergency import Emergency, EmergencyParams
 from dg_commons_dev.behavior.yield_to import Yield, YieldParams
 from dg_commons_dev.behavior.cruise import CruiseParams, Cruise
 from dg_commons_dev.behavior.utils import SituationObservations
 import copy
+from dg_commons_dev.utils import BaseParams
 
 
 @dataclass
@@ -50,7 +51,7 @@ class BehaviorSituation:
 
 
 @dataclass
-class SpeedBehaviorParam(BehaviorParams):
+class SpeedBehaviorParam(BaseParams):
     safety_time_braking: Union[List[float], float] = 1.5
     """Evaluates safety distance from vehicle in front based on distance covered in this delta time"""
     emergency: type(Emergency) = Emergency
