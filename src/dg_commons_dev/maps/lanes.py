@@ -15,8 +15,10 @@ from dg_commons.maps.lanes import DgLanelet, DgLanePose
 
 
 class DgLaneletControl:
-    """ This class extends the search of the closest position on the lane from DgLanelet for vehicle
-    lateral control purposes """
+    """
+    This class extends the DgLanelet search of the closest point on a path to a position for vehicle lateral and
+    longitudinal control purposes
+    """
 
     def __init__(self, path: DgLanelet):
         self.path = path
@@ -25,6 +27,7 @@ class DgLaneletControl:
     @dataclass
     class ControlSolParams:
         """ Parameters required by the search function to make a guess """
+
         current_v: float
         """ Current vehicle velocity """
         dt: float
@@ -35,7 +38,14 @@ class DgLaneletControl:
 
     def lane_pose_from_SE2_generic(self, q: SE2value, tol: float = 1e-4,
                                    control_sol: Optional[ControlSolParams] = None) -> DgLanePose:
-        """ This function finds the DgLanePose based on car current pose q """
+        """
+        This function finds the DgLanePose based on car current pose q
+        @param q: Current car pose
+        @param tol: Tolerance in the search
+        @param control_sol: The parameters for formulating a guess
+        @return: Current lane pos
+        """
+
         p, _, _ = translation_angle_scale_from_E2(q)
 
         beta, q0 = self.find_along_lane_closest_point(p, tol=tol, control_sol=control_sol)
@@ -51,7 +61,11 @@ class DgLaneletControl:
                                       control_sol: Optional[ControlSolParams] = None) -> Tuple[float, SE2value]:
         """
         This function finds beta and closest pose on the lane based on car current pose p.
-        If no ControlSolParams are passed, the DgLanelet version is used.
+        If no ControlSolParams are passed, the DgLanelet search version is used.
+        @param p: Current car pose
+        @param tol: Tolerance in the search
+        @param control_sol: The parameters for formulating a guess
+        @return: current beta and current closest pose on path
         """
         def get_delta(beta):
             q0 = self.path.center_point(beta)
