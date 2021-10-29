@@ -16,12 +16,12 @@ class CruiseDescription:
     is_following: bool = False
     """ Whether I am following another vehicle """
 
-    speed_ref: Optional[float] = None
+    speed_ref: float = None
     """ Reference speed """
 
-    my_player: Optional[PlayerName] = None
+    my_player: PlayerName = None
     """ My PlayerName """
-    other_player: Optional[PlayerName] = None
+    other_player: PlayerName = None
     """ Other Playername """
 
     def __post_init__(self):
@@ -54,12 +54,12 @@ class Cruise(Situation[SituationObservations, CruiseDescription]):
      2) computing important parameters describing the cruise situation
     """
 
-    def __init__(self, params: CruiseParams, safety_time_braking, plot=False):
+    def __init__(self, params: CruiseParams, safety_time_braking: float, plot=False):
         self.params = params
         self.safety_time_braking = safety_time_braking
 
-        self.obs: Optional[SituationObservations] = None
-        self.cruise_situation: Optional[CruiseDescription] = None
+        self.obs: SituationObservations
+        self.cruise_situation: CruiseDescription = CruiseDescription()
         self.polygon_plotter = SituationPolygons(plot=plot)
 
     def update_observations(self, new_obs: SituationObservations)\
