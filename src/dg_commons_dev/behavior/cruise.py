@@ -12,7 +12,7 @@ from dg_commons_dev.utils import BaseParams
 class CruiseDescription:
     """ Important parameters describing a cruise situation """
 
-    is_cruise: bool = True
+    is_cruise: bool = False
     is_following: bool = False
     """ Whether I am following another vehicle """
 
