@@ -1,10 +1,11 @@
-from dg_commons_dev.behavior.behavior_types import Situation, SituationParams
+from dg_commons_dev.behavior.behavior_types import Situation
 from dataclasses import dataclass
 from typing import Optional, Union, List
 import numpy as np
 from dg_commons_dev.behavior.utils import SituationObservations
 from dg_commons.sim.models import kmh2ms, extract_vel_from_state
 from math import pi
+from dg_commons_dev.utils import BaseParams
 
 
 # TODO:  there is still a lot to do here
@@ -23,7 +24,7 @@ class YieldDescription:
 
 
 @dataclass
-class YieldParams(SituationParams):
+class YieldParams(BaseParams):
     min_vel: Union[List[float], float] = kmh2ms(5)
     """Emergency only to vehicles that are at least moving at.."""
     min_dist: Union[List[float], float] = 7

@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import TypeVar, Generic
-from dataclasses import dataclass
-from dg_commons_dev.utils import BaseParams
 
 
 Obs = TypeVar('Obs')
@@ -10,19 +8,13 @@ S = TypeVar("S")
 SParams = TypeVar("SParams")
 
 
-@dataclass
-class SituationParams(BaseParams):
-    """ The situation parameters parametrize if/how a situation occurs """
-    pass
-
-
 class Situation(ABC, Generic[Obs, SParams]):
     """ A situation is a set of circumstances in which one finds oneself """
 
     @abstractmethod
     def update_observations(self, new_obs: Obs):
         """
-        Update the information about the circumstances, choose whether this particular situation is occurring and
+        Update the information about the circumstances, choose whether the considered situation is occurring and
         computes some key parameters
         """
         pass
@@ -34,14 +26,8 @@ class Situation(ABC, Generic[Obs, SParams]):
 
     @abstractmethod
     def infos(self) -> SParams:
-        """ Returns important parameters describing the considered """
+        """ Returns important parameters describing the considered situation """
         pass
-
-
-@dataclass
-class BehaviorParams(BaseParams):
-    """ The behavior parameters parametrize the behavior """
-    pass
 
 
 class Behavior(ABC, Generic[Obs, S]):

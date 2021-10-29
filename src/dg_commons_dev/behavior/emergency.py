@@ -1,26 +1,26 @@
-from dg_commons_dev.behavior.behavior_types import Situation, SituationParams
+from dg_commons_dev.behavior.behavior_types import Situation
 from dataclasses import dataclass
-from typing import Optional, Union, List, Tuple, MutableMapping
+from typing import Union, List, Tuple, MutableMapping
 from dg_commons_dev.behavior.utils import SituationObservations, \
     occupancy_prediction, entry_exit_t, SituationPolygons, Polygon, PlayerObservations
 from dg_commons.sim.models import kmh2ms, extract_vel_from_state
 from dg_commons.sim.models.vehicle import VehicleParameters
 from dg_commons import PlayerName, X
+from dg_commons_dev.utils import BaseParams
 
 
 @dataclass
 class EmergencyDescription:
-    """ Important parameters describing an emergency """
+    """ Parameters describing an emergency """
 
     is_emergency: bool = False
 
-    drac: Optional[Tuple[float, float]] = None
+    drac: Tuple[float, float] = None
     """ deceleration to avoid a crash """
-    ttc: Optional[float] = None
+    ttc: float = None
     """ time-to-collision """
-    pet: Optional[float] = None
+    pet: float = None
     """ post encroachment time """
-
     """ Reference: https://sumo.dlr.de/docs/Simulation/Output/SSM_Device.html """
 
     my_player: PlayerName = None
@@ -36,7 +36,7 @@ class EmergencyDescription:
 
 
 @dataclass
-class EmergencyParams(SituationParams):
+class EmergencyParams(BaseParams):
     min_dist: Union[List[float], float] = 7
     """Evaluate emergency only for vehicles within x [m]"""
     min_vel: Union[List[float], float] = kmh2ms(5)
@@ -64,6 +64,13 @@ class Emergency(Situation[SituationObservations, EmergencyDescription]):
 
     def update_observations(self, new_obs: SituationObservations) \
             -> Tuple[List[Polygon], List[SituationPolygons.PolygonClass]]:
+        """
+        Use new SituationObservations to update the situation:
+        1) Establish whether an emergency is occurring
+        2) Compute its parameters
+        @param new_obs: Current SituationObervations
+        @return: Polygons and polygon classes for plotting purposes
+        """
         self.obs = new_obs
         my_name: PlayerName = new_obs.my_name
         agents: MutableMapping[PlayerName, PlayerObservations] = new_obs.agents
@@ -147,17 +154,28 @@ class Emergency(Situation[SituationObservations, EmergencyDescription]):
         # This is for plotting purposes, can be ignored
 
     def _get_min_safety_dist(self, vel: float) -> float:
-        """The distance covered in x [s] travelling at vel"""
+        """
+        The distance covered in x [s] travelling at vel
+        @param vel: Current velocity
+        @return: Distance covered
+        """
         return vel * self.safety_time_braking
 
     def is_true(self) -> bool:
+        """
+        Whether an emergency situation is occurring
+        @return: True if it is occurring, False otherwise
+        """
         assert self.obs is not None
         return self.emergency_situation.is_emergency
 
     def infos(self) -> EmergencyDescription:
+        """
+        @return: Emergency Description
+        """
         assert self.obs is not None
         return self.emergency_situation
 
-    def simulation_ended(self):
+    def simulation_ended(self) -> None:
         """ Called when the simulation ends """
         pass

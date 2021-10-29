@@ -16,17 +16,29 @@ import copy
 
 @dataclass
 class BehaviorSituation:
-    situation: Optional[Situation] = None
+    """ Data structure to communicate the most prominent situation and its description """
+
+    situation: Situation = None
+    """ Current Situation """
 
     def is_emergency(self) -> bool:
+        """
+        @return: is the most prominent situation an emergency situation?
+        """
         assert self._is_situation_type()
         return isinstance(self.situation, Emergency)
 
     def is_yield(self) -> bool:
+        """
+        @return: is the most prominent situation a yield situation?
+        """
         assert self._is_situation_type()
         return isinstance(self.situation, Yield)
 
     def is_cruise(self) -> bool:
+        """
+        @return: is the most prominent situation a cruise situation?
+        """
         assert self._is_situation_type()
         return isinstance(self.situation, Cruise)
 
@@ -60,7 +72,7 @@ class SpeedBehavior(Behavior[MutableMapping[PlayerName, PlayerObservations], Tup
     def __init__(self, params: SpeedBehaviorParam = SpeedBehaviorParam(), my_name: Optional[PlayerName] = None):
         self.params: SpeedBehaviorParam = copy.deepcopy(params)
         self.my_name: PlayerName = my_name
-        self.agents: Optional[MutableMapping[PlayerName, PlayerObservations]] = None
+        self.agents: MutableMapping[PlayerName, PlayerObservations]
         self.speed_ref: float = 0
 
         self.yield_to = self.params.yield_to(self.params.yield_params, self.params.safety_time_braking)

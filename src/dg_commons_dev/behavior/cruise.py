@@ -1,22 +1,28 @@
-from dg_commons_dev.behavior.behavior_types import Situation, SituationParams
+from dg_commons_dev.behavior.behavior_types import Situation
 from dataclasses import dataclass
 from typing import Optional, Union, List, Tuple, MutableMapping
 from dg_commons.sim.models import kmh2ms, extract_vel_from_state
 from dg_commons_dev.behavior.utils import SituationObservations, \
     occupancy_prediction, SituationPolygons, Polygon, PlayerObservations
 from dg_commons import PlayerName, X
+from dg_commons_dev.utils import BaseParams
 
 
 @dataclass
 class CruiseDescription:
     """ Important parameters describing a cruise situation """
+
     is_cruise: bool = True
     is_following: bool = False
+    """ Whether I am following another vehicle """
 
     speed_ref: Optional[float] = None
+    """ Reference speed """
 
     my_player: Optional[PlayerName] = None
+    """ My PlayerName """
     other_player: Optional[PlayerName] = None
+    """ Other Playername """
 
     def __post_init__(self):
         if self.is_cruise:
@@ -27,7 +33,7 @@ class CruiseDescription:
 
 
 @dataclass
-class CruiseParams(SituationParams):
+class CruiseParams(BaseParams):
     nominal_speed: Union[List[float], float] = kmh2ms(40)
     """Nominal desired speed"""
 
@@ -42,7 +48,11 @@ class CruiseParams(SituationParams):
 
 
 class Cruise(Situation[SituationObservations, CruiseDescription]):
-    """ Cruise situation """
+    """
+    Cruise situation, provides tools for:
+     1) establishing whether a cruise situation is occurring
+     2) computing important parameters describing the cruise situation
+    """
 
     def __init__(self, params: CruiseParams, safety_time_braking, plot=False):
         self.params = params
@@ -54,6 +64,13 @@ class Cruise(Situation[SituationObservations, CruiseDescription]):
 
     def update_observations(self, new_obs: SituationObservations)\
             -> Tuple[List[Polygon], List[SituationPolygons.PolygonClass]]:
+        """
+        Use new SituationObservations to update the situation:
+        1) Establish whether a cruise situation is occurring
+        2) Compute its parameters
+        @param new_obs: Current SituationObervations
+        @return: Polygons and polygon classes for plotting purposes
+        """
         self.obs = new_obs
         my_name: PlayerName = new_obs.my_name
         agents: MutableMapping[PlayerName, PlayerObservations] = new_obs.agents
@@ -98,22 +115,39 @@ class Cruise(Situation[SituationObservations, CruiseDescription]):
         return self.polygon_plotter.next_frame()
 
     def _get_min_safety_dist(self, vel: float) -> float:
-        """The distance covered in x [s] travelling at vel"""
+        """
+        The minimal distance to keep between two vehicles.
+        @param vel: Current velocity
+        @return: Distance
+        """
         return vel * self.safety_time_braking * 2 + self.params.min_safety_distance
 
     def _get_look_ahead_time(self, vel: float) -> float:
+        """
+        How far in the future should I look
+        @param vel: Current velocity
+        @return: Time
+        """
         if vel == 0:
             return self.safety_time_braking * 2
         else:
             return (self._get_min_safety_dist(vel) + 5) / vel
 
     def is_true(self) -> bool:
+        """
+        Whether a cruise situation is occurring
+        @return: True if it is occurring, False otherwise
+        """
         assert self.obs is not None
         return self.cruise_situation.is_cruise
 
     def infos(self) -> CruiseDescription:
+        """
+        @return: Cruise Description
+        """
         assert self.obs is not None
         return self.cruise_situation
 
-    def simulation_ended(self):
+    def simulation_ended(self) -> None :
+        """ Called when the simulation ends """
         pass

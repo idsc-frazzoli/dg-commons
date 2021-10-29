@@ -1,5 +1,5 @@
 import copy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from dg_commons import PlayerName, SE2Transform
 from dg_commons.sim import PlayerObservations
 from typing import MutableMapping, Dict, Optional, Tuple, Callable, List
@@ -26,14 +26,14 @@ class SituationObservations:
     my_name: PlayerName
     """ My PlayerName """
 
-    agents: Optional[MutableMapping[PlayerName, PlayerObservations]] = None
+    dt_commands: float
+    """ Time interval between two subsequent calls """
+
+    agents: MutableMapping[PlayerName, PlayerObservations] = field(default_factory=dict)
     """ PlayerObservations for each player """
 
-    rel_poses: Optional[Dict[PlayerName, SE2Transform]] = None
+    rel_poses: Dict[PlayerName, SE2Transform] = field(default_factory=dict)
     """ Relative poses between me and the other players """
-
-    dt_commands: Optional[float] = None
-    """ Time interval between two subsequent calls """
 
 
 def relative_velocity(my_vel: float, other_vel: float, transform: SE2value) -> float:
