@@ -14,6 +14,8 @@ from dg_commons import X
 from dataclasses import dataclass
 from dg_commons_dev.utils import BaseParams
 
+# TODO: Create Generic Extended Kalman filter with parametrized state space - and measurement model.
+
 
 @dataclass
 class ExtendedKalmanKinParam(BaseParams):
