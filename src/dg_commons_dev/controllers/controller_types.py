@@ -4,7 +4,6 @@ from dg_commons_dev.maps.lanes import DgLaneletControl
 from abc import ABC, abstractmethod
 from dg_commons import X
 from dataclasses import dataclass
-from dg_commons_dev.utils import BaseParams
 from dg_commons_dev.controllers.interface import Controller, Obs, U
 
 
@@ -16,12 +15,6 @@ class Reference:
     """ Reference longitudinal speed """
     path: DgLanelet
     """ Path to follow """
-
-
-@dataclass
-class LateralControllerParam(BaseParams):
-    """ The Lateral controller parameters parametrize the lateral control process """
-    pass
 
 
 class LateralController(Controller[Reference, X, float]):
@@ -55,12 +48,6 @@ class LateralController(Controller[Reference, X, float]):
         return self._get_steering(t)
 
 
-@dataclass
-class LongitudinalControllerParam(BaseParams):
-    """ The longitudinal controller parameters parametrize the longitudinal control process """
-    pass
-
-
 class LongitudinalController(Controller[Reference, X, float]):
     """ Abstract class of a longitudinal controller """
     def __init__(self):
@@ -87,12 +74,6 @@ class LongitudinalController(Controller[Reference, X, float]):
         return self._get_acceleration(t)
 
 
-@dataclass
-class LatAndLonControllerParam(BaseParams):
-    """ The Lateral and longitudinal controller parameters parametrize the lateral and longitudinal control process """
-    pass
-
-
 class LatAndLonController(LateralController, LongitudinalController,
                           Controller[Reference, X, Tuple[float, float]], ABC):
     """ Abstract class of a lateral and longitudinal controller """
@@ -110,12 +91,6 @@ class LatAndLonController(LateralController, LongitudinalController,
         steer: float = self._get_steering(t)
         acc: float = self._get_acceleration(t)
         return steer, acc
-
-
-@dataclass
-class SteeringControllerParam(BaseParams):
-    """ The steering controller parameters parametrize the steering control process """
-    pass
 
 
 class SteeringController(Controller[float, float, float]):

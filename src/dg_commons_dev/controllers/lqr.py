@@ -10,10 +10,11 @@ from geometry import SE2_from_translation_angle,  translation_angle_from_SE2, tr
 from dg_commons_dev.utils import SemiDef
 import math
 from dg_commons_dev.curve_approximation_techniques import LinearCurve, CurveApproximationTechniques
-from dg_commons_dev.controllers.controller_types import LateralController, LateralControllerParam
+from dg_commons_dev.controllers.controller_types import LateralController
 from typing import Union
 from dataclasses import dataclass
 from dg_commons import X
+from dg_commons_dev.utils import BaseParams
 
 
 __all__ = ["LQR", "LQRParam"]
@@ -34,7 +35,7 @@ def lqr(a, b, q, r):
 
 
 @dataclass
-class LQRParam(LateralControllerParam):
+class LQRParam(BaseParams):
     r: Union[List[SemiDef], SemiDef] = SemiDef([1])
     """ Input Multiplier """
     q: Union[List[SemiDef], SemiDef] = SemiDef(matrix=np.identity(3))

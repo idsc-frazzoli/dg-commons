@@ -7,14 +7,15 @@ from geometry import SE2value, translation_angle_from_SE2, SE2_from_translation_
 from duckietown_world.utils import SE2_apply_R2
 from dg_commons.geo import norm_between_SE2value
 from dg_commons import X
-from dg_commons_dev.controllers.controller_types import LateralController, LateralControllerParam
+from dg_commons_dev.controllers.controller_types import LateralController
+from dg_commons_dev.utils import BaseParams
 
 
 __all__ = ["PurePursuit", "PurePursuitParam"]
 
 
 @dataclass
-class PurePursuitParam(LateralControllerParam):
+class PurePursuitParam(BaseParams):
     look_ahead_minmax: Union[List[Tuple[float, float]], Tuple[float, float]] = (3, 30)
     """min and max lookahead"""
     k_lookahead: Union[List[float], float] = 1.8

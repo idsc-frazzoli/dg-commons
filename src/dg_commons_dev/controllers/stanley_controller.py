@@ -10,14 +10,15 @@ import math
 from duckietown_world import relative_pose
 from dg_commons_dev.curve_approximation_techniques import LinearCurve, CurveApproximationTechniques
 from typing import Union, List
-from dg_commons_dev.controllers.controller_types import LateralController, LateralControllerParam
+from dg_commons_dev.controllers.controller_types import LateralController
+from dg_commons_dev.utils import BaseParams
 
 
 __all__ = ["Stanley", "StanleyParam"]
 
 
 @dataclass
-class StanleyParam(LateralControllerParam):
+class StanleyParam(BaseParams):
     stanley_gain: Union[List[float], float] = 1
     """ Tunable gain """
     t_step: Union[List[float], float] = 0.1
