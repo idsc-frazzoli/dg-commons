@@ -59,16 +59,19 @@ class MPCKinBase(Controller, ABC):
         self.target_speed: SX = self.model.set_variable(var_type='_tvp', var_name='target_speed', shape=(1, 1))
         self.speed_ref: float = 0
 
-        self.mpc: Optional[do_mpc.controller.MPC]
-        self.tvp_temp: Optional[SX] = None
+        self.mpc: do_mpc.controller.MPC = do_mpc.controller.SX_nan()
+        self.tvp_temp: SX = do_mpc.controller.SX_nan()
 
     def __post_init__(self):
-        """ Ensures that the mpc is set up in the __init__ method """
-        assert self.mpc is not None
-
-    def set_up_mpc(self):
         """
-        This method sets up the mpc and needs to be called in the inheriting __init__ method after the model setup """
+        Ensures that the mpc is set up in the __init__ method
+        """
+        assert self.mpc is not do_mpc.controller.SX_nan()
+
+    def set_up_mpc(self)->None:
+        """
+        This method sets up the mpc and needs to be called in the inheriting __init__ method after the model setup
+        """
 
         self.mpc = do_mpc.controller.MPC(self.model)
         self.mpc.set_param(**self.setup_mpc)
@@ -94,8 +97,12 @@ class MPCKinBase(Controller, ABC):
         self.mpc.setup()
 
     def func(self, t_now) -> SX:
-        """ Sets up the time varying parameter speed ref. Might be overwritten
-        in case of additional time varying parameters """
+        """
+        Sets up the time varying parameter speed ref. Might be overwritten
+        in case of additional time varying parameters
+        @param t_now: current time instant
+        @return: time varying parameters
+        """
         self.tvp_temp['_tvp', :] = np.array([self.speed_ref])
         return self.tvp_temp
 
