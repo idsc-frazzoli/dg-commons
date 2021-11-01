@@ -4,11 +4,12 @@ from typing import Union, List, Dict
 import scipy
 import numpy as np
 from dg_commons_dev.state_estimators.utils import PDistribution, PDistributionParams, ExponentialParams, Exponential
-from dg_commons_dev.state_estimators.estimator_types import DroppingTechniques, DroppingTechniquesParams
+from dg_commons_dev.state_estimators.estimator_types import DroppingTechniques
+from dg_commons_dev.utils import BaseParams
 
 
 @dataclass
-class LGBParam(DroppingTechniquesParams):
+class LGBParam(BaseParams):
 
     failure_p: Union[List[float], float] = 0
     """ Failure Probability """
@@ -112,7 +113,7 @@ class LGM(DroppingTechniques):
 
 
 @dataclass
-class LGSMParam(DroppingTechniquesParams):
+class LGSMParam(BaseParams):
     failure_distribution: Union[List[type(PDistribution)], type(PDistribution)] = Exponential
     failure_params: Union[List[PDistributionParams], PDistributionParams] = ExponentialParams()
 
@@ -177,7 +178,7 @@ class LGSM(DroppingTechniques):
         return self.val <= val
 
 
-DroppingMaps: Dict[type(DroppingTechniques), type(DroppingTechniquesParams)] = {
+DroppingMaps: Dict[type(DroppingTechniques), type(BaseParams)] = {
     LGB: LGBParam,
     LGM: LGMParam,
     LGSM: LGSMParam

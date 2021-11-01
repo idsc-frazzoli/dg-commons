@@ -5,17 +5,18 @@ from dg_commons.sim.models.vehicle_utils import steering_constraint, VehiclePara
 from dg_commons.sim.models.model_utils import acceleration_constraint
 from typing import Optional, Union
 from dg_commons_dev.utils import SemiDef
-from dg_commons_dev.state_estimators.dropping_trechniques import DroppingTechniques, DroppingTechniquesParams, \
+from dg_commons_dev.state_estimators.dropping_trechniques import DroppingTechniques, \
     LGB, LGBParam, DroppingMaps
 from typing import List
-from dg_commons_dev.state_estimators.estimator_types import EstimatorParams, Estimator
+from dg_commons_dev.state_estimators.estimator_types import Estimator
 import math
 from dg_commons import X
 from dataclasses import dataclass
+from dg_commons_dev.utils import BaseParams
 
 
 @dataclass
-class ExtendedKalmanKinParam(EstimatorParams):
+class ExtendedKalmanKinParam(BaseParams):
     n_states: Union[List[int], int] = VehicleState.get_n_states()
     """ Number of states """
     n_commands: Union[List[int], int] = VehicleCommands.get_n_commands()
@@ -32,7 +33,7 @@ class ExtendedKalmanKinParam(EstimatorParams):
     """ Initial covariance matrix """
     dropping_technique: Union[List[type(DroppingTechniques)], type(DroppingTechniques)] = LGB
     """ Dropping Technique """
-    dropping_params: Union[List[DroppingTechniquesParams], DroppingTechniquesParams] = LGBParam()
+    dropping_params: Union[List[BaseParams], BaseParams] = LGBParam()
     """ Dropping parameters """
     geometry_params: Union[List[VehicleGeometry], VehicleGeometry] = VehicleGeometry.default_car()
     """ Vehicle Geometry """

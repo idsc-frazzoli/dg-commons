@@ -1,13 +1,5 @@
 from abc import ABC, abstractmethod
 from dg_commons import U, X
-from dataclasses import dataclass
-from dg_commons_dev.utils import BaseParams
-
-
-@dataclass
-class EstimatorParams(BaseParams):
-    """ The estimator parameters parametrize the estimation process """
-    pass
 
 
 class Estimator(ABC):
@@ -22,12 +14,6 @@ class Estimator(ABC):
     def update_measurement(self, mk: X):
         """ The estimate gets updated based on a measurement model and a measurement """
         pass
-
-
-@dataclass
-class DroppingTechniquesParams(BaseParams):
-    """ The dropping techniques parameters parametrize the dropping process """
-    pass
 
 
 class DroppingTechniques(ABC):
