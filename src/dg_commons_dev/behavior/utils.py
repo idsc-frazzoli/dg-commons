@@ -172,7 +172,7 @@ def entry_exit_t(intersection: Polygon, current_state, occupacy: Polygon, safety
 
         def find_temp(t_temp, state_temp, dt_temp):
             while (t_temp - max_t) < 10e-6:
-                pred, states = occupancy_prediction(state_temp, dt_temp, occupacy, vg=vg, vp=vp)
+                pred, states = occupancy_prediction(state_temp, dt_temp, vg=vg, vp=vp)
                 inter = pred.intersection(intersection)
                 if condition(inter):
                     return t_temp, state_temp
