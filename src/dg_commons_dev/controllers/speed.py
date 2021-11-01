@@ -2,14 +2,15 @@ from dataclasses import dataclass
 from typing import Tuple, Optional, List, Union
 from dg_commons.controllers.pid import PIDParam, PID
 from dg_commons.sim.models import kmh2ms
-from dg_commons_dev.controllers.controller_types import LongitudinalControllerParam, LongitudinalController
+from dg_commons_dev.controllers.controller_types import LongitudinalController
 from dg_commons import X
+from dg_commons_dev.utils import BaseParams
 
 __all__ = ["SpeedControllerParam", "SpeedController"]
 
 
 @dataclass
-class SpeedControllerParam(LongitudinalControllerParam, PIDParam):
+class SpeedControllerParam(BaseParams, PIDParam):
     """Default values are tuned roughly for a default car model"""
     kP: Union[float, List[float]] = 4
     kI: Union[float, List[float]] = 0.01
