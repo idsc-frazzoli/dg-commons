@@ -1,7 +1,7 @@
 from casadi import *
 from dg_commons_dev.utils import SemiDef
 from dataclasses import dataclass
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Tuple
 from dg_commons_dev.utils import BaseParams
 
 """ Fully casadi compatible """
@@ -13,15 +13,32 @@ class Empty:
 
 @dataclass
 class QuadraticParams(BaseParams):
+    """
+    Parameters of quadratic cost function
+    state^T * q * state + input^T * r * input
+    """
+
     q: Union[List[SemiDef], SemiDef] = SemiDef([0])
+    """ q-matrix as illustrated above """
     r: Union[List[SemiDef], SemiDef] = SemiDef([0])
+    """ r-matrix as illustrated above """
 
 
 class QuadraticCost:
+    """
+    Quadratic cost function = state^T * q * state + input^T * r * input
+    """
+
     def __init__(self, params: QuadraticParams):
         self.params = params
 
-    def cost_function(self, x, u):
+    def cost_function(self, x, u) -> Tuple[SX, SX]:
+        """
+        Evaluates the cost.
+        @param x: state
+        @param u: input
+        @return: State cost + input cost, state cost
+        """
         r = SX(self.params.r.matrix)
         q = SX(self.params.q.matrix)
 
