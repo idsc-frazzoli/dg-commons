@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 import scipy.optimize
 import scipy.linalg
@@ -25,6 +25,12 @@ def lqr(a, b, q, r):
     Solve the continuous time lqr controller.
     dx/dt = ax + bu
     cost = integral x.T*q*x + u.T*r*u
+
+    @param a: a-matrix in model
+    @param b: b-matrix in model
+    @param q: q-matrix in cost function
+    @param r: r-matrix in cost function
+    @return: lqr k-matrix, result of the solved ARE, resulting model eigenvalues
     """
     x = np.matrix(scipy.linalg.solve_continuous_are(a, b, q.matrix, r.matrix))
     k = np.array(scipy.linalg.inv(r.matrix) * (b.T * x))
@@ -48,8 +54,14 @@ class LQR(LateralController):
     """ LQR lateral controller with adapting state space model """
 
     USE_STEERING_VELOCITY: bool = True
+    """ 
+    Whether the returned steering is the desired steering velocity or the desired steering angle 
+    True: steering velocity
+    False: steering angle
+    """
 
-    def __init__(self, params: LQRParam = LQRParam()):
+    def __init__(self, params: LQRParam = LQRParam(),
+                 target_position: T2value = None):
         super().__init__()
         self.params: LQRParam = params
         self.path_approx: CurveApproximationTechniques = LinearCurve()
@@ -59,9 +71,13 @@ class LQR(LateralController):
         self.back_pose: SE2value
         self.speed: float
         self.current_beta: float
-        self.target_position: T2value
+        self.target_position: T2value = target_position
 
-    def _update_obs(self, new_obs: X):
+    def _update_obs(self, new_obs: X) -> None:
+        """
+        A new observation is processed and an input for the system formulated
+        @param new_obs: New Observation
+        """
         pose = SE2_from_translation_angle(np.array([new_obs.x, new_obs.y]), new_obs.theta)
 
         back_position = SE2_apply_R2(pose, np.array([-self.vehicle_geometry.lr, 0]))
@@ -110,14 +126,20 @@ class LQR(LateralController):
             self.u = 0
 
     def _get_steering(self, at: float) -> float:
+        """
+        @param at: current time instant
+        @return: steering to command
+        """
         if any([_ is None for _ in [self.back_pose, self.path]]):
-            raise RuntimeError("Attempting to use PurePursuit before having set any observations or reference path")
+            raise RuntimeError("Attempting to use LQR before having set any observations or reference path")
 
         return self.u
 
-    def next_pos(self, current_beta):
-        """ Returns three position and three angles ahead of the current position on the path """
-
+    def next_pos(self, current_beta: float) -> Tuple[np.ndarray, float, np.ndarray, float, np.ndarray, float]:
+        """
+        @param current_beta: current parametrized location on path
+        @return: Three positions and three angles ahead of the current position on the path
+        """
         along_lane = self.path.along_lane_from_beta(current_beta)
         k = 2
         delta_step = self.speed * 0.1 * k

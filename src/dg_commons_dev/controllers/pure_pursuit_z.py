@@ -33,6 +33,11 @@ class PurePursuit(LateralController):
     """ Pure Pursuit lateral controller """
 
     USE_STEERING_VELOCITY: bool = False
+    """ 
+    Whether the returned steering is the desired steering velocity or the desired steering angle 
+    True: steering velocity
+    False: steering angle
+    """
 
     def __init__(self, params: PurePursuitParam = PurePursuitParam()):
         self.params: PurePursuitParam = params
@@ -45,6 +50,10 @@ class PurePursuit(LateralController):
         super().__init__()
 
     def _update_obs(self, new_obs: X):
+        """
+        A new observation is processed and an input for the system formulated
+        @param new_obs: New Observation
+        """
         self.pose = SE2_from_translation_angle([new_obs.x, new_obs.y], new_obs.theta)
 
         control_sol_params = self.control_path.ControlSolParams(new_obs.vx, self.params.t_step)
@@ -54,7 +63,8 @@ class PurePursuit(LateralController):
 
     def find_goal_point(self) -> Tuple[float, SE2value]:
         """
-        Find goal point along the path
+        Find goal point along the path with a distance k_lookahead from current position
+        @return: parametrized position on path of the goal point, position of the goal point
         """
         lookahead = self._get_lookahead()
 
@@ -75,6 +85,10 @@ class PurePursuit(LateralController):
         return res.x, goal_point
 
     def _get_steering(self, at: float) -> float:
+        """
+        @param at: current time instant
+        @return: steering to command
+        """
         if any([_ is None for _ in [self.pose, self.path]]):
             raise RuntimeError("Attempting to use PurePursuit before having set any observations or reference path")
         theta = angle_from_SE2(self.pose)
@@ -86,7 +100,9 @@ class PurePursuit(LateralController):
         return atan(self.params.length / radius)
 
     def _get_lookahead(self) -> float:
-        """ Returns lookahead distance """
+        """
+        @return: Returns lookahead distance
+        """
         return float(np.clip(self.params.k_lookahead * self.speed,
                              self.params.look_ahead_minmax[0],
                              self.params.look_ahead_minmax[1]))

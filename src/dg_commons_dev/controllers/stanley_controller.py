@@ -3,13 +3,14 @@ from math import atan
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 from dg_commons.sim.models.vehicle_dynamic import VehicleStateDyn
 import numpy as np
-from geometry import SE2value, SE2_from_translation_angle, translation_angle_scale_from_E2, translation_angle_from_SE2
+from geometry import SE2value, SE2_from_translation_angle, translation_angle_scale_from_E2, \
+    translation_angle_from_SE2, T2value
 from dg_commons import X
 from duckietown_world.utils import SE2_apply_R2
 import math
 from duckietown_world import relative_pose
 from dg_commons_dev.curve_approximation_techniques import LinearCurve, CurveApproximationTechniques
-from typing import Union, List
+from typing import Union, List, Tuple
 from dg_commons_dev.controllers.controller_types import LateralController
 from dg_commons_dev.utils import BaseParams
 
@@ -29,8 +30,14 @@ class Stanley(LateralController):
     """ Stanley lateral controller """
 
     USE_STEERING_VELOCITY: bool = False
+    """ 
+    Whether the returned steering is the desired steering velocity or the desired steering angle 
+    True: steering velocity
+    False: steering angle
+    """
 
-    def __init__(self, params: StanleyParam = StanleyParam()):
+    def __init__(self, params: StanleyParam = StanleyParam(),
+                 target_position: T2value = None):
         self.params: StanleyParam = params
         self.vehicle_geometry: VehicleGeometry = VehicleGeometry.default_car()
         self.path_approx: CurveApproximationTechniques = LinearCurve()
@@ -40,10 +47,15 @@ class Stanley(LateralController):
         self.alpha: float
         self.current_beta: float
         self.lateral: float
+        self.target_position: T2value = target_position
 
         super().__init__()
 
-    def _update_obs(self, new_obs: X):
+    def _update_obs(self, new_obs: X) -> None:
+        """
+        A new observation is processed and an input for the system formulated
+        @param new_obs: New Observation
+        """
         tr, ang = [new_obs.x, new_obs.y], new_obs.theta
         pose = SE2_from_translation_angle(tr, ang)
 
@@ -90,8 +102,11 @@ class Stanley(LateralController):
             r, self.alpha, _ = translation_angle_scale_from_E2(rel)
             self.lateral = r[1]
 
-    def next_pos(self, current_beta):
-        """ Returns three position and three angles ahead of the current position on the path """
+    def next_pos(self, current_beta) -> Tuple[np.ndarray, float, np.ndarray, float, np.ndarray, float]:
+        """
+        @param current_beta: current parametrized location on path
+        @return: Three positions and three angles ahead of the current position on the path
+        """
 
         along_lane = self.path.along_lane_from_beta(current_beta)
         k = 10
@@ -114,7 +129,11 @@ class Stanley(LateralController):
         return pos1, angle1, pos2, angle2, pos3, angle3
 
     def _get_steering(self, at: float) -> float:
+        """
+        @param at: current time instant
+        @return: steering to command
+        """
         if any([_ is None for _ in [self.alpha, self.lateral, self.speed]]):
-            raise RuntimeError("Attempting to use PurePursuit before having set any observations or reference path")
+            raise RuntimeError("Attempting to use Stanley before having set any observations or reference path")
 
         return self.alpha + atan(self.params.stanley_gain*self.lateral/self.speed)
