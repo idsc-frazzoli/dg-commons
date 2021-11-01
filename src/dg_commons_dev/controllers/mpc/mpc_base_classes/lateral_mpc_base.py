@@ -13,14 +13,13 @@ from dataclasses import dataclass
 from casadi import *
 from abc import abstractmethod
 from typing import List, Optional, Union
-from dg_commons_dev.utils import BaseParams
 
 
 vehicle_params = VehicleParameters.default_car()
 
 
 @dataclass
-class LatMPCKinBaseParam(MPCKinBAseParam, BaseParams):
+class LatMPCKinBaseParam(MPCKinBAseParam):
     cost: Union[List[CostFunctions], CostFunctions] = QuadraticCost
     """ Cost function """
     cost_params: Union[List[CostParameters], CostParameters] = QuadraticParams(
@@ -71,19 +70,39 @@ class LatMPCKinBase(MPCKinBase, LateralController):
             self.v_s = self.model.set_variable(var_type='_u', var_name='v_s')
 
     def func(self, t_now):
+        """
+        Sets up the time varying parameter speed ref and path parameters. Might be overwritten
+        in case of additional time varying parameters
+        @param t_now: current time instant
+        @return: time varying parameters
+        """
         temp = [self.speed_ref] + self.path_parameters
         self.tvp_temp['_tvp', :] = np.array(temp)
         return self.tvp_temp
 
-    def rear_axle_position(self, obs: X):
+    def rear_axle_position(self, obs: X) -> T2value:
+        """
+        Computes rear axle position
+        @param obs: state
+        @return: rear axle position
+        """
         pose = SE2_from_translation_angle([obs.x, obs.y], obs.theta)
         return SE2_apply_R2(pose, np.array([-self.params.vehicle_geometry.lr, 0]))
 
     @staticmethod
-    def cog_position(obs: X):
+    def cog_position(obs: X) -> T2value:
+        """
+        Computes cog position
+        @param obs: state
+        @return: cog position
+        """
         return np.array([obs.x, obs.y])
 
-    def _update_obs(self, new_obs: Optional[X] = None):
+    def _update_obs(self, new_obs: Optional[X] = None) -> None:
+        """
+        A new observation is processed and an input for the system formulated
+        @param new_obs: New Observation
+        """
         self.current_position = self.rear_axle_position(new_obs) if self.params.rear_axle \
             else self.cog_position(new_obs)
         self.current_speed = new_obs.vx
@@ -108,21 +127,41 @@ class LatMPCKinBase(MPCKinBase, LateralController):
 
         self.store_extra()
 
-    def lterm(self, target_x, target_y, speed_ref, target_angle=None):
+    def lterm(self, target_x, target_y, speed_ref, target_angle=None) -> SX:
+        """
+        Computes stage cost
+        @param target_x: target x-position
+        @param target_y: target y-position
+        @param speed_ref: target velocity
+        @param target_angle: target orientation
+        @return: symbolic stage cost
+        """
         error = [target_x - self.state_x, target_y - self.state_y]
         inp = [self.v_delta]
 
         lterm, _ = self.cost.cost_function(error, inp)
         return lterm
 
-    def mterm(self, target_x, target_y, speed_ref, target_angle=None):
+    def mterm(self, target_x, target_y, speed_ref, target_angle=None) -> SX:
+        """
+        Computes final cost
+        @param target_x: target x-position
+        @param target_y: target y-position
+        @param speed_ref: target velocity
+        @param target_angle: target orientation
+        @return: symbolic final cost
+        """
         error = [target_x - self.state_x, target_y - self.state_y]
         inp = [self.v_delta]
 
         _, mterm = self.cost.cost_function(error, inp)
         return mterm
 
-    def next_pos(self, current_beta):
+    def next_pos(self, current_beta) -> Tuple[np.ndarray, float, np.ndarray, float, np.ndarray, float]:
+        """
+        @param current_beta: current parametrized location on path
+        @return: Three positions and three angles ahead of the current position on the path
+        """
         along_lane = self.path.along_lane_from_beta(current_beta)
         delta_step = self.delta_step()
         along_lane1 = along_lane + delta_step/2
@@ -142,20 +181,34 @@ class LatMPCKinBase(MPCKinBase, LateralController):
         self.target_position = pos3
         return pos1, angle1, pos2, angle2, pos3, angle3
 
-    def delta_step(self):
+    def delta_step(self) -> float:
+        """
+        How far to look ahead
+        @return: distance along path
+        """
         return self.current_speed*self.params.t_step*self.params.n_horizon
 
-    def set_bounds(self):
+    def set_bounds(self) -> None:
+        """
+        Set state and input bounds
+        """
         self.mpc.bounds['lower', '_u', 'v_delta'] = self.params.v_delta_bounds[0]
         self.mpc.bounds['upper', '_u', 'v_delta'] = self.params.v_delta_bounds[1]
         self.mpc.bounds['lower', '_x', 'delta'] = self.params.delta_bounds[0]
         self.mpc.bounds['upper', '_x', 'delta'] = self.params.delta_bounds[1]
 
-    def store_extra(self):
+    def store_extra(self) -> None:
+        """
+        Store extra information for plotting or other reasons
+        """
         self.prediction_x = self.mpc.data.prediction(('_x', 'state_x', 0))[0]
         self.prediction_y = self.mpc.data.prediction(('_x', 'state_y', 0))[0]
 
-    def _get_steering(self, at: float):
+    def _get_steering(self, at: float) -> float:
+        """
+        @param at: current time instant
+        @return: desired steering
+        """
         if any([_ is None for _ in [self.path]]):
             raise RuntimeError("Attempting to use MPC before having set any observations or reference path")
         return self.u[0][0]
