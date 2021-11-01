@@ -2,11 +2,12 @@ from typing import Tuple
 from abc import abstractmethod
 from dg_commons_dev.controllers.mpc.mpc_base_classes.lateral_mpc_base import vehicle_params, LatMPCKinBase, LatMPCKinBaseParam
 from dg_commons_dev.controllers.utils.cost_functions import *
-from dg_commons_dev.controllers.controller_types import LatAndLonController, LatAndLonControllerParam
+from dg_commons_dev.controllers.controller_types import LatAndLonController
+from dg_commons_dev.utils import BaseParams
 
 
 @dataclass
-class FullMPCKinBaseParam(LatMPCKinBaseParam, LatAndLonControllerParam):
+class FullMPCKinBaseParam(LatMPCKinBaseParam, BaseParams):
     cost: CostFunctions = QuadraticCost
     """ Cost function """
     cost_params: CostParameters = QuadraticParams(
