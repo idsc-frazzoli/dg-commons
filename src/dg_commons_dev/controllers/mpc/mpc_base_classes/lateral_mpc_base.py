@@ -7,19 +7,20 @@ from dg_commons_dev.controllers.utils.cost_functions import CostFunctions, CostP
 from duckietown_world.utils import SE2_apply_R2
 from dg_commons.sim.models.vehicle_utils import VehicleParameters
 from dg_commons_dev.curve_approximation_techniques import CurveApproximationTechniques, LinearCurve
-from dg_commons_dev.controllers.controller_types import LateralController, LateralControllerParam
+from dg_commons_dev.controllers.controller_types import LateralController
 from dg_commons_dev.utils import SemiDef
 from dataclasses import dataclass
 from casadi import *
 from abc import abstractmethod
 from typing import List, Optional, Union
+from dg_commons_dev.utils import BaseParams
 
 
 vehicle_params = VehicleParameters.default_car()
 
 
 @dataclass
-class LatMPCKinBaseParam(MPCKinBAseParam, LateralControllerParam):
+class LatMPCKinBaseParam(MPCKinBAseParam, BaseParams):
     cost: Union[List[CostFunctions], CostFunctions] = QuadraticCost
     """ Cost function """
     cost_params: Union[List[CostParameters], CostParameters] = QuadraticParams(
