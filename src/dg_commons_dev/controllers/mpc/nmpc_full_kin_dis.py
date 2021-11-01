@@ -20,6 +20,11 @@ class NMPCFullKinDis(FullMPCKinBase):
     """ Nonlinear MPC for full control of vehicle. Kinematic model with prior discretization """
 
     USE_STEERING_VELOCITY: bool = True
+    """ 
+    Whether the returned steering is the desired steering velocity or the desired steering angle 
+    True: steering velocity
+    False: steering angle
+    """
 
     def __init__(self, params: NMPCFullKinDisParam = NMPCFullKinDisParam()):
         model_type: str = 'discrete'  # either 'discrete' or 'continuous'
@@ -50,6 +55,10 @@ class NMPCFullKinDis(FullMPCKinBase):
         self.set_up_mpc()
 
     def compute_targets(self):
+        """
+        Find symbolic expression for targets state variables
+        @return: Target state variables
+        """
         if self.params.analytical:
             self.path_approx.update_from_parameters(self.path_params)
             return *self.path_approx.closest_point_on_path([self.state_x, self.state_y]), None
@@ -58,6 +67,9 @@ class NMPCFullKinDis(FullMPCKinBase):
             return self.s, self.path_approx.function(self.s), None
 
     def set_scaling(self):
+        """
+        Set state and input scale
+        """
         self.mpc.scaling['_x', 'state_x']: float = 1
         self.mpc.scaling['_x', 'state_y']: float = 1
         self.mpc.scaling['_x', 'theta']: float = 1

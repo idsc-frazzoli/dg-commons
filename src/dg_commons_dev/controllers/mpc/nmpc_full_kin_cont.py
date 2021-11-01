@@ -1,22 +1,22 @@
 from dg_commons_dev.controllers.mpc.mpc_base_classes.full_mpc_base import FullMPCKinBase, FullMPCKinBaseParam
 from casadi import *
-from dataclasses import dataclass
+from typing import Tuple
 
 
-__all__ = ["NMPCFullKinCont", "NMPCFullKinContParam"]
-
-
-@dataclass
-class NMPCFullKinContParam(FullMPCKinBaseParam):
-    pass
+__all__ = ["NMPCFullKinCont"]
 
 
 class NMPCFullKinCont(FullMPCKinBase):
     """ Nonlinear MPC for full control of vehicle. Kinematic model without prior discretization """
 
     USE_STEERING_VELOCITY: bool = True
+    """ 
+    Whether the returned steering is the desired steering velocity or the desired steering angle 
+    True: steering velocity
+    False: steering angle
+    """
 
-    def __init__(self, params: NMPCFullKinContParam = NMPCFullKinContParam()):
+    def __init__(self, params: FullMPCKinBaseParam = FullMPCKinBaseParam()):
         model_type: str = 'continuous'  # either 'discrete' or 'continuous'
         super().__init__(params, model_type)
 
@@ -39,7 +39,11 @@ class NMPCFullKinCont(FullMPCKinBase):
         self.model.setup()
         self.set_up_mpc()
 
-    def compute_targets(self):
+    def compute_targets(self) -> Tuple[SX, ...]:
+        """
+        Find symbolic expression for targets state variables
+        @return: Target state variables
+        """
         if self.params.analytical:
             self.path_approx.update_from_parameters(self.path_params)
             return *self.path_approx.closest_point_on_path([self.state_x, self.state_y]), None
@@ -47,7 +51,10 @@ class NMPCFullKinCont(FullMPCKinBase):
             self.path_approx.update_from_parameters(self.path_params)
             return self.s, self.path_approx.function(self.s), None
 
-    def set_scaling(self):
+    def set_scaling(self) -> None:
+        """
+        Set state and input scale
+        """
         self.mpc.scaling['_x', 'state_x']: float = 1
         self.mpc.scaling['_x', 'state_y']: float = 1
         self.mpc.scaling['_x', 'theta']: float = 1
