@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from typing import Optional, Union, List
-from dg_commons_dev.controllers.controller_types import SteeringController, SteeringControllerParam
+from dg_commons_dev.controllers.controller_types import SteeringController
+from dg_commons_dev.utils import BaseParams
 
 
 @dataclass
-class SCIdentityParam(SteeringControllerParam):
+class SCIdentityParam(BaseParams):
     pass
 
 
@@ -18,7 +19,7 @@ class SCIdentity(SteeringController):
 
 
 @dataclass
-class SCPParam(SteeringControllerParam):
+class SCPParam(BaseParams):
     ddelta_kp: Union[List[float], float] = 10
 
 
