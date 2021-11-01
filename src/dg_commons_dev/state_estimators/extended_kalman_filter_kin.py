@@ -40,6 +40,7 @@ class ExtendedKalmanKinParam(BaseParams):
     vehicle_params: Union[List[VehicleParameters], VehicleParameters] = VehicleParameters.default_car()
     """ Vehicle Parameters """
     t_step: Union[List[float], float] = 0.1
+    """ Time interval between two calls """
 
     def __post_init__(self):
         if isinstance(self.dropping_params, list):
@@ -56,7 +57,8 @@ class ExtendedKalmanKinParam(BaseParams):
 class ExtendedKalmanKin(Estimator):
     """ Extended Kalman Filter with kinematic bicycle model and identity measurement model """
 
-    def __init__(self, x0=None, params=ExtendedKalmanKinParam()):
+    def __init__(self, x0=None, params=ExtendedKalmanKinParam(),
+                 model_noise_realization=None):
         self.params: ExtendedKalmanKinParam = params
 
         self.actual_model_noise: np.ndarray = params.actual_model_var.matrix
@@ -67,27 +69,39 @@ class ExtendedKalmanKin(Estimator):
 
         self.dropping: DroppingTechniques = params.dropping_technique(params.dropping_params)
 
-        self.state: Optional[X] = x0
+        self.state: X = x0
         self.dt: float = self.params.t_step
-        self.current_model_noise_realization: Optional[X] = None
+        self.current_model_noise_realization: X = model_noise_realization
 
-    def update_prediction(self, u_k: Optional[VehicleCommands]):
+    def update_prediction(self, u_k: Optional[VehicleCommands]) -> None:
+        """
+        Internal vehicle state and covariance matrix get projected ahead by params.dt using the kinematic bicycle model
+        and the input to the system u_k.
+        @param u_k: Vehicle input k
+        @return: None
+        """
         if self.state is None or u_k is None:
             return
 
-        self.state, self.p = self.solve_dequation(u_k)
+        self.state, self.p = self._solve_dequation(u_k)
 
-    def update_measurement(self, measurement_k: VehicleState):
+    def update_measurement(self, measurement_k: X) -> None:
+        """
+        Internal vehicle state and covariance matrix get updated based on identity measurement model and on measurement
+        k.
+        @param measurement_k: kth system measurement
+        @return: None
+        """
         n_states = self.params.n_states
         if self.state is None:
             self.state = measurement_k
             return
 
         if not self.dropping.drop():
-            h = self.h(self.state)
+            h = self._h(self.state)
             state = self.state.as_ndarray().reshape((n_states, 1))
             # Perturb measurement and reshape
-            measurement_k = measurement_k + ExtendedKalmanKin.realization(self.actual_meas_noise)
+            measurement_k = measurement_k + ExtendedKalmanKin._realization(self.actual_meas_noise)
             meas = measurement_k.as_ndarray().reshape((n_states, 1))
 
             try:
@@ -101,7 +115,7 @@ class ExtendedKalmanKin(Estimator):
             except np.linalg.LinAlgError:
                 pass
 
-    def solve_dequation(self, u_k: VehicleCommands):
+    def _solve_dequation(self, u_k: VehicleCommands):
         n_states: int = self.params.n_states
         n_commands: int = self.params.n_commands
 
@@ -120,16 +134,16 @@ class ExtendedKalmanKin(Estimator):
         def _dynamics(t, y):
             part1, part2 = y[:(n_states + n_commands)], y[(n_states + n_commands):]
             state0, actions = _stateactions_from_array(state_input=part1)
-            dx = self.dynamics(x0=state0, u=actions)
+            dx = self._dynamics(x0=state0, u=actions)
             du = np.zeros([len(VehicleCommands.idx)])
 
-            f = self.f(state0)
+            f = self._f(state0)
             p = vec_to_mat(part2)
             dp = np.matmul(f, p) + np.matmul(p, f.T) + self.belief_model_noise
 
             return np.concatenate([dx.as_ndarray(), du, mat_to_vec(dp)])
 
-        self.current_model_noise_realization = self.realization(self.actual_model_noise)
+        self.current_model_noise_realization = self._realization(self.actual_model_noise)
         state_zero = np.concatenate([self.state.as_ndarray(), u_k.as_ndarray(), mat_to_vec(self.p)])
         result = solve_ivp(fun=_dynamics, t_span=(0.0, float(self.dt)), y0=state_zero)
         if not result.success:
@@ -142,7 +156,7 @@ class ExtendedKalmanKin(Estimator):
 
         return new_state, new_p
 
-    def f(self, state):
+    def _f(self, state):
         l = self.params.geometry_params.length
         lr = self.params.geometry_params.lr
         s_t = math.sin(state.theta)
@@ -156,10 +170,10 @@ class ExtendedKalmanKin(Estimator):
                          [0, 0, 0, 0, 0],
                          [0, 0, 0, 0, 0]])
 
-    def h(self, state):
+    def _h(self, state):
         return np.eye(5)
 
-    def dynamics(self, x0: VehicleState, u: VehicleCommands) -> VehicleState:
+    def _dynamics(self, x0: VehicleState, u: VehicleCommands) -> VehicleState:
         """ Kinematic bicycle model, returns state derivative for given control inputs """
         l = self.params.geometry_params.length
         lr = self.params.geometry_params.lr
@@ -177,6 +191,6 @@ class ExtendedKalmanKin(Estimator):
         return VehicleState(x=xdot, y=ydot, theta=dtheta, vx=acc, delta=ddelta) + self.current_model_noise_realization
 
     @staticmethod
-    def realization(var: np.ndarray):
+    def _realization(var: np.ndarray):
         dim = int(var.shape[0])
         return VehicleState.from_array(np.random.multivariate_normal(np.zeros(dim), var))
