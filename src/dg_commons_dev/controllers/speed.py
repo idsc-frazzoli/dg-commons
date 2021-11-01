@@ -36,15 +36,23 @@ class SpeedControllerParam(BaseParams, PIDParam):
 
 
 class SpeedController(PID, LongitudinalController):
-    """Low-level controller for reference tracking of speed"""
+    """ Low-level controller for reference tracking of speed """
 
     def __init__(self, params: Optional[PIDParam] = None):
         params = SpeedControllerParam() if params is None else params
         super(SpeedController, self).__init__(params)
 
     def _update_obs(self, new_obs: X):
+        """
+        A new observation is processed and an input for the system formulated
+        @param new_obs: New Observation
+        """
         self.update_measurement(new_obs.vx)
 
     def _get_acceleration(self, at: float) -> float:
+        """
+        @param at: current time instant
+        @return: desired acceleration
+        """
         self.update_reference(self.speed_ref)
         return self.get_control(at)
