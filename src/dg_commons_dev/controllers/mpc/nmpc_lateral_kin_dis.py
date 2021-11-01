@@ -1,6 +1,6 @@
 from dg_commons_dev.controllers.utils.discretization_techniques import discretizations
 from dg_commons_dev.controllers.mpc.mpc_base_classes.lateral_mpc_base import LatMPCKinBaseParam, LatMPCKinBase
-from typing import List, Union
+from typing import List, Union, Tuple
 from dataclasses import dataclass
 from casadi import *
 
@@ -56,7 +56,7 @@ class NMPCLatKinDis(LatMPCKinBase):
         self.model.setup()
         self.set_up_mpc()
 
-    def compute_targets(self):
+    def compute_targets(self) -> Tuple[SX, ...]:
         """
         Find symbolic expression for targets state variables
         @return: Target state variables
@@ -68,7 +68,7 @@ class NMPCLatKinDis(LatMPCKinBase):
             self.path_approx.update_from_parameters(self.path_params)
             return self.s, self.path_approx.function(self.s), None
 
-    def set_scaling(self):
+    def set_scaling(self) -> None:
         """
         Set state and input scale
         """

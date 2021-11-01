@@ -1,6 +1,6 @@
 from dg_commons_dev.controllers.mpc.mpc_base_classes.full_mpc_base import FullMPCKinBaseParam, FullMPCKinBase
 from dg_commons_dev.controllers.utils.discretization_techniques import discretizations
-from typing import List, Union
+from typing import List, Union, Tuple
 from dataclasses import dataclass
 from casadi import *
 
@@ -54,7 +54,7 @@ class NMPCFullKinDis(FullMPCKinBase):
         self.model.setup()
         self.set_up_mpc()
 
-    def compute_targets(self):
+    def compute_targets(self) -> Tuple[SX, ...]:
         """
         Find symbolic expression for targets state variables
         @return: Target state variables
@@ -66,7 +66,7 @@ class NMPCFullKinDis(FullMPCKinBase):
             self.path_approx.update_from_parameters(self.path_params)
             return self.s, self.path_approx.function(self.s), None
 
-    def set_scaling(self):
+    def set_scaling(self) -> None:
         """
         Set state and input scale
         """
