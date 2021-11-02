@@ -34,7 +34,7 @@ class CruiseDescription:
 
 @dataclass
 class CruiseParams(BaseParams):
-    nominal_speed: Union[List[float], float] = kmh2ms(40)
+    nominal_speed: float = kmh2ms(40)
     """Nominal desired speed"""
 
     min_safety_distance: float = 5.0

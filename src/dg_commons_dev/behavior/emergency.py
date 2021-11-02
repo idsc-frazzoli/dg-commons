@@ -37,9 +37,9 @@ class EmergencyDescription:
 
 @dataclass
 class EmergencyParams(BaseParams):
-    min_dist: Union[List[float], float] = 7
+    min_dist: float = 7
     """Evaluate emergency only for vehicles within x [m]"""
-    min_vel: Union[List[float], float] = kmh2ms(5)
+    min_vel: float = kmh2ms(5)
     """emergency only to vehicles that are at least moving at.."""
 
 

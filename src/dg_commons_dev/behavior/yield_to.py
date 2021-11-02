@@ -25,9 +25,9 @@ class YieldDescription:
 
 @dataclass
 class YieldParams(BaseParams):
-    min_vel: Union[List[float], float] = kmh2ms(5)
+    min_vel: float = kmh2ms(5)
     """Emergency only to vehicles that are at least moving at.."""
-    min_dist: Union[List[float], float] = 7
+    min_dist: float = 7
     """Evaluate whether to yield only for vehicles within x [m]"""
 
 

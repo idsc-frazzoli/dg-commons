@@ -52,7 +52,7 @@ class BehaviorSituation:
 
 @dataclass
 class SpeedBehaviorParam(BaseParams):
-    safety_time_braking: Union[List[float], float] = 1.5
+    safety_time_braking: float = 1.5
     """Evaluates safety distance from vehicle in front based on distance covered in this delta time"""
     emergency: type(Emergency) = Emergency
     emergency_params: EmergencyParams = EmergencyParams()
