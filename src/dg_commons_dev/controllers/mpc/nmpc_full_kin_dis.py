@@ -10,9 +10,9 @@ __all__ = ["NMPCFullKinDis", "NMPCFullKinDisParam"]
 
 @dataclass
 class NMPCFullKinDisParam(FullMPCKinBaseParam):
-    dis_technique: Union[List[str], str] = 'Kinematic Euler'
+    dis_technique: str = 'Kinematic Euler'
     """ Discretization technique """
-    dis_t: Union[List[float], float] = 0.01
+    dis_t: float = 0.01
     """ Discretization Time Step """
 
 

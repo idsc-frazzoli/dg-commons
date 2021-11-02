@@ -10,11 +10,11 @@ __all__ = ["NMPCLatKinDis", "NMPCLatKinDisParam"]
 
 @dataclass
 class NMPCLatKinDisParam(LatMPCKinBaseParam):
-    path_approx_technique: Union[List[str], str] = 'linear'
+    path_approx_technique: str = 'linear'
     """ Path approximation technique """
-    dis_technique: Union[List[str], str] = 'Kinematic Euler'
+    dis_technique: str = 'Kinematic Euler'
     """ Discretization technique """
-    dis_t: Union[List[float], float] = 0.1
+    dis_t: float = 0.1
     """ Discretization Time Step """
 
 

@@ -12,19 +12,19 @@ from casadi import *
 
 @dataclass
 class MPCKinBAseParam(BaseParams):
-    n_horizon: Union[List[int], int] = 15
+    n_horizon: int = 15
     """ Horizon Length """
-    t_step: Union[List[float], float] = 0.1
+    t_step: float = 0.1
     """ Sample Time """
-    cost: Union[List[CostFunctions], CostFunctions] = QuadraticCost
+    cost: CostFunctions = QuadraticCost
     """ Cost function """
-    cost_params: Union[List[CostParameters], CostParameters] = QuadraticParams()
+    cost_params: CostParameters = QuadraticParams()
     """ Cost function parameters """
-    delta_input_weight: Union[List[float], float] = 1e-2
+    delta_input_weight: float = 1e-2
     """ Weighting factor in cost function for varying input """
-    rear_axle: Union[List[bool], bool] = False
+    rear_axle: bool = False
     """ Whether to control rear axle position instead of cog """
-    vehicle_geometry: Union[List[VehicleGeometry], VehicleGeometry] = VehicleGeometry.default_car()
+    vehicle_geometry: VehicleGeometry = VehicleGeometry.default_car()
 
     def __post_init__(self):
         if isinstance(self.cost, list):
