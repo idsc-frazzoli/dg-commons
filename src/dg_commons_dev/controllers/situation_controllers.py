@@ -55,7 +55,7 @@ class OptionalCommands:
 class EmergencyControllerParams(BaseParams):
     """ Emergency controller parameters """
 
-    vehicle_params: Union[List[VehicleParameters], VehicleParameters] = VehicleParameters.default_car()
+    vehicle_params: VehicleParameters = VehicleParameters.default_car()
     """ Vehicle parameters """
 
 
@@ -90,7 +90,7 @@ class EmergencyController(Controller[Reference, EmergencyDescription, OptionalCo
 class YieldControllerParams(BaseParams):
     """ Yield controller parameters """
 
-    vehicle_params: Union[List[VehicleParameters], VehicleParameters] = VehicleParameters.default_car()
+    vehicle_params: VehicleParameters = VehicleParameters.default_car()
     """ Vehicle parameters """
 
 
