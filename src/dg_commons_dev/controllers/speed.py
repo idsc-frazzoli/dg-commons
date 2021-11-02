@@ -12,12 +12,12 @@ __all__ = ["SpeedControllerParam", "SpeedController"]
 @dataclass
 class SpeedControllerParam(BaseParams, PIDParam):
     """Default values are tuned roughly for a default car model"""
-    kP: Union[float, List[float]] = 4
-    kI: Union[float, List[float]] = 0.01
-    kD: Union[float, List[float]] = 0.1
-    antiwindup: Union[Tuple[float, float], List[Tuple[float, float]]] = (-2, 2)
-    setpoint_minmax: Union[Tuple[float, float], List[Tuple[float, float]]] = (-kmh2ms(10), kmh2ms(150))
-    output_minmax: Union[Tuple[float, float], List[Tuple[float, float]]] = (-8, 5)  # acc minmax
+    kP: float = 4
+    kI: float = 0.01
+    kD: float = 0.1
+    antiwindup: Tuple[float, float] = (-2, 2)
+    setpoint_minmax: Tuple[float, float] = (-kmh2ms(10), kmh2ms(150))
+    output_minmax: Tuple[float, float] = (-8, 5)  # acc minmax
 
     def __post_init__(self):
         if isinstance(self.antiwindup, list):
