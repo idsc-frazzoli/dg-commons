@@ -24,7 +24,7 @@ class SCPParam(BaseParams):
     Parameters of P - steering controller
     """
 
-    ddelta_kp: Union[List[float], float] = 10
+    ddelta_kp: float = 10
     """ Kappa p - parameter """
 
 
