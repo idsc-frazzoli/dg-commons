@@ -20,9 +20,9 @@ __all__ = ["Stanley", "StanleyParam"]
 
 @dataclass
 class StanleyParam(BaseParams):
-    stanley_gain: Union[List[float], float] = 1
+    stanley_gain: float = 1
     """ Tunable gain """
-    t_step: Union[List[float], float] = 0.1
+    t_step: float = 0.1
     """ Time between two controller calls """
 
 

@@ -16,17 +16,17 @@ __all__ = ["PurePursuit", "PurePursuitParam"]
 
 @dataclass
 class PurePursuitParam(BaseParams):
-    look_ahead_minmax: Union[List[Tuple[float, float]], Tuple[float, float]] = (3, 30)
+    look_ahead_minmax: Tuple[float, float] = (3, 30)
     """min and max lookahead"""
-    k_lookahead: Union[List[float], float] = 1.8
+    k_lookahead: float = 1.8
     """Scaling constant for speed dependent params"""
-    min_distance: Union[List[float], float] = 0.1
+    min_distance: float = 0.1
     """Min initial progress to look for the next goal point"""
-    max_extra_distance: Union[List[float], float] = 5
+    max_extra_distance: float = 5
     """Max extra distance to look for the closest point on the ref path"""
-    length: Union[List[float], float] = 3.5
+    length: float = 3.5
     """Length of the vehicle"""
-    t_step: Union[List[float], float] = 0.1
+    t_step: float = 0.1
 
 
 class PurePursuit(LateralController):

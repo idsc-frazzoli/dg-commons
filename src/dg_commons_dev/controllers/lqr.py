@@ -42,11 +42,11 @@ def lqr(a, b, q, r):
 
 @dataclass
 class LQRParam(BaseParams):
-    r: Union[List[SemiDef], SemiDef] = SemiDef([1])
+    r: SemiDef = SemiDef([1])
     """ Input Multiplier """
-    q: Union[List[SemiDef], SemiDef] = SemiDef(matrix=np.identity(3))
+    q: SemiDef = SemiDef(matrix=np.identity(3))
     """State Multiplier """
-    t_step: Union[List[float], float] = 0.1
+    t_step: float = 0.1
     """ Time between two controller calls """
 
 
