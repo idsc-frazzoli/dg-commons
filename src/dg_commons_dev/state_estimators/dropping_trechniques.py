@@ -12,7 +12,7 @@ from dg_commons_dev.utils import BaseParams
 class LGBParam(BaseParams):
     """ Linear Gaussian Bernoulli Parameters """
 
-    failure_p: Union[List[float], float] = 0
+    failure_p: float = 0
     """ Failure Probability """
 
     def __post_init__(self):
@@ -61,7 +61,7 @@ class LGB(DroppingTechniques):
 class LGMParam(LGBParam):
     """ Linear Gaussian Markov Parameters """
 
-    recovery_p: Union[float, List[float]] = 0
+    recovery_p: float = 0
     """ Recovery Probability """
 
     def __post_init__(self):
@@ -145,17 +145,17 @@ class LGM(DroppingTechniques):
 class LGSMParam(BaseParams):
     """ Linear Gaussian Semi - Markov parameters """
 
-    failure_distribution: Union[List[type(PDistribution)], type(PDistribution)] = Exponential
+    failure_distribution: type(PDistribution) = Exponential
     """ Failure probability distribution """
-    failure_params: Union[List[PDistributionParams], PDistributionParams] = ExponentialParams()
+    failure_params: PDistributionParams = ExponentialParams()
     """ Failure probability distribution parameters """
 
-    recovery_distribution: Union[List[type(PDistribution)], type(PDistribution)] = Exponential
+    recovery_distribution: type(PDistribution) = Exponential
     """ Recovery probability distribution """
-    recovery_params: Union[List[PDistributionParams], PDistributionParams] = ExponentialParams()
+    recovery_params: PDistributionParams = ExponentialParams()
     """ Recovery probability distribution parameters """
 
-    dt: Union[List[float], float] = 0.1
+    dt: float = 0.1
     """ Time interval between two subsequent calls """
 
 

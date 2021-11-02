@@ -19,29 +19,29 @@ from dg_commons_dev.utils import BaseParams
 
 @dataclass
 class ExtendedKalmanKinParam(BaseParams):
-    n_states: Union[List[int], int] = VehicleState.get_n_states()
+    n_states: int = VehicleState.get_n_states()
     """ Number of states """
-    n_commands: Union[List[int], int] = VehicleCommands.get_n_commands()
+    n_commands: int = VehicleCommands.get_n_commands()
     """ Number of commands """
-    actual_model_var: Union[List[SemiDef], SemiDef] = SemiDef(n_states * [0])
+    actual_model_var: SemiDef = SemiDef(n_states * [0])
     """ Actual Modeling covariance matrix """
-    actual_meas_var: Union[List[SemiDef], SemiDef] = SemiDef(n_states * [0])
+    actual_meas_var: SemiDef = SemiDef(n_states * [0])
     """ Actual Measurement covariance matrix """
-    belief_model_var: Union[List[SemiDef], SemiDef] = actual_model_var
+    belief_model_var: SemiDef = actual_model_var
     """ Belief modeling covariance matrix """
-    belief_meas_var: Union[List[SemiDef], SemiDef] = actual_meas_var
+    belief_meas_var: SemiDef = actual_meas_var
     """ Belief measurement covariance matrix """
-    initial_variance: Union[List[SemiDef], SemiDef] = actual_model_var
+    initial_variance: SemiDef = actual_model_var
     """ Initial covariance matrix """
-    dropping_technique: Union[List[type(DroppingTechniques)], type(DroppingTechniques)] = LGB
+    dropping_technique: type(DroppingTechniques) = LGB
     """ Dropping Technique """
-    dropping_params: Union[List[BaseParams], BaseParams] = LGBParam()
+    dropping_params: BaseParams = LGBParam()
     """ Dropping parameters """
-    geometry_params: Union[List[VehicleGeometry], VehicleGeometry] = VehicleGeometry.default_car()
+    geometry_params: VehicleGeometry = VehicleGeometry.default_car()
     """ Vehicle Geometry """
-    vehicle_params: Union[List[VehicleParameters], VehicleParameters] = VehicleParameters.default_car()
+    vehicle_params: VehicleParameters = VehicleParameters.default_car()
     """ Vehicle Parameters """
-    t_step: Union[List[float], float] = 0.1
+    t_step: float = 0.1
     """ Time interval between two calls """
 
     def __post_init__(self):

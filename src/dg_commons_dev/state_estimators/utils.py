@@ -10,7 +10,7 @@ class ExponentialParams(BaseParams):
     Exponential Distribution Parameters
     """
 
-    lamb: Union[List[float], float] = 1
+    lamb: float = 1
     """ lambda > 0 """
 
     def __post_init__(self):
