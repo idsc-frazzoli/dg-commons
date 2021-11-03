@@ -2,7 +2,7 @@ from dataclasses import dataclass, fields
 from typing import Optional, List, Callable, TypeVar, Mapping, Dict, Any, Generic
 import numpy as np
 import scipy.linalg
-from abc import ABC
+from abc import ABC, abstractmethod
 import itertools
 import copy
 
@@ -91,138 +91,15 @@ class SemiDef:
         return all(self.eig[i] <= other.eig[i] for i, _ in enumerate(self.eig))
 
 
-R = TypeVar("R")
-
-
-def func(values: R) -> bool:
-    return True
-
-
 @dataclass
-class BaseParams(ABC, Generic[R]):
-    """
-    Base dataclass every parameter dataclasses are inheriting from.
-    Creates the baseline for iterating over different set of parameters.
+class BaseParams(ABC):
+    """ A BaseParams is a dataclass structure defining the external parameters of a functional class """
 
-    Assuming a dataclass inheriting from BaseParameters and with attributes satisfying:
-
-    attribute_i: Union[List[X], X] = [valx1, valx2]
-    attribute_j: Union[List[Y], Y] = [valy1, valy2],
-
-    where a single instance of the dataclass is one with a single value per attribute. This baseclass provides a
-    generator to iterate over all combinations if "condition" is satisfied.
-
-    Example:
-        dataclass ExampleParams(BaseParams):
-            q: Union[List[float], float] = [1, 2]
-            r: Union[List[float], float] = [3, 4]
-
-        example = 1DLQRParams()
-
-        for item in example.gen():
-            print(item.q, item.r)
-
-        would print:
-            1 3
-            1 3
-            2 3
-            2 4
-
-        You can furthermore add a condition:
-
-        def func(ex: ExampleParams):
-            if ex.r - ex.q == 2:
-                return True
-            else:
-                return False
-
-        example.condition = func
-
-        for item in example.gen():
-            print(item.q, item.r)
-
-        would print:
-            2 4
-
-        the only case in our example satisfying ex.r - ex.q == 2
-    
-    The whole thing can be nested but does not help if the expected single combination instance is a list.
-    """
-
-    condition: Callable[[R], bool] = func
-
-    def __post_init__(self):
-        """ Type checking and creation of xplets """
-
-        lists: List[Any] = []
-        single_list: List[bool] = []
-        for field in fields(self):
-            values: Any = getattr(self, field.name)
-            res: Any = self.process_mutually_exclusive_values(values)
-            lists.append(res)
-            single_list.append(len(res) == 1)
-
-        self.xplets: List[Any] = list(itertools.product(*lists))
-        self.is_single: bool = all(single_list)
-        if self.is_single:
-            self.n_total: int = 1
-        else:
-            helper: List[Any] = copy.deepcopy(self.xplets)
-            for xplet in self.xplets:
-                try:
-                    new_instance: Optional[R] = self.__new__(type(self))
-                    new_instance.__init__(*xplet)
-                except Exception:
-                    helper.remove(xplet)
-
-            self.xplets: List[Any] = helper
-            self.n_total: int = len(self.xplets)
-
-    def process_mutually_exclusive_values(self, values: Any) -> Any:
+    @property
+    @abstractmethod
+    def reference_class(self) -> Callable[["BaseParams"], Any]:
         """
-        Finds all possible values of a single parameter.
-        @param values: the values of interest
-        @return: list of all possible values
+        Every base parameter class defines the parameters of a reference class,
+        which needs to be set explicitly.
         """
-        return_values = []
-
-        def process_single_value(inst):
-            if self.is_nested(inst):
-                for val in inst.gen():
-                    return_values.append(val)
-            else:
-                return_values.append(inst)
-
-        if isinstance(values, list):
-            for value in values:
-                process_single_value(value)
-        else:
-            process_single_value(values)
-        return return_values
-
-    @staticmethod
-    def is_nested(value: Any) -> bool:
-        """
-        Returns whether the value of interest inherits in turn from BaseParams
-        @param value: The value of interest
-        @return: True if nested, false otherwise
-        """
-        try:
-            value.get_count()
-            return True
-        except AttributeError:
-            return False
-
-    def get_count(self) -> int:
-        """
-
-        @return: number of possible combinations
-        """
-        return self.n_total
-
-    def gen(self) -> R:
-        for xplet in self.xplets:
-            new_instance = self.__new__(type(self))
-            new_instance.__init__(*xplet)
-            if self.condition(new_instance):
-                yield new_instance
+        pass
