@@ -1,8 +1,8 @@
-from dataclasses import dataclass
-from typing import List, Callable, Any
+from dataclasses import dataclass, fields, asdict
+from typing import List
 import numpy as np
 import scipy.linalg
-from abc import ABC, abstractmethod
+from abc import ABC
 
 
 @dataclass
@@ -93,11 +93,15 @@ class SemiDef:
 class BaseParams(ABC):
     """ A BaseParams is a dataclass structure defining the external parameters of a functional class """
 
-    @property
-    @abstractmethod
-    def reference_class(self) -> Callable[["BaseParams"], Any]:
+    def __str__(self):
         """
-        Every base parameter class defines the parameters of a reference class,
-        which needs to be set explicitly.
+        Return string explicitly set for visualization
+        @return: Return string
         """
-        pass
+        string = "############## Base Parameters {} ##############\n".format(self.__class__.__name__)
+        string += "--------------------------------------------------\n"
+        for field in fields(self):
+            value = getattr(self, field.name)
+            string += field.name + " of type {}: ".format(field.type) + str(value) + "\n"
+            string += "--------------------------------------------------\n"
+        return string
