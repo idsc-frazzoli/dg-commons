@@ -1,10 +1,8 @@
-from dataclasses import dataclass, fields
-from typing import Optional, List, Callable, TypeVar, Mapping, Dict, Any, Generic
+from dataclasses import dataclass
+from typing import List, Callable, Any
 import numpy as np
 import scipy.linalg
 from abc import ABC, abstractmethod
-import itertools
-import copy
 
 
 @dataclass
