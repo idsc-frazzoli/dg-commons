@@ -41,6 +41,9 @@ class EmergencyParams(BaseParams):
     """Evaluate emergency only for vehicles within x [m]"""
     min_vel: float = kmh2ms(5)
     """emergency only to vehicles that are at least moving at.."""
+    def __post_init__(self):
+        assert 0 <= self.min_vel <= 350
+        assert 0 <= self.min_dist <= 100
 
 
 class Emergency(Situation[SituationObservations, EmergencyDescription]):
@@ -49,6 +52,7 @@ class Emergency(Situation[SituationObservations, EmergencyDescription]):
      1) establishing whether an emergency is occurring
      2) computing important parameters describing the emergency situation
     """
+    REF_PARAMS: dataclass = EmergencyParams
 
     def __init__(self, params: EmergencyParams, safety_time_braking: float,
                  vehicle_params: VehicleParameters = VehicleParameters.default_car(),

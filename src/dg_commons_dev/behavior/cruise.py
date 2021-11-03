@@ -53,6 +53,7 @@ class Cruise(Situation[SituationObservations, CruiseDescription]):
      1) establishing whether a cruise situation is occurring
      2) computing important parameters describing the cruise situation
     """
+    REF_PARAMS: dataclass = CruiseParams
 
     def __init__(self, params: CruiseParams, safety_time_braking: float, plot=False):
         self.params = params

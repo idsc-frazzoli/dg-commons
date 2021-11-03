@@ -1,6 +1,6 @@
 from dg_commons_dev.behavior.behavior_types import Situation
 from dataclasses import dataclass
-from typing import Optional, Union, List
+from typing import Optional
 import numpy as np
 from dg_commons_dev.behavior.utils import SituationObservations
 from dg_commons.sim.models import kmh2ms, extract_vel_from_state
@@ -29,10 +29,15 @@ class YieldParams(BaseParams):
     """Emergency only to vehicles that are at least moving at.."""
     min_dist: float = 7
     """Evaluate whether to yield only for vehicles within x [m]"""
+    def __post_init__(self):
+        assert 0 <= self.min_vel <= 350
+        assert 0 <= self.min_dist <= 100
 
 
 class Yield(Situation[SituationObservations, YieldDescription]):
     """ Yield situation """
+    REF_PARAMS: dataclass = YieldParams
+
     def __init__(self, params: YieldParams, safety_time_braking):
         self.params = params
         self.safety_time_braking = safety_time_braking
