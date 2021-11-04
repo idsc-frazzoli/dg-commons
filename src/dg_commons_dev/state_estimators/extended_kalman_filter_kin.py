@@ -3,11 +3,10 @@ from scipy.integrate import solve_ivp
 from dg_commons.sim.models.vehicle import VehicleState, VehicleCommands, VehicleGeometry
 from dg_commons.sim.models.vehicle_utils import steering_constraint, VehicleParameters
 from dg_commons.sim.models.model_utils import acceleration_constraint
-from typing import Optional, Union
+from typing import Optional
 from dg_commons_dev.utils import SemiDef
 from dg_commons_dev.state_estimators.dropping_trechniques import DroppingTechniques, \
-    LGB, LGBParam, DroppingMaps
-from typing import List
+    LGB, LGBParam
 from dg_commons_dev.state_estimators.estimator_types import Estimator
 import math
 from dg_commons import X
@@ -45,19 +44,16 @@ class ExtendedKalmanKinParam(BaseParams):
     """ Time interval between two calls """
 
     def __post_init__(self):
-        if isinstance(self.dropping_params, list):
-            assert len(self.dropping_technique) == len(self.dropping_params)
-            for i, technique in enumerate(self.dropping_technique):
-                assert DroppingMaps[technique] == type(self.dropping_params[i])
-
-        else:
-            assert DroppingMaps[self.dropping_technique] == type(self.dropping_params)
-
-        super().__post_init__()
+        assert len(self.actual_model_var.eig) == self.n_states
+        assert len(self.belief_model_var.eig) == self.n_states
+        assert len(self.initial_variance.eig) == self.n_states
+        assert 0 <= self.t_step <= 30
+        assert isinstance(self.dropping_params, self.dropping_technique.REF_PARAMS)
 
 
 class ExtendedKalmanKin(Estimator):
     """ Extended Kalman Filter with kinematic bicycle model and identity measurement model """
+    REF_PARAMS: dataclass = ExtendedKalmanKinParam
 
     def __init__(self, x0=None, params=ExtendedKalmanKinParam(),
                  model_noise_realization=None):

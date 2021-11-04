@@ -16,15 +16,12 @@ class LGBParam(BaseParams):
     """ Failure Probability """
 
     def __post_init__(self):
-        if isinstance(self.failure_p, list):
-            all(1 >= i >= 0 for i in self.failure_p)
-        else:
-            assert 1 >= self.failure_p >= 0
-        super().__post_init__()
+        assert 0 <= self.failure_p <= 0
 
 
 class LGB(DroppingTechniques):
     """ Linear Gaussian Bernoulli """
+    REF_PARAMS: dataclass = LGBParam
 
     def __init__(self, params=LGBParam()):
         self.params = params
@@ -66,16 +63,8 @@ class LGMParam(LGBParam):
 
     def __post_init__(self):
         super().__post_init__()
-        f_list = isinstance(self.failure_p, list)
-        r_list = isinstance(self.recovery_p, list)
-
-        temp_f = self.failure_p if f_list else [self.failure_p]
-        temp_r = self.recovery_p if r_list else [self.recovery_p]
-        self.expected_value = []
-        for i in temp_f:
-            for j in temp_r:
-                self.expected_value.append(self.process_instance(i, j))
-        super().__post_init__()
+        assert 0 <= self.recovery_p <= 1
+        self.expected_value = [self.process_instance(self.failure_p, self.recovery_p)]
 
     @staticmethod
     def process_instance(f, r) -> float:
@@ -87,8 +76,6 @@ class LGMParam(LGBParam):
         @param r: recovery probability
         @return: expected value
         """
-        assert 1 >= r >= 0
-
         mat = np.array([[1-f, f], [r, 1-r]])
         eigval, eigvecl, eigvecr = scipy.linalg.eig(mat, left=True)
 
@@ -101,6 +88,7 @@ class LGMParam(LGBParam):
 
 class LGM(DroppingTechniques):
     """ Linear Gaussian Markov """
+    REF_PARAMS: dataclass = LGMParam
 
     def __init__(self, params=LGMParam()):
         self.params = params
@@ -158,9 +146,15 @@ class LGSMParam(BaseParams):
     dt: float = 0.1
     """ Time interval between two subsequent calls """
 
+    def __post_init__(self):
+        assert 0 <= self.dt <= 30
+        assert isinstance(self.failure_params, self.failure_distribution.REF_PARAMS)
+        assert isinstance(self.recovery_params, self.recovery_distribution.REF_PARAMS)
+
 
 class LGSM(DroppingTechniques):
     """ Linear Gaussian Semi - Markov """
+    REF_PARAMS: dataclass = LGSMParam
 
     def __init__(self, params=LGSMParam()):
         self.dt = params.dt

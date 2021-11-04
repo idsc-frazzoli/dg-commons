@@ -14,12 +14,7 @@ class ExponentialParams(BaseParams):
     """ lambda > 0 """
 
     def __post_init__(self):
-        if isinstance(self.lamb, list):
-            for i in self.lamb:
-                assert i > 0
-        else:
-            assert self.lamb > 0
-        super().__post_init__()
+        assert self.lamb > 0
 
 
 class Exponential:
@@ -29,6 +24,7 @@ class Exponential:
     f(t) = lambda * exp(- lambda * t) if t >= 0
     f(t) = 0 otherwise
     """
+    REF_PARAMS: dataclass = ExponentialParams
 
     def __init__(self, params: ExponentialParams):
         self.params = params
