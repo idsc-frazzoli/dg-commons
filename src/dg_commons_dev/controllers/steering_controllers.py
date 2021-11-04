@@ -1,10 +1,12 @@
 from dataclasses import dataclass
-from typing import Optional, Union, List
+from typing import Optional, Callable
 from dg_commons_dev.controllers.controller_types import SteeringController
 from dg_commons_dev.utils import BaseParams
 
 
 class SCIdentity(SteeringController):
+    REF_PARAMS: Callable = BaseParams
+
     def __init__(self, params: Optional[BaseParams] = None):
         self.params = BaseParams() if params is None else params
         super().__init__()
@@ -27,8 +29,13 @@ class SCPParam(BaseParams):
     ddelta_kp: float = 10
     """ Kappa p - parameter """
 
+    def __post_init__(self):
+        assert 0 <= self.ddelta_kp
+
 
 class SCP(SteeringController):
+    REF_PARAMS: Callable = SCPParam
+
     def __init__(self, params: Optional[SCPParam] = None):
         self.params = SCPParam() if params is None else params
         super().__init__()
