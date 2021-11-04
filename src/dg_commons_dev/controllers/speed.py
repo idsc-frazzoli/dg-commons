@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Tuple, Optional, List, Union
+from typing import Tuple, Optional, Callable
 from dg_commons.controllers.pid import PIDParam, PID
 from dg_commons.sim.models import kmh2ms
 from dg_commons_dev.controllers.controller_types import LongitudinalController
@@ -20,23 +20,18 @@ class SpeedControllerParam(BaseParams, PIDParam):
     output_minmax: Tuple[float, float] = (-8, 5)  # acc minmax
 
     def __post_init__(self):
-        if isinstance(self.antiwindup, list):
-            assert all([i[0] < i[1] for i in self.antiwindup])
-        else:
-            assert self.antiwindup[0] < self.antiwindup[1]
-        if isinstance(self.setpoint_minmax, list):
-            assert all([i[0] < i[1] for i in self.setpoint_minmax])
-        else:
-            assert self.setpoint_minmax[0] < self.setpoint_minmax[1]
-        if isinstance(self.output_minmax, list):
-            assert all([i[0] < i[1] for i in self.output_minmax])
-        else:
-            assert self.output_minmax[0] < self.output_minmax[1]
+        assert self.antiwindup[0] < self.antiwindup[1]
+        assert self.setpoint_minmax[0] < self.setpoint_minmax[1]
+        assert self.output_minmax[0] < self.output_minmax[1]
+        assert 0 <= self.kP
+        assert 0 <= self.kI
+        assert 0 <= self.kD
         super().__post_init__()
 
 
 class SpeedController(PID, LongitudinalController):
     """ Low-level controller for reference tracking of speed """
+    REF_PARAMS: Callable = SpeedControllerParam
 
     def __init__(self, params: Optional[PIDParam] = None):
         params = SpeedControllerParam() if params is None else params
