@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from math import sin, atan
-from typing import Tuple, Union, List
+from typing import Tuple, Callable
 import numpy as np
 import scipy.optimize
 from geometry import SE2value, translation_angle_from_SE2, SE2_from_translation_angle, angle_from_SE2
@@ -28,6 +28,16 @@ class PurePursuitParam(BaseParams):
     """Length of the vehicle"""
     t_step: float = 0.1
 
+    def __post_init__(self):
+        assert 0 < self.t_step <= 30
+        assert 0 < self.k_lookahead
+        assert 0 < self.length
+        assert 0 <= self.max_extra_distance
+        assert 0 <= self.look_ahead_minmax[0] and 0 < self.look_ahead_minmax[1]
+        assert self.look_ahead_minmax[0] < self.look_ahead_minmax[1]
+        assert self.min_distance <= self.look_ahead_minmax[1]
+        assert self.max_extra_distance <= self.look_ahead_minmax[1]
+
 
 class PurePursuit(LateralController):
     """ Pure Pursuit lateral controller """
@@ -38,6 +48,7 @@ class PurePursuit(LateralController):
     True: steering velocity
     False: steering angle
     """
+    REF_PARAMS: Callable = PurePursuitParam
 
     def __init__(self, params: PurePursuitParam = PurePursuitParam()):
         self.params: PurePursuitParam = params

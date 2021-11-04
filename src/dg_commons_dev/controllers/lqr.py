@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Tuple, Callable
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 import scipy.optimize
 import scipy.linalg
@@ -48,6 +48,8 @@ class LQRParam(BaseParams):
     """State Multiplier """
     t_step: float = 0.1
     """ Time between two controller calls """
+    def __post_init__(self):
+        assert 0 <= self.t_step <= 30
 
 
 class LQR(LateralController):
@@ -59,6 +61,7 @@ class LQR(LateralController):
     True: steering velocity
     False: steering angle
     """
+    REF_PARAMS: Callable = LQRParam
 
     def __init__(self, params: LQRParam = LQRParam(),
                  target_position: T2value = None):

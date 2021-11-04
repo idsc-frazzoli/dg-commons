@@ -10,7 +10,7 @@ from duckietown_world.utils import SE2_apply_R2
 import math
 from duckietown_world import relative_pose
 from dg_commons_dev.curve_approximation_techniques import LinearCurve, CurveApproximationTechniques
-from typing import Union, List, Tuple
+from typing import Tuple, Callable
 from dg_commons_dev.controllers.controller_types import LateralController
 from dg_commons_dev.utils import BaseParams
 
@@ -25,6 +25,10 @@ class StanleyParam(BaseParams):
     t_step: float = 0.1
     """ Time between two controller calls """
 
+    def __post_init__(self):
+        assert 0 <= self.stanley_gain
+        assert 0 < self.t_step <= 30
+
 
 class Stanley(LateralController):
     """ Stanley lateral controller """
@@ -35,6 +39,7 @@ class Stanley(LateralController):
     True: steering velocity
     False: steering angle
     """
+    REF_PARAMS: Callable = StanleyParam
 
     def __init__(self, params: StanleyParam = StanleyParam(),
                  target_position: T2value = None):
