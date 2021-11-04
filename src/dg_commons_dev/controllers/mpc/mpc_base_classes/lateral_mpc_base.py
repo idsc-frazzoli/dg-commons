@@ -12,7 +12,7 @@ from dg_commons_dev.utils import SemiDef
 from dataclasses import dataclass
 from casadi import *
 from abc import abstractmethod
-from typing import List, Optional, Union
+from typing import Optional
 
 
 vehicle_params = VehicleParameters.default_car()
@@ -31,12 +31,18 @@ class LatMPCKinBaseParam(MPCKinBAseParam):
                                             vehicle_params.ddelta_max)
     """ Ddelta Bounds """
     delta_bounds: Tuple[float, float] = (-vehicle_params.default_car().delta_max,
-                                                                           vehicle_params.default_car().delta_max)
+        vehicle_params.default_car().delta_max)
     """ Steering Bounds """
     path_approx_technique: CurveApproximationTechniques = LinearCurve
     """ Path approximation technique """
     analytical: bool = False
     """ Whether to use analytical methods or path variable methods to compute targets  """
+
+    def __post_init__(self):
+        super().__post_init__()
+        assert isinstance(self.cost_params, self.cost.REF_PARAMS)
+        assert self.v_delta_bounds[0] <= self.v_delta_bounds[1]
+        assert self.delta_bounds[0] <= self.delta_bounds[1]
 
 
 class LatMPCKinBase(MPCKinBase, LateralController):

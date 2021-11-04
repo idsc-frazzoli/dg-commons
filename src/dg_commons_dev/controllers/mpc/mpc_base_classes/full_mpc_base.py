@@ -19,6 +19,12 @@ class FullMPCKinBaseParam(LatMPCKinBaseParam, BaseParams):
     v_bounds: Tuple[float, float] = vehicle_params.vx_limits
     """ Velocity Bounds """
 
+    def __post_init__(self):
+        super().__post_init__()
+        assert self.v_bounds[0] <= self.v_bounds[1]
+        assert self.acc_bounds[0] <= self.acc_bounds[1]
+        assert isinstance(self.cost_params, self.cost.REF_PARAMS)
+
 
 class FullMPCKinBase(LatMPCKinBase, LatAndLonController):
     """ MPC for vehicle lateral control abstract class """

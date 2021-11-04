@@ -1,7 +1,7 @@
 from casadi import *
 from dg_commons_dev.utils import SemiDef
 from dataclasses import dataclass
-from typing import Union, List, Dict, Tuple
+from typing import Union, List, Dict, Tuple, Callable
 from dg_commons_dev.utils import BaseParams
 
 """ Fully casadi compatible """
@@ -28,6 +28,7 @@ class QuadraticCost:
     """
     Quadratic cost function = state^T * q * state + input^T * r * input
     """
+    REF_PARAMS: Callable = QuadraticParams
 
     def __init__(self, params: QuadraticParams):
         self.params = params

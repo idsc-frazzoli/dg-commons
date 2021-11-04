@@ -1,9 +1,9 @@
-from typing import Union, List, Dict, Any, Optional, Tuple
+from typing import Dict, Any, Tuple
 from abc import ABC, abstractmethod
 import do_mpc
 from dataclasses import dataclass
-from dg_commons_dev.controllers.utils.cost_functions import CostFunctions, QuadraticCost, CostParameters, \
-    MapCostParam, QuadraticParams
+from dg_commons_dev.controllers.utils.cost_functions import CostFunctions, QuadraticCost, \
+    CostParameters, QuadraticParams
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 from dg_commons_dev.utils import BaseParams
 from dg_commons_dev.controllers.interface import Controller
@@ -27,15 +27,10 @@ class MPCKinBAseParam(BaseParams):
     vehicle_geometry: VehicleGeometry = VehicleGeometry.default_car()
 
     def __post_init__(self):
-        if isinstance(self.cost, list):
-            assert len(self.cost) == len(self.cost_params)
-            for i, technique in enumerate(self.cost):
-                assert MapCostParam[technique] == type(self.cost_params[i])
-
-        else:
-            assert MapCostParam[self.cost] == type(self.cost_params)
-
-        super().__post_init__()
+        assert isinstance(self.cost_params, self.cost.REF_PARAMS)
+        assert 0 <= self.t_step <= 30
+        assert 0 <= self.n_horizon
+        assert 0 <= self.delta_input_weight
 
 
 class MPCKinBase(Controller, ABC):

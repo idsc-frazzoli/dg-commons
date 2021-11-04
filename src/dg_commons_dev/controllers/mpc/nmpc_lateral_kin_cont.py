@@ -1,6 +1,6 @@
 from dg_commons_dev.controllers.mpc.mpc_base_classes.lateral_mpc_base import LatMPCKinBase, LatMPCKinBaseParam
 from casadi import *
-from typing import Tuple
+from typing import Tuple, Callable
 
 __all__ = ["NMPCLatKinCont"]
 
@@ -14,6 +14,7 @@ class NMPCLatKinCont(LatMPCKinBase):
     True: steering velocity
     False: steering angle
     """
+    REF_PARAMS: Callable = LatMPCKinBaseParam
 
     def __init__(self, params: LatMPCKinBaseParam = LatMPCKinBaseParam()):
         model_type: str = 'continuous'  # either 'discrete' or 'continuous'

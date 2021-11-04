@@ -1,6 +1,6 @@
 from dg_commons_dev.controllers.mpc.mpc_base_classes.full_mpc_base import FullMPCKinBase, FullMPCKinBaseParam
 from casadi import *
-from typing import Tuple
+from typing import Tuple, Callable
 
 
 __all__ = ["NMPCFullKinCont"]
@@ -15,6 +15,7 @@ class NMPCFullKinCont(FullMPCKinBase):
     True: steering velocity
     False: steering angle
     """
+    REF_PARAMS: Callable = FullMPCKinBaseParam
 
     def __init__(self, params: FullMPCKinBaseParam = FullMPCKinBaseParam()):
         model_type: str = 'continuous'  # either 'discrete' or 'continuous'

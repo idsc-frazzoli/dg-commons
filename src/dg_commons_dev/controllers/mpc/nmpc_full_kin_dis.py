@@ -1,6 +1,6 @@
 from dg_commons_dev.controllers.mpc.mpc_base_classes.full_mpc_base import FullMPCKinBaseParam, FullMPCKinBase
 from dg_commons_dev.controllers.utils.discretization_techniques import discretizations
-from typing import List, Union, Tuple
+from typing import List, Tuple, Callable
 from dataclasses import dataclass
 from casadi import *
 
@@ -14,6 +14,10 @@ class NMPCFullKinDisParam(FullMPCKinBaseParam):
     """ Discretization technique """
     dis_t: float = 0.01
     """ Discretization Time Step """
+    def __post_init__(self):
+        super().__post_init__()
+        assert self.t_step % self.dis_t < 10e-10  # Not set to zero because of numerical errors
+        assert self.dis_technique in discretizations.keys()
 
 
 class NMPCFullKinDis(FullMPCKinBase):
@@ -25,6 +29,7 @@ class NMPCFullKinDis(FullMPCKinBase):
     True: steering velocity
     False: steering angle
     """
+    REF_PARAMS: Callable = NMPCFullKinDisParam
 
     def __init__(self, params: NMPCFullKinDisParam = NMPCFullKinDisParam()):
         model_type: str = 'discrete'  # either 'discrete' or 'continuous'
