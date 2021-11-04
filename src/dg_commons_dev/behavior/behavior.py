@@ -67,9 +67,9 @@ class SpeedBehaviorParam(BaseParams):
     """ Period of decision making """
     def __post_init__(self):
         assert 0 <= self.safety_time_braking <= 50
-        assert isinstance(self.emergency_params, Emergency.REF_PARAMS)
-        assert isinstance(self.yield_params, Yield.REF_PARAMS)
-        assert isinstance(self.cruise_params, Cruise.REF_PARAMS)
+        assert isinstance(self.emergency_params, self.emergency.REF_PARAMS)
+        assert isinstance(self.yield_params, self.yield_to.REF_PARAMS)
+        assert isinstance(self.cruise_params, self.cruise.REF_PARAMS)
         assert 0 <= self.dt_commands <= 50
 
 
