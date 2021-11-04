@@ -1,6 +1,6 @@
 from dg_commons_dev.controllers.controller_types import Reference
 from dg_commons.sim.models.vehicle_utils import VehicleParameters
-from typing import List, Union, Optional
+from typing import Optional, Callable
 from dg_commons_dev.controllers.interface import Controller
 from dg_commons_dev.behavior.emergency import EmergencyDescription
 from dg_commons_dev.behavior.yield_to import YieldDescription
@@ -61,6 +61,7 @@ class EmergencyControllerParams(BaseParams):
 
 class EmergencyController(Controller[Reference, EmergencyDescription, OptionalCommands]):
     """ Emergency controller implements how to react to a certain emergency situation in terms of acc and ddelta """
+    REF_PARAMS: Callable = EmergencyControllerParams
 
     def __init__(self, params=EmergencyControllerParams(), ref: Reference = None):
         self.params = params
@@ -96,6 +97,7 @@ class YieldControllerParams(BaseParams):
 
 class YieldController(Controller[Reference, YieldDescription, OptionalCommands]):
     """ Yield controller implements how to react to a certain yield situation in terms of acc and ddelta """
+    REF_PARAMS: Callable = YieldControllerParams
 
     def __init__(self, params=YieldControllerParams()):
         self.params = params
