@@ -195,9 +195,8 @@ def entry_exit_t(intersection: Polygon, current_state, occupacy: Polygon, safety
     state = states_prediction(current_state, min_t, min_t)[-1] if min_t != 0 else current_state
     dt = (max_t - min_t)/2
     entry_t, state = find(t, state, dt, lambda inter: not inter.is_empty)
-    '''entry_t = 0 if entry_t is None else entry_t
-    state = current_state if state is None else state'''
-    assert entry_t is not None
+    if entry_t is None:
+        entry_t = safety_t - SAFETY_FACTOR / vel
 
     dt = (max_t - entry_t)/2
     exit_t, _ = find(entry_t, state, dt, lambda inter: inter.is_empty)
