@@ -66,6 +66,7 @@ class PurePursuit(LateralController):
         @param new_obs: New Observation
         """
         self.pose = SE2_from_translation_angle([new_obs.x, new_obs.y], new_obs.theta)
+        self.speed = new_obs.vx
 
         control_sol_params = self.control_path.ControlSolParams(new_obs.vx, self.params.t_step)
         lanepose = self.control_path.lane_pose_from_SE2_generic(self.pose, control_sol=control_sol_params)
