@@ -10,6 +10,7 @@ __all__ = [
     "MOTORCYCLE",
     "BICYCLE",
     "PEDESTRIAN",
+    "TRUCK",
     "ModelGeometry",
     "ModelParameters",
     "TwoWheelsTypes",
