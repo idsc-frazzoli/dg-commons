@@ -2,8 +2,8 @@ import os
 from decimal import Decimal as D
 
 from numpy import deg2rad
+from reprep import Report, MIME_GIF
 
-from crash.reports import generate_report
 from dg_commons import PlayerName, DgSampledSequence
 from dg_commons.sim import SimParameters
 from dg_commons.sim.agents import NPAgent
@@ -11,6 +11,7 @@ from dg_commons.sim.models.vehicle import VehicleCommands
 from dg_commons.sim.models.vehicle_dynamic import VehicleStateDyn, VehicleModelDyn
 from dg_commons.sim.scenarios import load_commonroad_scenario
 from dg_commons.sim.simulator import SimContext, Simulator
+from dg_commons.sim.simulator_animation import create_animation
 from dg_commons_tests import OUT_TESTS
 
 P1, P2 = (
@@ -53,6 +54,16 @@ def get_simple_scenario() -> SimContext:
         players=players,
         param=SimParameters(dt=D("0.01"), dt_commands=D("0.1"), sim_time_after_collision=D(1), max_sim_time=D(7)),
     )
+
+
+def generate_report(sim_context: SimContext) -> Report:
+    r = Report("EpisodeVisualisation")
+    if sim_context.sim_terminated is not True:
+        raise RuntimeWarning("Generating a simulation report from a simulation that is not terminated")
+    gif_viz = r.figure(cols=1)
+    with gif_viz.data_file("Animation", MIME_GIF) as fn:
+        create_animation(file_path=fn, sim_context=sim_context, figsize=(16, 8), dt=20, dpi=120, plot_limits="auto")
+    return r
 
 
 def test_simple_simulation():
