@@ -23,7 +23,7 @@ class OptionalCommands:
     acc: Optional[float] = None
     ddelta: Optional[float] = None
 
-    def is_normal_required(self) -> bool:
+    def is_cruise_required(self) -> bool:
         """
         Check whether cruise commands need to be computed
         @return: True if they need to be computed, False otherwise
