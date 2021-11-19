@@ -41,7 +41,7 @@ setup(
     author_email="azanardi@ethz.ch",
     url="https://github.com/idsc-frazzoli/dg-commons",
     description="Common tools and utilities related to Driving Games",
-    long_description=(Path(__file__).parent / "README.md").read_text(),
+    long_description=(Path(__file__).with_name("README.md")).read_text(),
     long_description_content_type="text/markdown",
     package_dir={"": src},
     packages=find_packages("src"),
@@ -54,6 +54,3 @@ setup(
     install_requires=install_requires,
     extra_requires=extra_requires,
 )
-
-if __name__ == "__main__":
-    print("test")
