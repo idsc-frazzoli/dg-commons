@@ -76,7 +76,7 @@ def resolve_collision(a: PlayerName, b: PlayerName, sim_context: SimContext) -> 
     who_is_at_fault = chek_who_is_at_fault(
         {a: a_model.get_pose(), b: b_model.get_pose()},
         impact_point=impact_point,
-        lanelet_network=sim_context.scenario.lanelet_network,
+        lanelet_network=sim_context.dg_scenario.lanelet_network,
     )
     a_fault, b_fault = who_is_at_fault[a], who_is_at_fault[b]
 

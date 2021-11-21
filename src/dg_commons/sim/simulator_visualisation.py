@@ -59,7 +59,7 @@ class SimRenderer(SimRendererABC):
     @contextmanager
     def plot_arena(self, ax: Axes):
         # planning_problem_set.draw(rnd)
-        self.sim_context.scenario.lanelet_network.draw(
+        self.sim_context.dg_scenario.lanelet_network.draw(
             self.commonroad_renderer, draw_params={"traffic_light": {"draw_traffic_lights": False}}
         )
         self.commonroad_renderer.render()

@@ -3,12 +3,11 @@ from decimal import Decimal
 from itertools import combinations
 from typing import Mapping, Optional, List, Dict
 
-from commonroad.scenario.scenario import Scenario
-
 from dg_commons import PlayerName, U
 from dg_commons.sim import SimTime, CollisionReport, logger
 from dg_commons.sim.agents.agent import Agent, TAgent
 from dg_commons.sim.collision_utils import CollisionException
+from dg_commons.sim.scenarios.structures import DgScenario
 from dg_commons.sim.simulator_structures import *
 from dg_commons.time import time_function
 
@@ -18,7 +17,7 @@ class SimContext:
     """The simulation context that keeps track of everything, handle with care as it is passed around by reference and
     it is a mutable object"""
 
-    scenario: Scenario
+    dg_scenario: DgScenario
     models: Mapping[PlayerName, SimModel]
     players: Mapping[PlayerName, TAgent]
     param: SimParameters
@@ -31,7 +30,7 @@ class SimContext:
 
     def __post_init__(self):
         assert self.models.keys() == self.players.keys()
-        assert isinstance(self.scenario, Scenario), self.scenario
+        assert isinstance(self.dg_scenario, DgScenario), self.dg_scenario
         for pname in self.models.keys():
             assert issubclass(type(self.models[pname]), SimModel)
             assert issubclass(type(self.players[pname]), Agent)
