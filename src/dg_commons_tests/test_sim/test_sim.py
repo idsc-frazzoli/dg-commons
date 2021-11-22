@@ -4,8 +4,6 @@ from decimal import Decimal as D
 from numpy import deg2rad
 from reprep import Report, MIME_GIF
 
-# from commonroad_dc.boundary import boundary
-
 from dg_commons import PlayerName, DgSampledSequence
 from dg_commons.sim import SimParameters
 from dg_commons.sim.agents import NPAgent

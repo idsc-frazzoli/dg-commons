@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Sequence
+from typing import Sequence, Optional
 
 from commonroad.scenario.scenario import Scenario
 from shapely.geometry.base import BaseGeometry
@@ -10,7 +10,7 @@ from dg_commons.maps.road_bounds import build_road_boundary_obstacle
 
 @dataclass
 class DgScenario:
-    scenario: Scenario
+    scenario: Optional[Scenario] = None
     """A commonroad scenario"""
     static_obstacles: Sequence[BaseGeometry] = field(default_factory=list)
     """A sequence of Shapely geometries"""
@@ -19,7 +19,8 @@ class DgScenario:
     strtree_obstacles: STRtree = field(init=False)
 
     def __post_init__(self):
-        assert isinstance(self.scenario, Scenario), self.scenario
+        if self.scenario:
+            assert isinstance(self.scenario, Scenario), self.scenario
         for sobstacle in self.static_obstacles:
             assert issubclass(type(sobstacle), BaseGeometry), sobstacle
         if self.use_road_boundaries:
