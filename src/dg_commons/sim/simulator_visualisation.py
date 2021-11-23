@@ -65,8 +65,8 @@ class SimRenderer(SimRendererABC):
                 self.commonroad_renderer, draw_params={"traffic_light": {"draw_traffic_lights": False}}
             )
             self.commonroad_renderer.render()
-        for s_obstacle in self.sim_context.dg_scenario.static_obstacles:
-            self.shapely_viz.add_shape(s_obstacle)
+        for s_obstacle in self.sim_context.dg_scenario.static_obstacles.values():
+            self.shapely_viz.add_shape(s_obstacle.shape, color=s_obstacle.geometry.color)
         yield
 
     def plot_player(

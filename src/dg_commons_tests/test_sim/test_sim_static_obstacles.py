@@ -8,6 +8,7 @@ from shapely.geometry import LinearRing, Polygon
 from dg_commons import PlayerName, DgSampledSequence, apply_SE2_to_shapely_geo
 from dg_commons.sim import SimParameters
 from dg_commons.sim.agents import NPAgent
+from dg_commons.sim.models.obstacles import StaticObstacle
 from dg_commons.sim.models.vehicle import VehicleCommands
 from dg_commons.sim.models.vehicle_dynamic import VehicleStateDyn, VehicleModelDyn
 from dg_commons.sim.scenarios.structures import DgScenario
@@ -35,9 +36,9 @@ def get_maze_scenario() -> SimContext:
     )
     boundaries = LinearRing([(0, 0), (0, 50), (50, 50), (50, 0), (0, 0)])
     poly1 = Polygon([[0, 0], [3, 0], [3, 3], [0, 3], [0, 0]])
-    poly2 = apply_SE2_to_shapely_geo(poly1, SE2_from_xytheta((2, 2, deg2rad(30))))
+    poly2 = apply_SE2_to_shapely_geo(poly1, SE2_from_xytheta((7, 15, deg2rad(30))))
 
-    static_obstacles = [boundaries, poly1, poly2]
+    static_obstacles = {0: StaticObstacle(boundaries), 1: StaticObstacle(poly1), 2: StaticObstacle(poly2)}
     players = {Ego: NPAgent(moving_vehicle)}
 
     return SimContext(

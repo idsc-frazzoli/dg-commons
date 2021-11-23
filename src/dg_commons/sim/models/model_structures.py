@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from math import inf
 from typing import Tuple, Sequence, NewType
 
 from dg_commons import Color
@@ -43,6 +44,16 @@ class ModelGeometry(ABC):
     @abstractmethod
     def outline(self) -> Sequence[Tuple[float, float]]:
         pass
+
+
+@dataclass(frozen=True, unsafe_hash=True)
+class StaticModelGeometry(ModelGeometry):
+    def outline(self) -> Sequence[Tuple[float, float]]:
+        raise NotImplementedError("Outline method for static model geometry is not implemented")
+
+    @staticmethod
+    def default() -> "StaticModelGeometry":
+        return StaticModelGeometry(m=inf, Iz=inf, e=0.4, color="black")
 
 
 @dataclass(frozen=True, unsafe_hash=True)

@@ -103,7 +103,8 @@ class Simulator:
         """
         Here all the operations that happen after we have stepped the simulation, e.g. collision checking
         """
-        collision_detected = self._check_collisions(sim_context)
+        collision_enviroment = self._check_collisions_with_environment(sim_context)
+        collision_players = self._check_collisions_among_players(sim_context)
         # after all the computations advance simulation time
         sim_context.time += sim_context.param.dt
         self._maybe_terminate_simulation(sim_context)
@@ -119,19 +120,47 @@ class Simulator:
         sim_context.sim_terminated = termination_condition
 
     @staticmethod
-    def _check_collisions(sim_context: SimContext) -> bool:
+    def _check_collisions_with_environment(sim_context: SimContext) -> bool:
+        """Check collisions of the players with the environment"""
+        from dg_commons.sim.collision import resolve_collision_with_environment  # import here to avoid circular imports
+
+        env_obstacles = sim_context.dg_scenario.strtree_obstacles
+        collision = False
+        for p, p_model in sim_context.models.items():
+            p_shape = p_model.get_footprint()
+            items = env_obstacles.query_items(p_shape)
+            for idx in items:
+                candidate = sim_context.dg_scenario.static_obstacles[idx]
+                if p_shape.intersects(candidate.shape):
+                    try:
+                        report: Optional[CollisionReport] = resolve_collision_with_environment(
+                            p, p_model, candidate, sim_context.time
+                        )
+                    except CollisionException as e:
+                        logger.warn(f"Failed to resolve collision of {p} with environment because:\n{e.args}")
+                        report = None
+                    if report is not None:
+                        logger.info(f"Player {p} collided with the environment")
+                        collision = True
+                        sim_context.collision_reports.append(report)
+                        if sim_context.time < sim_context.first_collision_ts:
+                            sim_context.first_collision_ts = sim_context.time
+        return collision
+
+    @staticmethod
+    def _check_collisions_among_players(sim_context: SimContext) -> bool:
         """
         This checks only collision location at the current step, tunneling effects and similar are ignored
         :param sim_context:
         :return: True if at least one collision happened, False otherwise
         """
+        from dg_commons.sim.collision import resolve_collision  # import here to avoid circular imports
+
         collision = False
         for p1, p2 in combinations(sim_context.models, 2):
             a_shape = sim_context.models[p1].get_footprint()
             b_shape = sim_context.models[p2].get_footprint()
             if a_shape.intersects(b_shape):
-                from dg_commons.sim.collision import resolve_collision  # import here to avoid circular imports
-
                 try:
                     report: Optional[CollisionReport] = resolve_collision(p1, p2, sim_context)
                 except CollisionException as e:
