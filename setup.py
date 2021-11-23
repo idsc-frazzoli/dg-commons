@@ -1,4 +1,6 @@
-import pathlib
+import distutils.text_file
+from pathlib import Path
+from typing import List
 
 from setuptools import setup, find_packages
 
@@ -19,17 +21,13 @@ def get_version(filename):
     return version
 
 
-install_requires = [
-    "frozendict>=2.0.6",
-    "cytoolz>=0.11.0",
-    "cachetools~=4.2.1",
-    "numpy>=1.21.2",
-    "scipy>=1.7.1",
-    "matplotlib==3.4.3",
-    "shapely>=1.7.0",
-    "PyGeometry-z6>=2.0",
-    "zuper-commons-z6>=6.1.5",
-]
+def _parse_requirements(filename: str) -> List[str]:
+    """Return requirements from requirements file."""
+    return distutils.text_file.TextFile(filename=str(Path(__file__).with_name(filename))).readlines()
+
+
+install_requires = _parse_requirements("requirements.txt")
+extra_requires = {"all": _parse_requirements("requirements-extra.txt")}
 
 module = "dg_commons"
 package = "dg-commons"
@@ -43,7 +41,7 @@ setup(
     author_email="azanardi@ethz.ch",
     url="https://github.com/idsc-frazzoli/dg-commons",
     description="Common tools and utilities related to Driving Games",
-    long_description=(pathlib.Path(__file__).parent / "README.md").read_text(),
+    long_description=(Path(__file__).with_name("README.md")).read_text(),
     long_description_content_type="text/markdown",
     package_dir={"": src},
     packages=find_packages("src"),
@@ -54,4 +52,5 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     ],
     install_requires=install_requires,
+    extra_requires=extra_requires,
 )
