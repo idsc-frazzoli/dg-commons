@@ -1,3 +1,5 @@
+import os
+
 import matplotlib.pyplot as plt
 
 from dg_commons.dynamics import BicycleDynamics
@@ -5,6 +7,7 @@ from dg_commons.planning import *
 from dg_commons.sim.models.vehicle import VehicleState
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 from dg_commons.sim.simulator_visualisation import plot_trajectories
+from dg_commons_tests import OUT_TESTS
 
 
 def _viz(trajectories, name=""):
@@ -20,7 +23,8 @@ def _viz(trajectories, name=""):
     plt.gca().relim(visible_only=True)
     # ax.autoscale_view()
     # plt.draw()
-    plt.savefig(f"out/{name}_debug.png")
+    file_name = os.path.join(OUT_TESTS, f"{name}_test.png")
+    plt.savefig(file_name)
 
 
 def test_generate_motion_primitives():

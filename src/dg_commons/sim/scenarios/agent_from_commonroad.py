@@ -86,7 +86,9 @@ def _estimate_mass_inertia(length: float, width: float) -> Tuple[float, float]:
     return mass, inertia
 
 
-def dglane_from_position(p: T2value, network: LaneletNetwork) -> DgLanelet:
+def dglane_from_position(
+    p: T2value, network: LaneletNetwork, init_lane_selection: int = 0, succ_lane_selection: int = 0
+) -> DgLanelet:
     """Gets the first merged lane from the current position"""
     # todo add possibility to select the number of the lane successor (0 by default)
     lane_id = network.find_lanelet_by_position(
@@ -95,8 +97,10 @@ def dglane_from_position(p: T2value, network: LaneletNetwork) -> DgLanelet:
         ]
     )
     assert len(lane_id[0]) > 0, p
-    lane = network.find_lanelet_by_id(lane_id[0][0])
-    merged_lane = Lanelet.all_lanelets_by_merging_successors_from_lanelet(lanelet=lane, network=network)[0][0]
+    lane = network.find_lanelet_by_id(lane_id[0][init_lane_selection])
+    merged_lane = Lanelet.all_lanelets_by_merging_successors_from_lanelet(lanelet=lane, network=network)[0][
+        succ_lane_selection
+    ]
     return DgLanelet.from_commonroad_lanelet(merged_lane)
 
 
