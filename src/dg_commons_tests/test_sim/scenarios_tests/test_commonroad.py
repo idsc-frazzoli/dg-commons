@@ -1,4 +1,5 @@
 # import functions to read xml file and visualize commonroad objects
+import os
 from math import pi
 
 import matplotlib.pyplot as plt
@@ -8,6 +9,7 @@ from commonroad.visualization.mp_renderer import MPRenderer
 # from commonroad_route_planner.route_planner import RoutePlanner
 from dg_commons.sim.scenarios import load_commonroad_scenario
 from dg_commons.sim.scenarios.agent_from_commonroad import model_agent_from_dynamic_obstacle
+from dg_commons_tests import OUT_TESTS
 
 
 def test_commonroad_scenario_viz():
@@ -24,7 +26,8 @@ def test_commonroad_scenario_viz():
     )
     rnd.render()
     # plt.grid(True, "both", zorder=1000)
-    plt.savefig(f"out/test-results/{scenario_name}.png", dpi=300)
+    file_name = os.path.join(OUT_TESTS, f"{scenario_name}.png")
+    plt.savefig(file_name, dpi=300)
     # write_default_params("../../sim_tests/scenarios_tests/default_params.json")
 
 

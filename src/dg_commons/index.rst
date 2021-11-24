@@ -1,5 +1,5 @@
 DG commons
-=========================================
+==========
 
 This module provides common utilities for Driving Games
 
@@ -29,10 +29,4 @@ General utils
    :members:
 
 .. automodule:: dg_commons.maps
-   :members:
-
-
-The Simulator
---------------
-.. automodule:: dg_commons.sim
    :members:
