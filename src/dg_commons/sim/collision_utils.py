@@ -6,6 +6,7 @@ import numpy as np
 from commonroad.scenario.lanelet import LaneletNetwork
 from geometry import T2value, SO2value, SO2_from_angle, SE2value
 from shapely.geometry import Polygon, Point, LineString
+from shapely.geometry.base import BaseGeometry
 from toolz import remove
 
 from dg_commons.maps.lanes import DgLanelet, DgLanePose
@@ -26,7 +27,7 @@ def velocity_of_P_given_A(vel: T2value, omega: float, vec_ap: T2value) -> T2valu
     return vel + omega * (_rot90 @ vec_ap)
 
 
-def _find_intersection_points(a_shape: Polygon, b_shape: Polygon) -> List[Tuple[float, float]]:
+def _find_intersection_points(a_shape: Polygon, b_shape: BaseGeometry) -> List[Tuple[float, float]]:
     int_shape = a_shape.intersection(b_shape)
     points = list(int_shape.exterior.coords[:-1])
 
@@ -40,7 +41,7 @@ def _find_intersection_points(a_shape: Polygon, b_shape: Polygon) -> List[Tuple[
 
         plt.figure()
         plt.plot(*a_shape.exterior.xy, "b")
-        plt.plot(*b_shape.exterior.xy, "r")
+        plt.plot(*b_shape.xy, "r")
         for p in points:
             plt.plot(*p, "o")
         plt.savefig(f"coll_debug{time.time()}.png")
@@ -56,7 +57,7 @@ def get_impact_point_direction(state: X, impact_point: Point) -> float:
     return abs_angle_dof - car_heading
 
 
-def compute_impact_geometry(a: Polygon, b: Polygon) -> (np.ndarray, Point):
+def compute_impact_geometry(a: Polygon, b: BaseGeometry) -> (np.ndarray, Point):
     """
     This computes the normal of impact between vehicles a and b
     :param a: Polygon object
@@ -84,11 +85,11 @@ def compute_impulse_response(
     The impulse J is defined in terms of force F and time period ∆t
     J = F*∆t = ma*∆t = m *∆v/∆t *∆t = m*∆v
     :param n:             Vector onto which to project rel_v (normally, n or t)
-    :param vel_ab:           Relative velocity between a and b
+    :param vel_ab:          Relative velocity between a and b
     :param r_ap:            Vector from CG of a to collision point P
     :param r_bp:            Vector from CG of b to collision point P
-    :param a_geom:          Geometry of vehicle a
-    :param b_geom:          Geometry of vehicle b
+    :param a_geom:          Geometry of model a
+    :param b_geom:          Geometry of model b
     :return:
     """
     # Restitution coefficient -> represents the "bounciness" of the vehicle

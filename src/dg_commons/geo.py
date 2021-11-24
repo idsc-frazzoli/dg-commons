@@ -10,9 +10,11 @@ from geometry import (
     SE2_from_translation_angle,
     linear_angular_from_se2,
 )
+from shapely.affinity import affine_transform
+from shapely.geometry.base import BaseGeometry
 
 """
-This structures and operations are are taken from duckietown_world with minor modifications
+Some of these structures and operations are are taken from `duckietown-world` with minor modifications
 """
 
 
@@ -74,3 +76,9 @@ class SE2Transform:
     def as_SE2(self) -> SE2value:
         M = SE2_from_translation_angle(self.p, self.theta)
         return M
+
+
+def apply_SE2_to_shapely_geo(shapely_geometry: BaseGeometry, se2_value: SE2value) -> BaseGeometry:
+    """Apply SE2 transform to shapely geometry"""
+    coeffs = [se2_value[0, 0], se2_value[1, 0], se2_value[0, 1], se2_value[1, 1], se2_value[0, 2], se2_value[1, 2]]
+    return affine_transform(shapely_geometry, coeffs)

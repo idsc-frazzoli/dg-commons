@@ -21,12 +21,13 @@ from dg_commons.sim.simulator_structures import SimModel
 
 @dataclass(unsafe_hash=True, eq=True, order=True)
 class VehicleCommands:
+    # todo add horn
     acc: float
     """ Acceleration [m/s^2] """
     ddelta: float
     """ Steering rate [rad/s] (delta derivative) """
     lights: LightsCmd = NO_LIGHTS
-    # todo add horn
+    """ Lights for the car, indicators"""
     idx = frozendict({"acc": 0, "ddelta": 1})
     """ Dictionary to get correct values from numpy arrays"""
 
@@ -219,7 +220,7 @@ class VehicleModel(SimModel[TVehicleState, VehicleCommands]):
         footprint = self.get_footprint()
         vertices = footprint.exterior.coords[:-1]
         cxy = footprint.centroid.coords[0]
-        # maybe we can use triangulate from shapely
+        # fixme maybe we can use triangulate from shapely inferring the side from the relative angle
         impact_locations: Mapping[ImpactLocation, Polygon] = {
             IMPACT_RIGHT: Polygon([cxy, vertices[0], vertices[3], cxy]),
             IMPACT_LEFT: Polygon([cxy, vertices[1], vertices[2], cxy]),

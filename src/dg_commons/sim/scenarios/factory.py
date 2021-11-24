@@ -4,6 +4,7 @@ from dg_commons import PlayerName
 from dg_commons.sim import logger, SimLog, SimParameters
 from dg_commons.sim.scenarios import load_commonroad_scenario
 from dg_commons.sim.scenarios.agent_from_commonroad import model_agent_from_dynamic_obstacle, NotSupportedConversion
+from dg_commons.sim.scenarios.structures import DgScenario
 from dg_commons.sim.simulator import SimContext
 
 
@@ -40,7 +41,7 @@ def get_scenario_commonroad_replica(
     logger.info(f"Managed to load {len(players)}")
     sim_param = SimParameters() if sim_param is None else sim_param
     return SimContext(
-        scenario=scenario,
+        dg_scenario=DgScenario(scenario),
         models=models,
         players=players,
         log=SimLog(),
