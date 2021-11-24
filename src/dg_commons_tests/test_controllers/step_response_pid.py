@@ -10,6 +10,7 @@ from dg_commons.controllers.steer import SteerControllerParam, SteerController
 from dg_commons.sim.models import kmh2ms
 from dg_commons.sim.models.vehicle import VehicleCommands
 from dg_commons.sim.models.vehicle_dynamic import VehicleModelDyn, VehicleStateDyn
+from dg_commons_tests import OUT_TESTS
 
 
 def sim_step_response(model, sp_controller, st_controller):
@@ -66,7 +67,8 @@ def sim_step_response(model, sp_controller, st_controller):
 
     ax1.legend()
     ax3.legend()
-    plt.savefig("out/stepresponse")
+    file_path = os.path.join(OUT_TESTS, "step_response_pid")
+    plt.savefig(file_path)
 
 
 if __name__ == "__main__":
