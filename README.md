@@ -3,6 +3,8 @@
 [![CircleCI](https://circleci.com/gh/idsc-frazzoli/dg-commons/tree/master.svg?style=svg&circle-token=19e654261b71d1fa32c2991574d17dde93a23502)](https://circleci.com/gh/idsc-frazzoli/dg-commons/tree/master)
 [![codecov](https://codecov.io/gh/idsc-frazzoli/dg-commons/branch/master/graph/badge.svg?token=jqhkIa4fzB)](https://codecov.io/gh/idsc-frazzoli/dg-commons)
 [![PyPI version](https://badge.fury.io/py/dg-commons.svg)](https://badge.fury.io/py/dg-commons)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 
 This package contains common tools that ease the development and quick prototyping of autonomous vehicles with a
 focus on multi-agent planning and decision-making.

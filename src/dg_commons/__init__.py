@@ -1,12 +1,15 @@
-__version__ = "0.0.6"
+__version__ = "0.0.8"
 
 from logging import INFO
 
+import contracts
 from zuper_commons.logs import ZLogger
 
 logger = ZLogger(__name__)
 
 logger.setLevel(level=INFO)
+
+contracts.disable_all()
 
 from .seq import *
 from .geo import *

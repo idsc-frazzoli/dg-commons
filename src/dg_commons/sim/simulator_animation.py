@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.axes import Axes
 from toolz.sandbox import unzip
+from zuper_commons.types import ZValueError
 
 from dg_commons import PlayerName, X
 from dg_commons import Timestamp
@@ -169,10 +170,14 @@ def create_animation(
     ax.clear()
 
 
-def adjust_axes_limits(ax: Axes, plot_limits: Union[str, Sequence[Sequence[float]]], players_states: Sequence[X]):
+def adjust_axes_limits(
+    ax: Axes, plot_limits: Union[str, Sequence[Sequence[float]]], players_states: Optional[Sequence[X]] = None
+):
     if plot_limits is None:
         ax.autoscale()
     elif plot_limits == "auto":
+        if plot_limits is None:
+            raise ZValueError('Plotting with "auto" option requires players positions')
         players_limits = approximate_bounding_box_players(obj_list=players_states)
         if players_limits is not None:
             ax.axis(
@@ -184,8 +189,9 @@ def adjust_axes_limits(ax: Axes, plot_limits: Union[str, Sequence[Sequence[float
         else:
             ax.autoscale()
     else:
-        ax.xlim(plot_limits[0][0], plot_limits[0][1])
-        ax.ylim(plot_limits[1][0], plot_limits[1][1])
+        # plotlimits are expected to be seq of seq of floats
+        ax.set_xlim(plot_limits[0][0], plot_limits[0][1])
+        ax.set_ylim(plot_limits[1][0], plot_limits[1][1])
     return
 
 
