@@ -1,7 +1,6 @@
 from typing import Union, Dict
 
 import matplotlib.patches as mpatches
-import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from shapely.geometry import (
