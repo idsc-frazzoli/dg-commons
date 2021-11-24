@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Tuple, List, Optional, Mapping
+from typing import Tuple, List, Mapping
 
 import numpy as np
 from geometry import SE2_from_xytheta
@@ -46,15 +46,22 @@ class VehicleGeometry(ModelGeometry):
 
     # todo fix default rotational inertia
     @classmethod
-    def default_car(cls, color: Optional[Color] = None) -> "VehicleGeometry":
-        color = "royalblue" if color is None else color
+    def default_car(
+        cls,
+        color: Color = "royalblue",
+        m=1500.0,
+        Iz=1300,
+        w_half=0.9,
+        lf=1.7,
+        lr=1.7,
+    ) -> "VehicleGeometry":
         return VehicleGeometry(
             vehicle_type=CAR,
-            m=1500.0,
-            Iz=1300,
-            w_half=0.9,
-            lf=1.7,
-            lr=1.7,
+            m=m,
+            Iz=Iz,
+            w_half=w_half,
+            lf=lf,
+            lr=lr,
             c_drag=0.3756,
             a_drag=2,
             e=0.5,
@@ -64,15 +71,22 @@ class VehicleGeometry(ModelGeometry):
         )
 
     @classmethod
-    def default_bicycle(cls, color: Optional[Color] = None) -> "VehicleGeometry":
-        color = "saddlebrown" if color is None else color
+    def default_bicycle(
+        cls,
+        color: Color = "saddlebrown",
+        m=85.0,
+        Iz=90,
+        w_half=0.25,
+        lf=1.0,
+        lr=1.0,
+    ) -> "VehicleGeometry":
         return VehicleGeometry(
             vehicle_type=BICYCLE,
-            m=85.0,
-            Iz=90,
-            w_half=0.25,
-            lf=1.0,
-            lr=1.0,
+            m=m,
+            Iz=Iz,
+            w_half=w_half,
+            lf=lf,
+            lr=lr,
             c_drag=0.01,
             a_drag=0.2,
             e=0.35,
@@ -82,15 +96,14 @@ class VehicleGeometry(ModelGeometry):
         )
 
     @classmethod
-    def default_truck(cls, color: Optional[Color] = None) -> "VehicleGeometry":
-        color = "darkgreen" if color is None else color
+    def default_truck(cls, color: Color = "darkgreen", m=8000.0, Iz=6300, w_half=1.2, lf=4, lr=4) -> "VehicleGeometry":
         return VehicleGeometry(
             vehicle_type=TRUCK,
-            m=8000.0,
-            Iz=6300,
-            w_half=1.2,
-            lf=4,
-            lr=4,
+            m=m,
+            Iz=Iz,
+            w_half=w_half,
+            lf=lf,
+            lr=lr,
             c_drag=0.3756,
             a_drag=4,
             e=0.5,
