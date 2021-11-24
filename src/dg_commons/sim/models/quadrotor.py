@@ -17,14 +17,16 @@ from dg_commons.sim.models.quadrotor_structures import QuadGeometry, QuadParamet
 from dg_commons.sim.models.vehicle_utils import steering_constraint
 from dg_commons.sim.simulator_structures import SimModel
 
+logger.error("Quadrotor model is not completed. It will be released in the future.")
+
 
 @dataclass(unsafe_hash=True, eq=True, order=True)
 class QuadCommands:
     acc: float
-    """ Acceleration [m/s^2] """
-    dtheta: float
-    """ rotational rate [rad/s]"""
-    idx = frozendict({"acc": 0, "dtheta": 1})
+    """ linear acceleration [m/s^2] """
+    dpsi: float
+    """ Yaw rate [rad/s]"""
+    idx = frozendict({"acc": 0, "dpsi": 1})
     """ Dictionary to get correct values from numpy arrays"""
 
     @classmethod
@@ -33,7 +35,7 @@ class QuadCommands:
 
     def __add__(self, other: "QuadCommands") -> "QuadCommands":
         if type(other) == type(self):
-            return replace(self, acc=self.acc + other.acc, dtheta=self.dtheta + other.dtheta)
+            return replace(self, acc=self.acc + other.acc, dpsi=self.dpsi + other.dpsi)
         else:
             raise NotImplementedError
 
@@ -43,7 +45,7 @@ class QuadCommands:
         return self + (other * -1.0)
 
     def __mul__(self, val: float) -> "QuadCommands":
-        return replace(self, acc=self.acc * val, dtheta=self.dtheta * val)
+        return replace(self, acc=self.acc * val, dpsi=self.dpsi * val)
 
     __rmul__ = __mul__
 
@@ -51,12 +53,12 @@ class QuadCommands:
         return self * (1 / val)
 
     def as_ndarray(self) -> np.ndarray:
-        return np.array([self.acc, self.dtheta])
+        return np.array([self.acc, self.dpsi])
 
     @classmethod
     def from_array(cls, z: np.ndarray):
         assert cls.get_n_commands() == z.size == z.shape[0], f"z vector {z} cannot initialize VehicleInputs."
-        return QuadCommands(acc=z[cls.idx["acc"]], dtheta=z[cls.idx["dtheta"]])
+        return QuadCommands(acc=z[cls.idx["acc"]], dpsi=z[cls.idx["dpsi"]])
 
 
 @dataclass(unsafe_hash=True, eq=True, order=True)
@@ -65,11 +67,13 @@ class QuadState:
     """ CoG x location [m] """
     y: float
     """ CoG y location [m] """
-    theta: float
-    """ Heading [rad] """
+    psi: float
+    """ Heading (yaw) [rad] """
     vx: float
     """ CoG longitudinal velocity [m/s] """
-    idx = frozendict({"x": 0, "y": 1, "theta": 2, "vx": 3})
+    vy: float
+    """ CoG longitudinal velocity [m/s] """
+    idx = frozendict({"x": 0, "y": 1, "psi": 2, "vx": 3})
     """ Dictionary to get correct values from numpy arrays"""
 
     @classmethod
@@ -82,7 +86,7 @@ class QuadState:
                 self,
                 x=self.x + other.x,
                 y=self.y + other.y,
-                theta=self.theta + other.theta,
+                psi=self.psi + other.psi,
                 vx=self.vx + other.vx,
             )
         else:
@@ -98,7 +102,7 @@ class QuadState:
             self,
             x=self.x * val,
             y=self.y * val,
-            theta=self.theta * val,
+            psi=self.psi * val,
             vx=self.vx * val,
         )
 
@@ -111,7 +115,7 @@ class QuadState:
         return str({k: round(float(v), 2) for k, v in self.__dict__.items() if not k.startswith("idx")})
 
     def as_ndarray(self) -> np.ndarray:
-        return np.array([self.x, self.y, self.theta, self.vx, self.theta])
+        return np.array([self.x, self.y, self.psi, self.vx, self.psi])
 
     @classmethod
     def from_array(cls, z: np.ndarray):
@@ -119,7 +123,7 @@ class QuadState:
         return QuadState(
             x=z[cls.idx["x"]],
             y=z[cls.idx["y"]],
-            theta=z[cls.idx["theta"]],
+            psi=z[cls.idx["psi"]],
             vx=z[cls.idx["vx"]],
         )
 
@@ -149,10 +153,10 @@ class QuadModel(SimModel[QuadState, QuadCommands]):
             n_states = self.XT.get_n_states()
             state = self.XT.from_array(y[0:n_states])
             if self.has_collided:
-                actions = QuadCommands(acc=0, dtheta=0)
+                actions = QuadCommands(acc=0, dpsi=0)
             else:
                 actions = QuadCommands(
-                    acc=y[QuadCommands.idx["acc"] + n_states], dtheta=y[QuadCommands.idx["dtheta"] + n_states]
+                    acc=y[QuadCommands.idx["acc"] + n_states], dpsi=y[QuadCommands.idx["dpsi"] + n_states]
                 )
             return state, actions
 
@@ -176,16 +180,16 @@ class QuadModel(SimModel[QuadState, QuadCommands]):
     def dynamics(self, x0: QuadState, u: QuadCommands) -> QuadState:
         """Kinematic bicycle model, returns state derivative for given control inputs"""
         vx = x0.vx
-        dtheta = vx * math.tan(x0.theta) / self.qg.length
-        vy = dtheta * self.qg.lr
-        costh = math.cos(x0.theta)
-        sinth = math.sin(x0.theta)
+        dpsi = vx * math.tan(x0.psi) / self.qg.length
+        vy = u.dpsi * self.qg.lr
+        costh = math.cos(x0.psi)
+        sinth = math.sin(x0.psi)
         xdot = vx * costh - vy * sinth
         ydot = vx * sinth + vy * costh
 
-        dtheta = steering_constraint(x0.theta, u.dtheta, self.qp)
+        dpsi = steering_constraint(x0.psi, u.dpsi, self.qp)
         acc = acceleration_constraint(x0.vx, u.acc, self.qp)
-        return QuadState(x=xdot, y=ydot, theta=dtheta, vx=acc)
+        return QuadState(x=xdot, y=ydot, psi=dpsi, vx=acc)
 
     def get_footprint(self) -> Polygon:
         """Returns current footprint of the vehicle (mainly for collision checking)"""
@@ -212,7 +216,7 @@ class QuadModel(SimModel[QuadState, QuadCommands]):
         return impact_locations
 
     def get_pose(self) -> SE2value:
-        return SE2_from_xytheta([self._state.x, self._state.y, self._state.theta])
+        return SE2_from_xytheta([self._state.x, self._state.y, self._state.psi])
 
     def get_geometry(self) -> QuadGeometry:
         return self.qg
@@ -220,17 +224,17 @@ class QuadModel(SimModel[QuadState, QuadCommands]):
     def get_velocity(self, in_model_frame: bool) -> (T2value, float):
         """Returns velocity at COG"""
         vx = self._state.vx
-        vy = dtheta * self.qg.lr
+        vy = dpsi * self.qg.lr
         v_l = np.array([vx, vy])
         if in_model_frame:
-            return v_l, dtheta
-        rot: SO2value = SO2_from_angle(self._state.theta)
+            return v_l, dpsi
+        rot: SO2value = SO2_from_angle(self._state.psi)
         v_g = rot @ v_l
-        return v_g, dtheta
+        return v_g, dpsi
 
     def set_velocity(self, vel: T2value, omega: float, in_model_frame: bool):
         if not in_model_frame:
-            rot: SO2value = SO2_from_angle(-self._state.theta)
+            rot: SO2value = SO2_from_angle(-self._state.psi)
             vel = rot @ vel
         self._state.vx = vel[0]
         logger.warn(
