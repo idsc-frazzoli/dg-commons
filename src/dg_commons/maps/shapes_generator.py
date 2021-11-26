@@ -1,10 +1,10 @@
 import math
 import random
-from typing import List, Tuple
+from typing import Tuple, Sequence
 
 import numpy as np
 
-Points = List[Tuple[float, float]]
+Points = Sequence[Tuple[float, float]]
 
 
 def polygon_star(x: float, y: float, p: float, t: float) -> Points:

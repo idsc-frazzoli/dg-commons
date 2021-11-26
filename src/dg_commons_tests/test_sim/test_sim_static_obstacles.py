@@ -42,7 +42,7 @@ def get_maze_scenario() -> SimContext:
     players = {Ego: NPAgent(moving_vehicle)}
 
     return SimContext(
-        dg_scenario=DgScenario(static_obstacles=static_obstacles),
+        dg_scenario=DgScenario(static_obstacles=static_obstacles, use_road_boundaries=True),
         models=models,
         players=players,
         param=SimParameters(dt=D("0.01"), dt_commands=D("0.1"), sim_time_after_collision=D(1), max_sim_time=D(4)),
