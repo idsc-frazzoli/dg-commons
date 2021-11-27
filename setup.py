@@ -52,5 +52,5 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     ],
     install_requires=install_requires,
-    extra_requires=extra_requires,
+    extras_require=extra_requires,
 )
