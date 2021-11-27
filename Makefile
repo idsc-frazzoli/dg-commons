@@ -39,13 +39,13 @@ test-parallel-circle:
 coverage-combine:
 	coverage combine
 
-black:
-	black -l 120 --target-version py38 src
-
 coverage-report:
 	coverage html  -d $(coverage_dir)
 
-###### Docs
+black:
+	black -l 120 --target-version py38 src
+
+### Docs ###
 docs:
 	sphinx-build src $(out)/docs
 
@@ -56,5 +56,5 @@ docs-docker: build
 		-v ${PWD}/$(out-docker)/docs:/driving_games/$(out)/docs $(tag) \
 		sphinx-build src /driving-games/$(out)/docs
 
-
+### PyPi versioning ###
 include makefiles/Makefile.version

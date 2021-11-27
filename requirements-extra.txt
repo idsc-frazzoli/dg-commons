@@ -18,7 +18,7 @@ reprep-z6>=6.0.3,<7
 
 # coverage
 codecov>=2.1.9
-coverage>=5.2.1
+coverage>=6.2
 
 # docs
 sphinx>=4.2.0
