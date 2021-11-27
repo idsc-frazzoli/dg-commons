@@ -7,7 +7,7 @@ import numpy as np
 Points = Sequence[Tuple[float, float]]
 
 
-def polygon_star(x: float, y: float, p: float, t: float) -> Points:
+def create_star_polygon(x: float, y: float, p: float, t: float) -> Points:
     """
     Returns a polygon with a 4 spikes star shape.
     :param x: center of the star
@@ -26,7 +26,7 @@ def polygon_star(x: float, y: float, p: float, t: float) -> Points:
     return points
 
 
-def generate_starshaped_polygon(
+def create_random_starshaped_polygon(
     ctr_x: float, ctr_y: float, avg_radius: float, irregularity: float, spikiness: float, n_vertices: int
 ) -> Points:
     """Start with the centre of the polygon at ctrX, ctrY, then creates the polygon by sampling points on a circle around the centre.
