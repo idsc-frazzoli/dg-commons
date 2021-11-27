@@ -27,7 +27,7 @@ def _parse_requirements(filename: str) -> List[str]:
 
 
 install_requires = _parse_requirements("requirements.txt")
-extra_requires = {"all": _parse_requirements("requirements-extra.txt")}
+extras_require = {"all": _parse_requirements("requirements-extra.txt")}
 
 module = "dg_commons"
 package = "dg-commons"
@@ -52,5 +52,5 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     ],
     install_requires=install_requires,
-    extras_require=extra_requires,
+    extras_require=extras_require,
 )
