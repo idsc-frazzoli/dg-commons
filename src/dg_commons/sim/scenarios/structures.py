@@ -25,7 +25,8 @@ class DgScenario:
             assert isinstance(self.scenario, Scenario), self.scenario
         for idx, sobstacle in self.static_obstacles.items():
             assert issubclass(type(sobstacle), StaticObstacle), sobstacle
-        if self.use_road_boundaries:
+        # add lane boundaries as obstacles after the static obstacles (since we assign random ids)
+        if self.use_road_boundaries and self.scenario is not None:
             lanelet_bounds = build_road_boundary_obstacle(self.scenario)
             for lanelet_bound in lanelet_bounds:
                 idx = randint(0, 100000)
@@ -33,6 +34,8 @@ class DgScenario:
                     logger.warn(f"While adding lane boundaries obstacles: Idx {idx} already taken, retrying...")
                     idx = randint(0, 100000)
                 self.static_obstacles[idx] = StaticObstacle(lanelet_bound)
+        elif self.use_road_boundaries and self.scenario is None:
+            logger.warn("Road boundaries requested but no scenario provided, ignoring...")
         obs_shapes = [sobstacle.shape for sobstacle in self.static_obstacles.values()]
         obs_idx = [idx for idx in self.static_obstacles.keys()]
         self.strtree_obstacles = STRtree(obs_shapes, obs_idx, node_capacity=3)
