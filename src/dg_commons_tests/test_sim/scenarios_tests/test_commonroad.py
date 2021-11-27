@@ -9,7 +9,7 @@ from commonroad.visualization.mp_renderer import MPRenderer
 # from commonroad_route_planner.route_planner import RoutePlanner
 from dg_commons.sim.scenarios import load_commonroad_scenario
 from dg_commons.sim.scenarios.agent_from_commonroad import model_agent_from_dynamic_obstacle
-from dg_commons_tests import OUT_TESTS
+from dg_commons_tests import OUT_TESTS_DIR
 
 
 def test_commonroad_scenario_viz():
@@ -26,7 +26,7 @@ def test_commonroad_scenario_viz():
     )
     rnd.render()
     # plt.grid(True, "both", zorder=1000)
-    file_name = os.path.join(OUT_TESTS, f"{scenario_name}.png")
+    file_name = os.path.join(OUT_TESTS_DIR, f"{scenario_name}.png")
     plt.savefig(file_name, dpi=300)
     # write_default_params("../../sim_tests/scenarios_tests/default_params.json")
 

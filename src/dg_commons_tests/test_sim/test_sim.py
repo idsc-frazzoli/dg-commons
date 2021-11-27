@@ -13,7 +13,7 @@ from dg_commons.sim.scenarios import load_commonroad_scenario
 from dg_commons.sim.scenarios.structures import DgScenario
 from dg_commons.sim.simulator import SimContext, Simulator
 from dg_commons.sim.simulator_animation import create_animation
-from dg_commons_tests import OUT_TESTS
+from dg_commons_tests import OUT_TESTS_DIR
 
 P1, P2 = (
     PlayerName("P1"),
@@ -73,5 +73,5 @@ def test_simple_simulation():
     sim.run(sim_context)
     report = generate_report(sim_context)
     # save report
-    report_file = os.path.join(OUT_TESTS, f"simple_sim.html")
+    report_file = os.path.join(OUT_TESTS_DIR, f"simple_sim.html")
     report.to_html(report_file)

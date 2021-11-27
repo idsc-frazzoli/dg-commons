@@ -1,1 +1,1 @@
-OUT_TESTS = "out/test-results"
+OUT_TESTS_DIR = "out/test-results"

@@ -8,7 +8,7 @@ from shapely.geometry import LinearRing, Polygon
 from dg_commons import apply_SE2_to_shapely_geo
 from dg_commons.maps.obstacles_shapes import polygon_star, generate_starshaped_polygon
 from dg_commons.maps.shapely_viz import ShapelyViz
-from dg_commons_tests import OUT_TESTS
+from dg_commons_tests import OUT_TESTS_DIR
 
 
 def test_generate_shapes():
@@ -25,5 +25,5 @@ def test_generate_shapes():
         viz.add_shape(poly, facecolor="gold", edgecolor="r")
     viz.ax.autoscale()
     viz.ax.set_aspect("equal")
-    f = os.path.join(OUT_TESTS, "test_generate_shapes.png")
+    f = os.path.join(OUT_TESTS_DIR, "test_generate_shapes.png")
     plt.savefig(f, dpi=300)

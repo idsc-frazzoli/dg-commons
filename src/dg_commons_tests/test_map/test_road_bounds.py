@@ -8,6 +8,7 @@ from dg_commons.maps.road_bounds import build_road_boundary_obstacle
 from dg_commons.sim.models.obstacles import StaticObstacle
 from dg_commons.sim.scenarios import load_commonroad_scenario
 from dg_commons.sim.scenarios.structures import DgScenario
+from dg_commons_tests import OUT_TESTS_DIR
 
 
 def test_build_road_bounds():
@@ -54,7 +55,5 @@ def test_road_bounds_dgscenario():
         rnd.ax.axes.plot(xy[0], xy[1], color="orange", zorder=100)
     rnd.ax.set_facecolor("k")
 
-    # xy_out = overall_poly.exterior.coords.xy
-    # rnd.ax.axes.plot(xy_out[0], xy_out[1], color="orange", zorder=100)
-
-    plt.show()
+    plt.savefig(OUT_TESTS_DIR + "/road_bounds_dgscenario.png")
+    # plt.show()

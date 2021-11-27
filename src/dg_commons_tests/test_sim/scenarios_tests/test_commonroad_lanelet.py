@@ -5,7 +5,7 @@ import numpy as np
 from commonroad.visualization.mp_renderer import MPRenderer
 
 from dg_commons.sim.scenarios.factory import get_scenario_commonroad_replica
-from dg_commons_tests import OUT_TESTS
+from dg_commons_tests import OUT_TESTS_DIR
 
 
 def test_commonroad_lanelet():
@@ -30,5 +30,5 @@ def test_commonroad_lanelet():
     x, y = np.array(lanelets_succ[0].center_vertices).T
     rnd.render()
     rnd.ax.scatter(x, y, c="b", zorder=1000)
-    file_name = os.path.join(OUT_TESTS, f"lanelet.png")
+    file_name = os.path.join(OUT_TESTS_DIR, f"lanelet.png")
     plt.savefig(file_name)
