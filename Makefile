@@ -57,4 +57,4 @@ docs-docker: build
 		sphinx-build src /driving-games/$(out)/docs
 
 ### PyPi versioning ###
-include makefiles/Makefile.version
+include makefiles/Pypi.mk
