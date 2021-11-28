@@ -42,6 +42,7 @@ class SimRendererABC(Generic[X, U], ABC):
 
 
 class ZOrders(IntEnum):
+    ENV_OBSTACLE = 32
     LIGHTS = 34
     MODEL = 35
     PLAYER_NAME = 40
@@ -66,7 +67,7 @@ class SimRenderer(SimRendererABC):
             )
             self.commonroad_renderer.render()
         for s_obstacle in self.sim_context.dg_scenario.static_obstacles.values():
-            self.shapely_viz.add_shape(s_obstacle.shape, color=s_obstacle.geometry.color)
+            self.shapely_viz.add_shape(s_obstacle.shape, color=s_obstacle.geometry.color, zorder=ZOrders.ENV_OBSTACLE)
         yield
 
     def plot_player(

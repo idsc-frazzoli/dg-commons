@@ -6,7 +6,11 @@ from shapely.ops import unary_union
 
 
 def build_road_boundary_obstacle(scenario: Scenario) -> List[LineString]:
-    """Returns a list of LineString of the scenario that are then used for collision checking"""
+    """Returns a list of LineString of the scenario that are then used for collision checking.
+    The boundaries are computed taking the external perimeter of the scenario and
+    removing the entrance and exiting "gates" of the lanes.
+    """
+
     lanelets = scenario.lanelet_network.lanelets
     scenario_bounds: List[LineString] = []
     lane_polygons: List[Polygon] = []
@@ -29,7 +33,5 @@ def build_road_boundary_obstacle(scenario: Scenario) -> List[LineString]:
     ext_bounds = overall_poly.exterior
     for eeg in entrance_exit_gates:
         ext_bounds = ext_bounds.difference(eeg)
-
-    for ext_bound in ext_bounds:
-        scenario_bounds.append(ext_bound)
+    scenario_bounds += [g for g in ext_bounds.geoms]
     return scenario_bounds

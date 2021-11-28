@@ -67,7 +67,7 @@ jobs:
       - run:
           name: Run tests
           command: |
-            make test
+            make test-parallel
       - store_test_results:
           path: out/test-results
       - run:

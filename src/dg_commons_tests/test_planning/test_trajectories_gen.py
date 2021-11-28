@@ -7,7 +7,7 @@ from dg_commons.planning import *
 from dg_commons.sim.models.vehicle import VehicleState
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 from dg_commons.sim.simulator_visualisation import plot_trajectories
-from dg_commons_tests import OUT_TESTS
+from dg_commons_tests import OUT_TESTS_DIR
 
 
 def _viz(trajectories, name=""):
@@ -23,7 +23,7 @@ def _viz(trajectories, name=""):
     plt.gca().relim(visible_only=True)
     # ax.autoscale_view()
     # plt.draw()
-    file_name = os.path.join(OUT_TESTS, f"{name}_test.png")
+    file_name = os.path.join(OUT_TESTS_DIR, f"{name}_test.png")
     plt.savefig(file_name)
 
 

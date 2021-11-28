@@ -8,7 +8,7 @@ from numpy import linspace
 from dg_commons import SE2_apply_T2
 from dg_commons.maps.lanes import DgLanelet
 from dg_commons.sim.scenarios import load_commonroad_scenario
-from dg_commons_tests import OUT_TESTS
+from dg_commons_tests import OUT_TESTS_DIR
 
 
 def test_lane_is_hashable():
@@ -39,6 +39,6 @@ def test_lane_vis():
             plt.plot(*left, "o")
             plt.plot(*right, "x")
             plt.gca().set_aspect("equal")
-        file_name = os.path.join(OUT_TESTS, f"lane_vis_{lanelet.lanelet_id}.png")
+        file_name = os.path.join(OUT_TESTS_DIR, f"lane_vis_{lanelet.lanelet_id}.png")
         plt.savefig(file_name)
         plt.close()

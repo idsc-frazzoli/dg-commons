@@ -13,7 +13,7 @@ from dg_commons.sim.scenarios import load_commonroad_scenario
 from dg_commons.sim.scenarios.structures import DgScenario
 from dg_commons.sim.simulator import SimContext, Simulator
 from dg_commons.sim.simulator_animation import create_animation
-from dg_commons_tests import OUT_TESTS
+from dg_commons_tests import OUT_TESTS_DIR
 
 P1, P2 = (
     PlayerName("P1"),
@@ -62,7 +62,7 @@ def generate_report(sim_context: SimContext) -> Report:
     r = Report("EpisodeVisualisation")
     gif_viz = r.figure(cols=1)
     with gif_viz.data_file("Animation", MIME_GIF) as fn:
-        create_animation(file_path=fn, sim_context=sim_context, figsize=(16, 8), dt=20, dpi=120, plot_limits="auto")
+        create_animation(file_path=fn, sim_context=sim_context, figsize=(16, 8), dt=30, dpi=120, plot_limits="auto")
     return r
 
 
@@ -73,5 +73,5 @@ def test_simple_simulation():
     sim.run(sim_context)
     report = generate_report(sim_context)
     # save report
-    report_file = os.path.join(OUT_TESTS, f"simple_sim.html")
+    report_file = os.path.join(OUT_TESTS_DIR, f"simple_sim.html")
     report.to_html(report_file)

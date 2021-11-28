@@ -13,7 +13,7 @@ from dg_commons.sim.models.vehicle import VehicleCommands
 from dg_commons.sim.models.vehicle_dynamic import VehicleStateDyn, VehicleModelDyn
 from dg_commons.sim.scenarios.structures import DgScenario
 from dg_commons.sim.simulator import Simulator, SimContext
-from dg_commons_tests import OUT_TESTS
+from dg_commons_tests import OUT_TESTS_DIR
 from dg_commons_tests.test_sim.test_sim import generate_report
 
 Ego = PlayerName("ego")
@@ -42,7 +42,7 @@ def get_maze_scenario() -> SimContext:
     players = {Ego: NPAgent(moving_vehicle)}
 
     return SimContext(
-        dg_scenario=DgScenario(static_obstacles=static_obstacles),
+        dg_scenario=DgScenario(static_obstacles=static_obstacles, use_road_boundaries=True),
         models=models,
         players=players,
         param=SimParameters(dt=D("0.01"), dt_commands=D("0.1"), sim_time_after_collision=D(1), max_sim_time=D(4)),
@@ -56,5 +56,5 @@ def test_sim_static_obstacles():
     sim.run(sim_context)
     report = generate_report(sim_context)
     # save report
-    report_file = os.path.join(OUT_TESTS, f"maze_sim.html")
+    report_file = os.path.join(OUT_TESTS_DIR, f"maze_sim.html")
     report.to_html(report_file)

@@ -37,9 +37,9 @@ class VehicleGeometry(ModelGeometry):
     """ Drag coefficient """
     a_drag: float
     """ Section Area interested by drag """
-    c_rr_f: float
+    c_rr_f: float = 0.003
     """ Rolling Resistance coefficient front """
-    c_rr_r: float
+    c_rr_r: float = 0.003
     """ Rolling Resistance coefficient rear """
     h_cog: float = 0.7
     """ Height of the CoG [m] """
@@ -65,8 +65,6 @@ class VehicleGeometry(ModelGeometry):
             c_drag=0.3756,
             a_drag=2,
             e=0.5,
-            c_rr_f=0.003,
-            c_rr_r=0.003,
             color=color,
         )
 
@@ -90,8 +88,6 @@ class VehicleGeometry(ModelGeometry):
             c_drag=0.01,
             a_drag=0.2,
             e=0.35,
-            c_rr_f=0.003,
-            c_rr_r=0.003,
             color=color,
         )
 
@@ -107,8 +103,6 @@ class VehicleGeometry(ModelGeometry):
             c_drag=0.3756,
             a_drag=4,
             e=0.5,
-            c_rr_f=0.03,
-            c_rr_r=0.03,
             color=color,
         )
 
