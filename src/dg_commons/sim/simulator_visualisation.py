@@ -49,6 +49,7 @@ class ZOrders(IntEnum):
     TRAJECTORY = 45
     TRAJECTORY_MARKER = 46
     TIME_TEXT = 50
+    GOAL = 55
 
 
 class SimRenderer(SimRendererABC):
@@ -68,6 +69,8 @@ class SimRenderer(SimRendererABC):
             self.commonroad_renderer.render()
         for s_obstacle in self.sim_context.dg_scenario.static_obstacles.values():
             self.shapely_viz.add_shape(s_obstacle.shape, color=s_obstacle.geometry.color, zorder=ZOrders.ENV_OBSTACLE)
+        for p, goal in self.sim_context.missions.values():
+            self.shapely_viz.add_shape(goal.get_plottable_geometry(), color="orange", zorder=ZOrders.GOAL, alpha=0.5)
         yield
 
     def plot_player(

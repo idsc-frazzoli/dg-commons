@@ -9,6 +9,8 @@ from dg_commons import logger
 from dg_commons.maps.road_bounds import build_road_boundary_obstacle
 from dg_commons.sim.models.obstacles import StaticObstacle
 
+__all__ = ["DgScenario"]
+
 
 @dataclass
 class DgScenario:
