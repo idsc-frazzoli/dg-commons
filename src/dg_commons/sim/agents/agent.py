@@ -19,7 +19,7 @@ class Agent(ABC):
         pass
 
     # todo make this agent be able to take a map, static obstacles and a goal
-    # a DgScenario object?
+    # a DgScenario object? or simply pass them via the init method?!
 
     @abstractmethod
     def get_commands(self, sim_obs: SimObservations) -> U:

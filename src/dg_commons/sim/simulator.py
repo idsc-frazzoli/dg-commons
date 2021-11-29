@@ -15,7 +15,8 @@ from dg_commons.time import time_function
 
 @dataclass
 class SimContext:
-    """The simulation context that keeps track of everything,
+    """
+    The simulation context that keeps track of everything,
     handle with care as it is passed around by reference and it is a mutable object.
     """
 
@@ -27,14 +28,18 @@ class SimContext:
     """The players in the simulation (Agents mapping observations to commands)"""
     param: SimParameters
     """The simulation parameters"""
-    missions: Optional[Mapping[PlayerName, PlanningGoal]] = None
-    """The ultimate goal of each player"""
+    missions: Mapping[PlayerName, PlanningGoal] = field(default_factory=dict)
+    """The ultimate goal of each player, it can be specified only for a subset of the players"""
     log: SimLog = field(default_factory=SimLog)
+    "The loggers for observations, commands, and extra information"
     time: SimTime = SimTime(0)
+    "The clock for the simulator, keeps track of the current instant"
     seed: int = 0
     sim_terminated: bool = False
     collision_reports: List[CollisionReport] = field(default_factory=list)
     first_collision_ts: SimTime = SimTime("Infinity")
+    description: str = ""
+    "A string description for the specific simulation context"
 
     def __post_init__(self):
         assert self.models.keys() == self.players.keys()
@@ -130,11 +135,11 @@ class Simulator:
         - the minimum time after the first collision has expired
         - all missions have been fulfilled
         """
-        missions_completed: bool = False
-        if sim_context.missions:
-            missions_completed = all(
-                m.is_fulfilled(sim_context.models[p].get_state()) for p, m in sim_context.missions.items()
-            )
+        missions_completed: bool = (
+            all(m.is_fulfilled(sim_context.models[p].get_state()) for p, m in sim_context.missions.items())
+            if sim_context.missions
+            else False
+        )
         termination_condition: bool = (
             sim_context.time > sim_context.param.max_sim_time
             or sim_context.time > sim_context.first_collision_ts + sim_context.param.sim_time_after_collision
