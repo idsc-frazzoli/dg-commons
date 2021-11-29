@@ -4,6 +4,7 @@ from itertools import combinations
 from typing import Mapping, Optional, List, Dict
 
 from dg_commons import PlayerName, U
+from dg_commons.planning import PlanningGoal
 from dg_commons.sim import SimTime, CollisionReport, logger
 from dg_commons.sim.agents.agent import Agent, TAgent
 from dg_commons.sim.collision_utils import CollisionException
@@ -14,13 +15,20 @@ from dg_commons.time import time_function
 
 @dataclass
 class SimContext:
-    """The simulation context that keeps track of everything, handle with care as it is passed around by reference and
-    it is a mutable object"""
+    """The simulation context that keeps track of everything,
+    handle with care as it is passed around by reference and it is a mutable object.
+    """
 
     dg_scenario: DgScenario
+    """A driving games scenario"""
     models: Mapping[PlayerName, SimModel]
+    """The simulation models for each player"""
     players: Mapping[PlayerName, TAgent]
+    """The players in the simulation (Agents mapping observations to commands)"""
     param: SimParameters
+    """The simulation parameters"""
+    missions: Optional[Mapping[PlayerName, PlanningGoal]] = None
+    """The ultimate goal of each player"""
     log: SimLog = field(default_factory=SimLog)
     time: SimTime = SimTime(0)
     seed: int = 0
@@ -30,6 +38,10 @@ class SimContext:
 
     def __post_init__(self):
         assert self.models.keys() == self.players.keys()
+        # players with a mission must be a subset of the players
+        if self.missions is not None:
+            assert all([player in self.models for player in self.missions])
+            assert all([issubclass(type(self.missions[p]), PlanningGoal) for p in self.missions])
         assert isinstance(self.dg_scenario, DgScenario), self.dg_scenario
         for pname in self.models.keys():
             assert issubclass(type(self.models[pname]), SimModel)
@@ -112,10 +124,21 @@ class Simulator:
 
     @staticmethod
     def _maybe_terminate_simulation(sim_context: SimContext):
-        """Evaluates if the simulation needs to terminate based on the expiration of times"""
+        """Evaluates if the simulation needs to terminate based on the expiration of times.
+        The simulation is considered terminated iff:
+        - the maximum time has expired
+        - the minimum time after the first collision has expired
+        - all missions have been fulfilled
+        """
+        missions_completed: bool = False
+        if sim_context.missions:
+            missions_completed = all(
+                m.is_fulfilled(sim_context.models[p].get_state()) for p, m in sim_context.missions.items()
+            )
         termination_condition: bool = (
             sim_context.time > sim_context.param.max_sim_time
             or sim_context.time > sim_context.first_collision_ts + sim_context.param.sim_time_after_collision
+            or missions_completed
         )
         sim_context.sim_terminated = termination_condition
 

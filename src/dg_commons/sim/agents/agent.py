@@ -18,6 +18,9 @@ class Agent(ABC):
         """This method will get called once for each player at the beginning of the simulation"""
         pass
 
+    # todo make this agent be able to take a map, static obstacles and a goal
+    # a DgScenario object?
+
     @abstractmethod
     def get_commands(self, sim_obs: SimObservations) -> U:
         """This method gets called for each player inside the update loop of the simulator"""
