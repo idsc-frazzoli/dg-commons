@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import Type, Mapping
 
 import numpy as np
+from dg_commons.sim.models.spacescraft_structures import SpacecraftGeometry, SpacecraftParameters
 from frozendict import frozendict
 from geometry import SE2value, SE2_from_xytheta, SO2_from_angle, SO2value, T2value
 from scipy.integrate import solve_ivp
@@ -13,7 +14,6 @@ from shapely.geometry import Polygon
 from dg_commons.sim import logger, ImpactLocation, IMPACT_RIGHT, IMPACT_LEFT, IMPACT_BACK, IMPACT_FRONT
 from dg_commons.sim.models import ModelType
 from dg_commons.sim.models.model_utils import acceleration_constraint
-from dg_commons.sim.models.quadrotor_structures import QuadGeometry, QuadParameters
 from dg_commons.sim.models.vehicle_utils import steering_constraint
 from dg_commons.sim.simulator_structures import SimModel
 
@@ -21,48 +21,48 @@ logger.error("Quadrotor model is not completed. It will be released in the futur
 
 
 @dataclass(unsafe_hash=True, eq=True, order=True)
-class QuadCommands:
-    acc: float
+class SpacecraftCommands:
+    acc_left: float
     """ linear acceleration [m/s^2] """
-    dpsi: float
-    """ Yaw rate [rad/s]"""
-    idx = frozendict({"acc": 0, "dpsi": 1})
+    acc_right: float
+    """ linear acceleration [m/s^2]"""
+    idx = frozendict({"acc": 0, "acc_right": 1})
     """ Dictionary to get correct values from numpy arrays"""
 
     @classmethod
     def get_n_commands(cls) -> int:
         return len(cls.idx)
 
-    def __add__(self, other: "QuadCommands") -> "QuadCommands":
+    def __add__(self, other: "SpacecraftCommands") -> "SpacecraftCommands":
         if type(other) == type(self):
-            return replace(self, acc=self.acc + other.acc, dpsi=self.dpsi + other.dpsi)
+            return replace(self, acc_left=self.acc_left + other.acc_left, acc_right=self.acc_right + other.acc_right)
         else:
             raise NotImplementedError
 
     __radd__ = __add__
 
-    def __sub__(self, other: "QuadCommands") -> "QuadCommands":
+    def __sub__(self, other: "SpacecraftCommands") -> "SpacecraftCommands":
         return self + (other * -1.0)
 
-    def __mul__(self, val: float) -> "QuadCommands":
-        return replace(self, acc=self.acc * val, dpsi=self.dpsi * val)
+    def __mul__(self, val: float) -> "SpacecraftCommands":
+        return replace(self, acc_left=self.acc_left * val, acc_right=self.acc_right * val)
 
     __rmul__ = __mul__
 
-    def __truediv__(self, val: float) -> "QuadCommands":
+    def __truediv__(self, val: float) -> "SpacecraftCommands":
         return self * (1 / val)
 
     def as_ndarray(self) -> np.ndarray:
-        return np.array([self.acc, self.dpsi])
+        return np.array([self.acc_left, self.acc_right])
 
     @classmethod
     def from_array(cls, z: np.ndarray):
         assert cls.get_n_commands() == z.size == z.shape[0], f"z vector {z} cannot initialize VehicleInputs."
-        return QuadCommands(acc=z[cls.idx["acc"]], dpsi=z[cls.idx["dpsi"]])
+        return SpacecraftCommands(acc_left=z[cls.idx["acc_left "]], acc_right=z[cls.idx["acc_right"]])
 
 
 @dataclass(unsafe_hash=True, eq=True, order=True)
-class QuadState:
+class SpacecraftState:
     x: float
     """ CoG x location [m] """
     y: float
@@ -73,14 +73,16 @@ class QuadState:
     """ CoG longitudinal velocity [m/s] """
     vy: float
     """ CoG longitudinal velocity [m/s] """
-    idx = frozendict({"x": 0, "y": 1, "psi": 2, "vx": 3})
+    dpsi: float
+    """ Heading (yaw) rate [rad/s] """
+    idx = frozendict({"x": 0, "y": 1, "psi": 2, "vx": 3, "vy": 3, "dpsi": 3})
     """ Dictionary to get correct values from numpy arrays"""
 
     @classmethod
     def get_n_states(cls) -> int:
         return len(cls.idx)
 
-    def __add__(self, other: "QuadState") -> "QuadState":
+    def __add__(self, other: "SpacecraftState") -> "SpacecraftState":
         if type(other) == type(self):
             return replace(
                 self,
@@ -88,82 +90,89 @@ class QuadState:
                 y=self.y + other.y,
                 psi=self.psi + other.psi,
                 vx=self.vx + other.vx,
+                vy=self.vy + other.vy,
+                dpsi=self.dpsi + other.dpsi,
             )
         else:
             raise NotImplementedError
 
     __radd__ = __add__
 
-    def __sub__(self, other: "QuadState") -> "QuadState":
+    def __sub__(self, other: "SpacecraftState") -> "SpacecraftState":
         return self + (other * -1.0)
 
-    def __mul__(self, val: float) -> "QuadState":
+    def __mul__(self, val: float) -> "SpacecraftState":
         return replace(
             self,
             x=self.x * val,
             y=self.y * val,
             psi=self.psi * val,
             vx=self.vx * val,
+            vy=self.vy * val,
+            dpsi=self.dpsi * val,
         )
 
     __rmul__ = __mul__
 
-    def __truediv__(self, val: float) -> "QuadState":
+    def __truediv__(self, val: float) -> "SpacecraftState":
         return self * (1 / val)
 
     def __repr__(self) -> str:
         return str({k: round(float(v), 2) for k, v in self.__dict__.items() if not k.startswith("idx")})
 
     def as_ndarray(self) -> np.ndarray:
-        return np.array([self.x, self.y, self.psi, self.vx, self.psi])
+        return np.array([self.x, self.y, self.psi, self.vx, self.vy, self.dpsi])
 
     @classmethod
     def from_array(cls, z: np.ndarray):
         assert cls.get_n_states() == z.size == z.shape[0], f"z vector {z} cannot initialize QuadState."
-        return QuadState(
+        return SpacecraftState(
             x=z[cls.idx["x"]],
             y=z[cls.idx["y"]],
             psi=z[cls.idx["psi"]],
             vx=z[cls.idx["vx"]],
+            vy=z[cls.idx["vy"]],
+            dpsi=z[cls.idx["dpsi"]],
         )
 
 
-class QuadModel(SimModel[QuadState, QuadCommands]):
-    def __init__(self, x0: QuadState, qg: QuadGeometry, qp: QuadParameters):
-        self._state: QuadState = x0
+class QuadModel(SimModel[SpacecraftState, SpacecraftCommands]):
+    def __init__(self, x0: SpacecraftState, qg: SpacecraftGeometry, qp: SpacecraftParameters):
+        self._state: SpacecraftState = x0
         """ Current state of the model"""
-        self.XT: Type[QuadState] = type(x0)
+        self.XT: Type[SpacecraftState] = type(x0)
         """ State type"""
-        self.qg: QuadGeometry = qg
+        self.qg: SpacecraftGeometry = qg
         """ The vehicle's geometry parameters"""
-        self.qp: QuadParameters = qp
+        self.qp: SpacecraftParameters = qp
         """ The vehicle parameters"""
 
     @classmethod
-    def default(cls, x0: QuadState):
-        return QuadModel(x0=x0, qg=QuadGeometry.default(), qp=QuadParameters.default())
+    def default(cls, x0: SpacecraftState):
+        return QuadModel(x0=x0, qg=SpacecraftGeometry.default(), qp=SpacecraftParameters.default())
 
-    def update(self, commands: QuadCommands, dt: Decimal):
+    def update(self, commands: SpacecraftCommands, dt: Decimal):
         """
         Perform initial value problem integration
         to propagate state using actions for time dt
         """
 
-        def _stateactions_from_array(y: np.ndarray) -> [QuadState, QuadCommands]:
+        def _stateactions_from_array(y: np.ndarray) -> [SpacecraftState, SpacecraftCommands]:
             n_states = self.XT.get_n_states()
             state = self.XT.from_array(y[0:n_states])
             if self.has_collided:
-                actions = QuadCommands(acc=0, dpsi=0)
+                actions = SpacecraftCommands(acc_left=0, acc_right=0)
             else:
-                actions = QuadCommands(
-                    acc=y[QuadCommands.idx["acc"] + n_states], dpsi=y[QuadCommands.idx["dpsi"] + n_states]
+                actions = SpacecraftCommands(
+                    acc_left=y[SpacecraftCommands.idx["acc_left "] + n_states],
+                    acc_right=y[SpacecraftCommands.idx["acc_right"] + n_states],
                 )
             return state, actions
 
         def _dynamics(t, y):
             state0, actions = _stateactions_from_array(y=y)
             dx = self.dynamics(x0=state0, u=actions)
-            du = np.zeros([len(QuadCommands.idx)])
+            du = np.zeros([len(SpacecraftCommands.idx)])
             return np.concatenate([dx.as_ndarray(), du])
 
         state_np = self._state.as_ndarray()
@@ -177,19 +186,21 @@ class QuadModel(SimModel[QuadState, QuadCommands]):
         self._state = new_state
         return
 
-    def dynamics(self, x0: QuadState, u: QuadCommands) -> QuadState:
+    def dynamics(self, x0: SpacecraftState, u: SpacecraftCommands) -> SpacecraftState:
         """Kinematic bicycle model, returns state derivative for given control inputs"""
         vx = x0.vx
         dpsi = vx * math.tan(x0.psi) / self.qg.length
-        vy = u.dpsi * self.qg.lr
+        vy = u.acc_right * self.qg.lr
         costh = math.cos(x0.psi)
         sinth = math.sin(x0.psi)
         xdot = vx * costh - vy * sinth
         ydot = vx * sinth + vy * costh
 
-        dpsi = steering_constraint(x0.psi, u.dpsi, self.qp)
-        acc = acceleration_constraint(x0.vx, u.acc, self.qp)
-        return QuadState(x=xdot, y=ydot, psi=dpsi, vx=acc)
+        dpsi = steering_constraint(x0.psi, u.acc_right, self.qp)
+        acc = acceleration_constraint(x0.vx, u.acc_left, self.qp)
+        acc = acceleration_constraint(x0.vx, u.acc_right, self.qp)
+
+        return SpacecraftState(x=xdot, y=ydot, psi=dpsi, vx=acc)
 
     def get_footprint(self) -> Polygon:
         """Returns current footprint of the vehicle (mainly for collision checking)"""
@@ -218,7 +229,7 @@ class QuadModel(SimModel[QuadState, QuadCommands]):
     def get_pose(self) -> SE2value:
         return SE2_from_xytheta([self._state.x, self._state.y, self._state.psi])
 
-    def get_geometry(self) -> QuadGeometry:
+    def get_geometry(self) -> SpacecraftGeometry:
         return self.qg
 
     def get_velocity(self, in_model_frame: bool) -> (T2value, float):

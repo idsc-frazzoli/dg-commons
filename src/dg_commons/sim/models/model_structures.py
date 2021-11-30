@@ -12,7 +12,7 @@ __all__ = [
     "BICYCLE",
     "PEDESTRIAN",
     "TRUCK",
-    "QUADROTOR",
+    "SPACECRAFT",
     "ModelGeometry",
     "ModelParameters",
     "TwoWheelsTypes",
@@ -25,7 +25,7 @@ TRUCK = ModelType("truck")
 MOTORCYCLE = ModelType("motorcycle")
 BICYCLE = ModelType("bicycle")
 PEDESTRIAN = ModelType("pedestrian")
-QUADROTOR = ModelType("quadrotor")
+SPACECRAFT = ModelType("spacecraft")
 TwoWheelsTypes = frozenset({BICYCLE, MOTORCYCLE})
 FourWheelsTypes = frozenset({CAR, TRUCK})
 
