@@ -4,17 +4,16 @@ from decimal import Decimal
 from typing import Type, Mapping
 
 import numpy as np
-from dg_commons.sim.models.spacescraft_structures import SpacecraftGeometry, SpacecraftParameters
 from frozendict import frozendict
 from geometry import SE2value, SE2_from_xytheta, SO2_from_angle, SO2value, T2value
 from scipy.integrate import solve_ivp
 from shapely.affinity import affine_transform
 from shapely.geometry import Polygon
 
-from dg_commons.sim import logger, ImpactLocation, IMPACT_RIGHT, IMPACT_LEFT, IMPACT_BACK, IMPACT_FRONT
+from dg_commons.sim import logger, ImpactLocation, IMPACT_EVERYWHERE
 from dg_commons.sim.models import ModelType
-from dg_commons.sim.models.model_utils import acceleration_constraint
-from dg_commons.sim.models.vehicle_utils import steering_constraint
+from dg_commons.sim.models.model_utils import apply_acceleration_limits, apply_rot_speed_constraint
+from dg_commons.sim.models.spacecraft_structures import SpacecraftGeometry, SpacecraftParameters
 from dg_commons.sim.simulator_structures import SimModel
 
 logger.error("Quadrotor model is not completed. It will be released in the future.")
@@ -136,20 +135,20 @@ class SpacecraftState:
         )
 
 
-class QuadModel(SimModel[SpacecraftState, SpacecraftCommands]):
-    def __init__(self, x0: SpacecraftState, qg: SpacecraftGeometry, qp: SpacecraftParameters):
+class SpacecraftModel(SimModel[SpacecraftState, SpacecraftCommands]):
+    def __init__(self, x0: SpacecraftState, sg: SpacecraftGeometry, sp: SpacecraftParameters):
         self._state: SpacecraftState = x0
         """ Current state of the model"""
         self.XT: Type[SpacecraftState] = type(x0)
         """ State type"""
-        self.qg: SpacecraftGeometry = qg
+        self.sg: SpacecraftGeometry = sg
         """ The vehicle's geometry parameters"""
-        self.qp: SpacecraftParameters = qp
+        self.sp: SpacecraftParameters = sp
         """ The vehicle parameters"""
 
     @classmethod
     def default(cls, x0: SpacecraftState):
-        return QuadModel(x0=x0, qg=SpacecraftGeometry.default(), qp=SpacecraftParameters.default())
+        return SpacecraftModel(x0=x0, sg=SpacecraftGeometry.default(), sp=SpacecraftParameters.default())
 
     def update(self, commands: SpacecraftCommands, dt: Decimal):
         """
@@ -188,23 +187,27 @@ class QuadModel(SimModel[SpacecraftState, SpacecraftCommands]):
 
     def dynamics(self, x0: SpacecraftState, u: SpacecraftCommands) -> SpacecraftState:
         """Kinematic bicycle model, returns state derivative for given control inputs"""
+        acc_lx = apply_acceleration_limits(u.acc_left, self.sp)
+        acc_rx = apply_acceleration_limits(u.acc_right, self.sp)
+        acc_sum = acc_lx + acc_rx
+        acc_diff = acc_rx - acc_lx
+
         vx = x0.vx
-        dpsi = vx * math.tan(x0.psi) / self.qg.length
-        vy = u.acc_right * self.qg.lr
+        vy = x0.vy
         costh = math.cos(x0.psi)
         sinth = math.sin(x0.psi)
-        xdot = vx * costh - vy * sinth
-        ydot = vx * sinth + vy * costh
+        dx = vx * costh - vy * sinth
+        dy = vx * sinth + vy * costh
 
-        dpsi = steering_constraint(x0.psi, u.acc_right, self.qp)
-        acc = acceleration_constraint(x0.vx, u.acc_left, self.qp)
-        acc = acceleration_constraint(x0.vx, u.acc_right, self.qp)
-
-        return SpacecraftState(x=xdot, y=ydot, psi=dpsi, vx=acc)
+        ax = acc_sum + x0.vy * x0.dpsi
+        ay = -x0.vx * x0.dpsi
+        ddpsi = self.sg.w_half * self.sg.m / self.sg.Iz * acc_diff  # need to be saturated first
+        ddpsi = apply_rot_speed_constraint(x0.dpsi, ddpsi, self.sp)
+        return SpacecraftState(x=dx, y=dy, psi=x0.dpsi, vx=ax, vy=ay, dpsi=ddpsi)
 
     def get_footprint(self) -> Polygon:
         """Returns current footprint of the vehicle (mainly for collision checking)"""
-        footprint = self.qg.outline_as_polygon
+        footprint = self.sg.outline_as_polygon
         transform = self.get_pose()
         matrix_coeff = transform[0, :2].tolist() + transform[1, :2].tolist() + transform[:2, 2].tolist()
         footprint = affine_transform(footprint, matrix_coeff)
@@ -213,14 +216,8 @@ class QuadModel(SimModel[SpacecraftState, SpacecraftCommands]):
 
     def get_mesh(self) -> Mapping[ImpactLocation, Polygon]:
         footprint = self.get_footprint()
-        vertices = footprint.exterior.coords[:-1]
-        cxy = footprint.centroid.coords[0]
-        # fixme maybe we can use triangulate from shapely inferring the side from the relative angle
         impact_locations: Mapping[ImpactLocation, Polygon] = {
-            IMPACT_RIGHT: Polygon([cxy, vertices[0], vertices[3], cxy]),
-            IMPACT_LEFT: Polygon([cxy, vertices[1], vertices[2], cxy]),
-            IMPACT_BACK: Polygon([cxy, vertices[0], vertices[1], cxy]),
-            IMPACT_FRONT: Polygon([cxy, vertices[2], vertices[3], cxy]),
+            IMPACT_EVERYWHERE: footprint,
         }
         for shape in impact_locations.values():
             assert shape.is_valid
@@ -230,12 +227,13 @@ class QuadModel(SimModel[SpacecraftState, SpacecraftCommands]):
         return SE2_from_xytheta([self._state.x, self._state.y, self._state.psi])
 
     def get_geometry(self) -> SpacecraftGeometry:
-        return self.qg
+        return self.sg
 
     def get_velocity(self, in_model_frame: bool) -> (T2value, float):
         """Returns velocity at COG"""
         vx = self._state.vx
-        vy = dpsi * self.qg.lr
+        vy = self._state.vy
+        dpsi = self._state.dpsi
         v_l = np.array([vx, vy])
         if in_model_frame:
             return v_l, dpsi
@@ -248,14 +246,12 @@ class QuadModel(SimModel[SpacecraftState, SpacecraftCommands]):
             rot: SO2value = SO2_from_angle(-self._state.psi)
             vel = rot @ vel
         self._state.vx = vel[0]
-        logger.warn(
-            "It is NOT possible to set the lateral and rotational velocity for this model\n"
-            "Try using the dynamic model."
-        )
+        self._state.vy = vel[1]
+        self._state.dpsi = omega
 
     @property
     def model_type(self) -> ModelType:
-        return self.qg.model_type
+        return self.sg.model_type
 
     def get_extra_collision_friction_acc(self):
         # this model is not dynamic

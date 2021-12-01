@@ -8,7 +8,7 @@ from geometry import T2value, SO2_from_angle, SO2value
 
 from dg_commons.sim.models import Pacejka4p, Pacejka
 from dg_commons.sim.models.model_structures import TwoWheelsTypes
-from dg_commons.sim.models.model_utils import acceleration_constraint
+from dg_commons.sim.models.model_utils import apply_full_acceleration_limits
 from dg_commons.sim.models.utils import G, rho
 from dg_commons.sim.models.vehicle import VehicleCommands, VehicleState, VehicleModel
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
@@ -142,7 +142,7 @@ class VehicleModelDyn(VehicleModel):
             )
         else:
             m = self.vg.m
-            acc = acceleration_constraint(x0.vx, u.acc, self.vp)
+            acc = apply_full_acceleration_limits(x0.vx, u.acc, self.vp)
             ddelta = steering_constraint(x0.delta, u.ddelta, self.vp)
 
             # vertical forces

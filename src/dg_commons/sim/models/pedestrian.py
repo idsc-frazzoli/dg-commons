@@ -13,7 +13,7 @@ from shapely.geometry import Point, Polygon
 
 from dg_commons.sim import SimModel, SimTime, ImpactLocation, IMPACT_EVERYWHERE
 from dg_commons.sim.models.model_structures import ModelGeometry, PEDESTRIAN, ModelType
-from dg_commons.sim.models.model_utils import acceleration_constraint
+from dg_commons.sim.models.model_utils import apply_full_acceleration_limits
 from dg_commons.sim.models.pedestrian_utils import PedestrianParameters, rotation_constraint
 
 
@@ -204,7 +204,7 @@ class PedestrianModel(SimModel[SE2value, float]):
     def dynamics(self, x0: PedestrianState, u: PedestrianCommands) -> PedestrianState:
         """Simple double integrator with friction after collision to simulate a "bag of potato" effect"""
         dtheta = rotation_constraint(rot_velocity=u.dtheta, pp=self.pp)
-        acc = acceleration_constraint(speed=x0.vx, acceleration=u.acc, p=self.pp)
+        acc = apply_full_acceleration_limits(speed=x0.vx, acceleration=u.acc, p=self.pp)
 
         costheta, sintheta = cos(x0.theta), sin(x0.theta)
         frictionx, frictiony, frictiontheta = self.get_extra_collision_friction_acc()
