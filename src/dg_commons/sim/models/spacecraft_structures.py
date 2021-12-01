@@ -62,7 +62,7 @@ class SpacecraftGeometry(ModelGeometry):
         """Outline of the vehicle intended as the whole car body."""
         cog2cup = self.lf / 4
         circle = Point(cog2cup, 0).buffer(self.w_half)
-        ellipse = affinity.scale(circle, 1, 1.5)
+        ellipse = affinity.scale(circle, self.lf, 1)
         rect = Polygon(
             [(-self.lr, self.w_half), (-self.lr, -self.w_half), (cog2cup, -self.w_half), (cog2cup, self.w_half)]
         )

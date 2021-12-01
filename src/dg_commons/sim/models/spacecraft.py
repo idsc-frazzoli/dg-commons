@@ -25,7 +25,7 @@ class SpacecraftCommands:
     """ linear acceleration [m/s^2] """
     acc_right: float
     """ linear acceleration [m/s^2]"""
-    idx = frozendict({"acc": 0, "acc_right": 1})
+    idx = frozendict({"acc_left": 0, "acc_right": 1})
     """ Dictionary to get correct values from numpy arrays"""
 
     @classmethod
@@ -74,7 +74,7 @@ class SpacecraftState:
     """ CoG longitudinal velocity [m/s] """
     dpsi: float
     """ Heading (yaw) rate [rad/s] """
-    idx = frozendict({"x": 0, "y": 1, "psi": 2, "vx": 3, "vy": 3, "dpsi": 3})
+    idx = frozendict({"x": 0, "y": 1, "psi": 2, "vx": 3, "vy": 4, "dpsi": 5})
     """ Dictionary to get correct values from numpy arrays"""
 
     @classmethod
@@ -163,7 +163,7 @@ class SpacecraftModel(SimModel[SpacecraftState, SpacecraftCommands]):
                 actions = SpacecraftCommands(acc_left=0, acc_right=0)
             else:
                 actions = SpacecraftCommands(
-                    acc_left=y[SpacecraftCommands.idx["acc_left "] + n_states],
+                    acc_left=y[SpacecraftCommands.idx["acc_left"] + n_states],
                     acc_right=y[SpacecraftCommands.idx["acc_right"] + n_states],
                 )
             return state, actions

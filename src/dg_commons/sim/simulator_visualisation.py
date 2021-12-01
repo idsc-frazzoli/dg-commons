@@ -12,12 +12,15 @@ from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection, PathCollection
 from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon, Circle
+from zuper_commons.types import ZValueError
 
 from dg_commons import Color
 from dg_commons import PlayerName, X, U
 from dg_commons.maps.shapely_viz import ShapelyViz
 from dg_commons.planning.trajectory import Trajectory
 from dg_commons.sim.models.pedestrian import PedestrianState, PedestrianGeometry
+from dg_commons.sim.models.spacecraft import SpacecraftState
+from dg_commons.sim.models.spacecraft_structures import SpacecraftGeometry
 from dg_commons.sim.models.vehicle import VehicleState, VehicleGeometry
 from dg_commons.sim.models.vehicle_ligths import LightsColors
 from dg_commons.sim.simulator import SimContext
@@ -79,13 +82,14 @@ class SimRenderer(SimRendererABC):
         player_name: PlayerName,
         state: X,
         lights_colors: Optional[LightsColors],
-        vehicle_poly: Optional[List[Polygon]] = None,
+        model_poly: Optional[List[Polygon]] = None,
         lights_patches: Optional[List[Circle]] = None,
         alpha: float = 0.6,
         plot_wheels: bool = False,
-        plot_ligths: bool = False,
+        plot_lights: bool = False,
     ) -> Tuple[List[Polygon], List[Circle]]:
         """Draw the player the state."""
+        # todo make it nicer with a map of plotting functions based on the state type
 
         mg = self.sim_context.models[player_name].get_geometry()
         if issubclass(type(state), VehicleState):
@@ -96,21 +100,34 @@ class SimRenderer(SimRendererABC):
                 lights_colors=lights_colors,
                 vg=mg,
                 alpha=alpha,
-                vehicle_poly=vehicle_poly,
+                vehicle_poly=model_poly,
                 lights_patches=lights_patches,
                 plot_wheels=plot_wheels,
-                plot_ligths=plot_ligths,
+                plot_ligths=plot_lights,
             )
-        else:
+        elif issubclass(type(state), PedestrianState):
             ped_poly = plot_pedestrian(
                 ax=ax,
                 player_name=player_name,
                 state=state,
                 pg=mg,
                 alpha=alpha,
-                ped_poly=vehicle_poly,
+                ped_poly=model_poly,
             )
             return ped_poly, []
+        elif issubclass(type(state), SpacecraftState):
+            scraft_poly = plot_spacecraft(
+                ax=ax,
+                player_name=player_name,
+                state=state,
+                sg=mg,
+                alpha=alpha,
+                scraft_poly=model_poly,
+            )
+            return scraft_poly, []
+
+        else:
+            raise ZValueError(msg=f"Unknown state type, {type(state)}", state=state)
 
     def plot_trajectories(
         self,
@@ -237,6 +254,12 @@ def _plot_lights(ax: Axes, q: SE2value, lights_colors: LightsColors, vg: Vehicle
     return patches
 
 
+def plot_history(ax: Axes, state: VehicleState, vg: VehicleGeometry, traces: Optional[Line2D] = None):
+    if traces is None:
+        (trace,) = ax.plot([], [], ",-", lw=1)
+    # todo similar to https://matplotlib.org/stable/gallery/animation/double_pendulum.html#sphx-glr-gallery-animation-double-pendulum-py
+
+
 def plot_pedestrian(
     ax: Axes,
     player_name: PlayerName,
@@ -261,10 +284,28 @@ def plot_pedestrian(
     return ped_poly
 
 
-def plot_history(ax: Axes, state: VehicleState, vg: VehicleGeometry, traces: Optional[Line2D] = None):
-    if traces is None:
-        (trace,) = ax.plot([], [], ",-", lw=1)
-    # todo similar to https://matplotlib.org/stable/gallery/animation/double_pendulum.html#sphx-glr-gallery-animation-double-pendulum-py
+def plot_spacecraft(
+    ax: Axes,
+    player_name: PlayerName,
+    state: SpacecraftState,
+    sg: SpacecraftGeometry,
+    alpha: float,
+    scraft_poly: Optional[List[Polygon]],
+) -> List[Polygon]:
+    q = SE2_from_xytheta((state.x, state.y, state.psi))
+    if scraft_poly is None:
+        spacecraft_box = ax.fill([], [], color=sg.color, alpha=alpha, zorder=ZOrders.MODEL)[0]
+        scraft_poly = [
+            spacecraft_box,
+        ]
+        x4, y4 = transform_xy(q, ((0, 0),))[0]
+        ax.text(
+            x4, y4, player_name, zorder=ZOrders.PLAYER_NAME, horizontalalignment="center", verticalalignment="center"
+        )
+    ped_outline: Sequence[Tuple[float, float], ...] = sg.outline
+    outline_xy = transform_xy(q, ped_outline)
+    scraft_poly[0].set_xy(outline_xy)
+    return scraft_poly
 
 
 def transform_xy(q: np.ndarray, points: Sequence[Tuple[float, float]]) -> Sequence[Tuple[float, float]]:
