@@ -1,14 +1,14 @@
 import math
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Tuple
+from typing import Tuple, List, Sequence
 
-import numpy as np
+from geometry import SE2value, SE2_from_xytheta
 from shapely import affinity
 from shapely.geometry import Polygon, Point
 from shapely.ops import unary_union
 
-from dg_commons import Color
+from dg_commons import Color, transform_xy
 from dg_commons.sim.models import kmh2ms
 from dg_commons.sim.models.model_structures import (
     ModelGeometry,
@@ -22,26 +22,28 @@ __all__ = ["SpacecraftGeometry", "SpacecraftParameters"]
 
 @dataclass(frozen=True, unsafe_hash=True)
 class SpacecraftGeometry(ModelGeometry):
-    """Geometry parameters of the vehicle (and colour)"""
+    """Geometry parameters of the spacecraft (and colour)"""
 
     w_half: float
     """ Half width of the drone - distance from CoG to end of rotor [m] """
     lf: float
-    """ Front length of vehicle - dist from CoG to front axle [m] """
+    """ Front length of spacecraft - dist from CoG to front axle [m] """
     lr: float
-    """ Rear length of vehicle - dist from CoG to back axle [m] """
+    """ Rear length of spacecraft - dist from CoG to back axle [m] """
     model_type: ModelType = SPACECRAFT
 
-    # todo fix default rotational inertia
+    def __post_init__(self):
+        assert self.lr > self.lf
+
     @classmethod
     def default(
         cls,
         color: Color = "royalblue",
         m=50,
         Iz=100,
-        w_half=2,
-        lf=3,
-        lr=2,
+        w_half=1,
+        lf=2,
+        lr=3,
     ) -> "SpacecraftGeometry":
         return SpacecraftGeometry(
             m=m,
@@ -59,12 +61,20 @@ class SpacecraftGeometry(ModelGeometry):
 
     @cached_property
     def outline(self) -> Tuple[Tuple[float, float], ...]:
-        """Outline of the vehicle intended as the whole car body."""
-        cog2cup = self.lf / 4
-        circle = Point(cog2cup, 0).buffer(self.w_half)
-        ellipse = affinity.scale(circle, self.lf, 1)
+        """
+        Outline of the spacecraft. The outline is made by the union of an ellipse and a rectangle.
+        The cog is at the end of the rectangle (circle center).
+        """
+        circle = Point(0, 0).buffer(self.w_half)
+        ellipse = affinity.scale(circle, self.lf / self.w_half, 1)
         rect = Polygon(
-            [(-self.lr, self.w_half), (-self.lr, -self.w_half), (cog2cup, -self.w_half), (cog2cup, self.w_half)]
+            [
+                (-self.lr, self.w_half),
+                (-self.lr, -self.w_half),
+                (1e-3, -self.w_half),
+                (1e-3, self.w_half),
+                (-self.lr, self.w_half),
+            ]
         )
         spacecraft_poly = unary_union([ellipse, rect])
         return tuple(spacecraft_poly.exterior.coords)
@@ -73,26 +83,29 @@ class SpacecraftGeometry(ModelGeometry):
     def outline_as_polygon(self) -> Polygon:
         return Polygon(self.outline)
 
-    @cached_property
-    def trusther_shape(self):
-        halfwidth, radius = 0.1, 0.3  # size of the wheels
-        return halfwidth, radius
+    @property
+    def n_thrusters(self) -> int:
+        return 2
 
-    @cached_property
-    def wheel_outline(self):
-        halfwidth, radius = self.trusther_shape
-        return np.array(
-            [
-                [radius, -radius, -radius, radius, radius],
-                [-halfwidth, -halfwidth, halfwidth, halfwidth, -halfwidth],
-                [1, 1, 1, 1, 1],
-            ]
-        )
+    @property
+    def thruster_shape(self):
+        w_half, l_half = 0.1, 0.3
+        return w_half, l_half
 
-    @cached_property
-    def wheels_position(self) -> np.ndarray:
-        positions = np.array([[self.lf, -self.lr], [0, 0], [1, 1]])
+    @property
+    def thruster_outline(self) -> Tuple[Tuple[float, float], ...]:
+        w_half, l_half = self.thruster_shape
+        return ((l_half, -w_half), (-l_half, -w_half), (-l_half, w_half), (l_half, w_half), (l_half, -w_half))
+
+    @property
+    def thrusters_position(self) -> List[SE2value]:
+        positions = [SE2_from_xytheta((-self.lr, -self.w_half, 0)), SE2_from_xytheta((-self.lr, self.w_half, 0))]
         return positions
+
+    @cached_property
+    def thrusters_outline_in_body_frame(self) -> List[Tuple[Tuple[float, float], ...]]:
+        thrusters_outline = [transform_xy(q, self.thruster_outline) for q in self.thrusters_position]
+        return thrusters_outline
 
 
 @dataclass(frozen=True, unsafe_hash=True)

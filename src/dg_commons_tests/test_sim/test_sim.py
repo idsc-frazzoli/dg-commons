@@ -72,7 +72,7 @@ def get_simple_scenario() -> SimContext:
         dg_scenario=DgScenario(scenario),
         models=models,
         players=players,
-        param=SimParameters(dt=D("0.01"), dt_commands=D("0.1"), sim_time_after_collision=D(1), max_sim_time=D(7)),
+        param=SimParameters(dt=D("0.01"), dt_commands=D("0.1"), sim_time_after_collision=D(1), max_sim_time=D(2)),
     )
 
 

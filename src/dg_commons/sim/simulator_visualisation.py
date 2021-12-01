@@ -14,7 +14,7 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon, Circle
 from zuper_commons.types import ZValueError
 
-from dg_commons import Color
+from dg_commons import Color, transform_xy
 from dg_commons import PlayerName, X, U
 from dg_commons.maps.shapely_viz import ShapelyViz
 from dg_commons.planning.trajectory import Trajectory
@@ -302,18 +302,20 @@ def plot_spacecraft(
         ax.text(
             x4, y4, player_name, zorder=ZOrders.PLAYER_NAME, horizontalalignment="center", verticalalignment="center"
         )
+        thrusters_boxes = [
+            ax.fill([], [], color="k", alpha=alpha, zorder=ZOrders.MODEL)[0] for _ in range(sg.n_thrusters)
+        ]
+        scraft_poly.extend(thrusters_boxes)
+    # body
     ped_outline: Sequence[Tuple[float, float], ...] = sg.outline
     outline_xy = transform_xy(q, ped_outline)
     scraft_poly[0].set_xy(outline_xy)
+    # thrusters
+    thrusters_outline = np.array([transform_xy(q, t_outline) for t_outline in sg.thrusters_outline_in_body_frame])
+    for t_idx, thruster in enumerate(scraft_poly[1:]):
+        xy_poly = thrusters_outline[t_idx]
+        thruster.set_xy(xy_poly)
     return scraft_poly
-
-
-def transform_xy(q: np.ndarray, points: Sequence[Tuple[float, float]]) -> Sequence[Tuple[float, float]]:
-    points_array = np.array([(x, y, 1) for x, y in points]).T
-    points = q @ points_array
-    x = points[0, :]
-    y = points[1, :]
-    return list(zip(x, y))
 
 
 def approximate_bounding_box_players(obj_list: Sequence[X]) -> Union[Sequence[List], None]:
