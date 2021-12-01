@@ -7,6 +7,7 @@ from reprep import Report, MIME_GIF
 from dg_commons import PlayerName, DgSampledSequence
 from dg_commons.sim import SimParameters
 from dg_commons.sim.agents import NPAgent
+from dg_commons.sim.models.spacecraft import SpacecraftState, SpacecraftModel, SpacecraftCommands
 from dg_commons.sim.models.vehicle import VehicleCommands
 from dg_commons.sim.models.vehicle_dynamic import VehicleStateDyn, VehicleModelDyn
 from dg_commons.sim.scenarios import load_commonroad_scenario
@@ -15,9 +16,10 @@ from dg_commons.sim.simulator import SimContext, Simulator
 from dg_commons.sim.simulator_animation import create_animation
 from dg_commons_tests import OUT_TESTS_DIR
 
-P1, P2 = (
+P1, P2, P3 = (
     PlayerName("P1"),
     PlayerName("P2"),
+    PlayerName("P3"),
 )
 
 
@@ -28,7 +30,12 @@ def get_simple_scenario() -> SimContext:
 
     x0_p1 = VehicleStateDyn(x=0, y=0, theta=deg2rad(60), vx=5, delta=0)
     x0_p2 = VehicleStateDyn(x=24, y=6, theta=deg2rad(150), vx=6, delta=0)
-    models = {P1: VehicleModelDyn.default_car(x0_p1), P2: VehicleModelDyn.default_bicycle(x0_p2)}
+    x0_p3 = SpacecraftState(x=10, y=5, psi=deg2rad(-150), vx=5, vy=1, dpsi=1)
+    models = {
+        P1: VehicleModelDyn.default_car(x0_p1),
+        P2: VehicleModelDyn.default_bicycle(x0_p2),
+        P3: SpacecraftModel.default(x0_p3),
+    }
 
     static_vehicle = DgSampledSequence[VehicleCommands](
         timestamps=[
@@ -49,7 +56,18 @@ def get_simple_scenario() -> SimContext:
             VehicleCommands(acc=0, ddelta=-3),
         ],
     )
-    players = {P1: NPAgent(moving_vehicle), P2: NPAgent(static_vehicle)}
+    spacecraft_dynamic = DgSampledSequence[SpacecraftCommands](
+        timestamps=[0, 1, 2, 3, 4, 5],
+        values=[
+            SpacecraftCommands(acc_left=0, acc_right=0),
+            SpacecraftCommands(acc_left=2, acc_right=+1),
+            SpacecraftCommands(acc_left=1, acc_right=-0.5),
+            SpacecraftCommands(acc_left=3, acc_right=+0.4),
+            SpacecraftCommands(acc_left=-5, acc_right=-3),
+            SpacecraftCommands(acc_left=0, acc_right=-3),
+        ],
+    )
+    players = {P1: NPAgent(moving_vehicle), P2: NPAgent(static_vehicle), P3: NPAgent(spacecraft_dynamic)}
     return SimContext(
         dg_scenario=DgScenario(scenario),
         models=models,

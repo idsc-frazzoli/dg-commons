@@ -12,7 +12,7 @@ from shapely.geometry import Polygon
 
 from dg_commons.sim import logger, ImpactLocation, IMPACT_RIGHT, IMPACT_LEFT, IMPACT_BACK, IMPACT_FRONT
 from dg_commons.sim.models import ModelType, CAR
-from dg_commons.sim.models.model_utils import acceleration_constraint
+from dg_commons.sim.models.model_utils import apply_full_acceleration_limits
 from dg_commons.sim.models.vehicle_ligths import LightsCmd, NO_LIGHTS
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 from dg_commons.sim.models.vehicle_utils import steering_constraint, VehicleParameters
@@ -204,7 +204,7 @@ class VehicleModel(SimModel[TVehicleState, VehicleCommands]):
         ydot = vx * sinth + vy * costh
 
         ddelta = steering_constraint(x0.delta, u.ddelta, self.vp)
-        acc = acceleration_constraint(x0.vx, u.acc, self.vp)
+        acc = apply_full_acceleration_limits(x0.vx, u.acc, self.vp)
         return VehicleState(x=xdot, y=ydot, theta=dtheta, vx=acc, delta=ddelta)
 
     def get_footprint(self) -> Polygon:

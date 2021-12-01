@@ -89,7 +89,7 @@ def create_animation(
                     player_name=pname,
                     alpha=0.7,
                     plot_wheels=plot_wheels,
-                    plot_ligths=plot_ligths,
+                    plot_lights=plot_ligths,
                 )
                 if plog.extra:
                     try:
@@ -123,10 +123,10 @@ def create_animation(
                 player_name=pname,
                 state=log_at_t[pname].state,
                 lights_colors=lights_colors,
-                vehicle_poly=box_handle,
+                model_poly=box_handle,
                 lights_patches=actions[pname],
                 plot_wheels=plot_wheels,
-                plot_ligths=plot_ligths,
+                plot_lights=plot_ligths,
             )
             if log_at_t[pname].extra:
                 try:
