@@ -25,7 +25,7 @@ class SpacecraftGeometry(ModelGeometry):
     """Geometry parameters of the spacecraft (and colour)"""
 
     w_half: float
-    """ Half width of the drone - distance from CoG to end of rotor [m] """
+    """ Half width of the spacecraft - half width of the spacecraft [m] """
     lf: float
     """ Front length of spacecraft - dist from CoG to front axle [m] """
     lr: float
