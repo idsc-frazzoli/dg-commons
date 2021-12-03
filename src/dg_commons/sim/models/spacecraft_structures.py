@@ -1,7 +1,7 @@
 import math
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Tuple, List, Sequence
+from typing import Tuple, List
 
 from geometry import SE2value, SE2_from_xytheta
 from shapely import affinity
@@ -89,13 +89,13 @@ class SpacecraftGeometry(ModelGeometry):
 
     @property
     def thruster_shape(self):
-        w_half, l_half = 0.1, 0.3
+        w_half, l_half = 0.15, 0.5
         return w_half, l_half
 
     @property
     def thruster_outline(self) -> Tuple[Tuple[float, float], ...]:
         w_half, l_half = self.thruster_shape
-        return ((l_half, -w_half), (-l_half, -w_half), (-l_half, w_half), (l_half, w_half), (l_half, -w_half))
+        return (l_half, -w_half), (-l_half, -w_half), (-l_half, w_half), (l_half, w_half), (l_half, -w_half)
 
     @property
     def thrusters_position(self) -> List[SE2value]:
