@@ -24,8 +24,8 @@ DObs1 = PlayerName("DObs1")
 def get_maze_scenario() -> SimContext:
     x0_p1 = VehicleStateDyn(x=7, y=4, theta=deg2rad(60), vx=2, delta=0)
 
-    dobs_shape = Polygon([[0, 0], [3, 0], [3, 3], [0, 3], [0, 0]])
-    x0_dobs1: DynObstacleState = DynObstacleState(x=7, y=9, psi=deg2rad(67), vx=2, vy=-3, dpsi=-0.5)
+    dobs_shape = Polygon([[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]])
+    x0_dobs1: DynObstacleState = DynObstacleState(x=7, y=9, psi=deg2rad(-45), vx=6, vy=0, dpsi=0)
     og_dobs1: ObstacleGeometry = ObstacleGeometry(m=100, Iz=100, e=0.3)
     op_dops1: DynObstacleParameters = DynObstacleParameters(vx_limits=(-10, 10), acc_limits=(-1, 1))
 
@@ -46,11 +46,12 @@ def get_maze_scenario() -> SimContext:
             VehicleCommands(acc=2, ddelta=+1),
             VehicleCommands(acc=1, ddelta=-0.5),
             VehicleCommands(acc=3, ddelta=+0.4),
-            VehicleCommands(acc=-5, ddelta=-3),
+            VehicleCommands(acc=5, ddelta=-1),
             VehicleCommands(acc=0, ddelta=-3),
         ],
     )
-    boundaries = LinearRing([(0, 0), (0, 50), (50, 50), (50, 0), (0, 0)])
+    size = 30
+    boundaries = LinearRing([(0, 0), (0, size), (size, size), (size, 0), (0, 0)])
     poly1 = Polygon([[0, 0], [3, 0], [3, 3], [0, 3], [0, 0]])
     poly2 = apply_SE2_to_shapely_geo(poly1, SE2_from_xytheta((7, 15, deg2rad(30))))
 
@@ -61,16 +62,16 @@ def get_maze_scenario() -> SimContext:
         dg_scenario=DgScenario(static_obstacles=static_obstacles, use_road_boundaries=True),
         models=models,
         players=players,
-        param=SimParameters(dt=D("0.01"), dt_commands=D("0.3"), sim_time_after_collision=D(15), max_sim_time=D(15)),
+        param=SimParameters(dt=D("0.01"), dt_commands=D("0.3"), sim_time_after_collision=D(10), max_sim_time=D(15)),
     )
 
 
-def test_sim_static_obstacles():
+def test_sim_with_obstacles():
     sim_context = get_maze_scenario()
     sim = Simulator()
     # run simulations
     sim.run(sim_context)
     report = generate_report(sim_context)
     # save report
-    report_file = os.path.join(OUT_TESTS_DIR, f"maze_sim.html")
+    report_file = os.path.join(OUT_TESTS_DIR, f"sim_with_obstacles.html")
     report.to_html(report_file)
