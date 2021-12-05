@@ -80,7 +80,7 @@ def generate_report(sim_context: SimContext) -> Report:
     r = Report("EpisodeVisualisation")
     gif_viz = r.figure(cols=1)
     with gif_viz.data_file("Animation", MIME_GIF) as fn:
-        create_animation(file_path=fn, sim_context=sim_context, figsize=(16, 8), dt=30, dpi=120, plot_limits="auto")
+        create_animation(file_path=fn, sim_context=sim_context, figsize=(16, 8), dt=40, dpi=120, plot_limits="auto")
     return r
 
 

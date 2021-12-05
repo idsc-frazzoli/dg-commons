@@ -74,12 +74,15 @@ def resolve_collision(a: PlayerName, b: PlayerName, sim_context: SimContext) -> 
     b_locations = impact_locations_from_polygons(b_model, a_shape)
 
     # Check who is at fault
-    who_is_at_fault = chek_who_is_at_fault(
-        {a: a_model.get_pose(), b: b_model.get_pose()},
-        impact_point=impact_point,
-        lanelet_network=sim_context.dg_scenario.lanelet_network,
-    )
-    a_fault, b_fault = who_is_at_fault[a], who_is_at_fault[b]
+    if sim_context.dg_scenario.scenario:
+        who_is_at_fault = chek_who_is_at_fault(
+            {a: a_model.get_pose(), b: b_model.get_pose()},
+            impact_point=impact_point,
+            lanelet_network=sim_context.dg_scenario.scenario.lanelet_network,
+        )
+        a_fault, b_fault = who_is_at_fault[a], who_is_at_fault[b]
+    else:
+        a_fault, b_fault = False, False
 
     # Compute impulse resolution
     a_geom = a_model.get_geometry()

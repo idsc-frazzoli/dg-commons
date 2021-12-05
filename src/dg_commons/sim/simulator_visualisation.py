@@ -14,10 +14,12 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon, Circle
 from zuper_commons.types import ZValueError
 
-from dg_commons import Color, transform_xy
+from dg_commons import Color, transform_xy, apply_SE2_to_shapely_geo
 from dg_commons import PlayerName, X, U
 from dg_commons.maps.shapely_viz import ShapelyViz
 from dg_commons.planning.trajectory import Trajectory
+from dg_commons.sim.models import extract_pose_from_state
+from dg_commons.sim.models.obstacles_dyn import DynObstacleState, DynObstacleModel
 from dg_commons.sim.models.pedestrian import PedestrianState, PedestrianGeometry
 from dg_commons.sim.models.spacecraft import SpacecraftState
 from dg_commons.sim.models.spacecraft_structures import SpacecraftGeometry
@@ -125,7 +127,16 @@ class SimRenderer(SimRendererABC):
                 scraft_poly=model_poly,
             )
             return scraft_poly, []
-
+        elif issubclass(type(state), DynObstacleState):
+            # todo merge with shapely viz
+            shape = self.sim_context.models[player_name].shape
+            geo = self.sim_context.models[player_name].get_geometry()
+            if model_poly is None:
+                model_poly = ax.fill([], [], color=geo.color, alpha=alpha, zorder=ZOrders.MODEL)
+            q = SE2_from_xytheta((state.x, state.y, state.psi))
+            transformed_shape = apply_SE2_to_shapely_geo(shape, q)
+            model_poly[0].set_xy(np.array(transformed_shape.exterior.xy).T)
+            return model_poly, []
         else:
             raise ZValueError(msg=f"Unknown state type, {type(state)}", state=state)
 

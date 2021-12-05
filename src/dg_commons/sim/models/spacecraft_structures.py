@@ -110,13 +110,15 @@ class SpacecraftGeometry(ModelGeometry):
 
 @dataclass(frozen=True, unsafe_hash=True)
 class SpacecraftParameters(ModelParameters):
-    dpsi_max: float
+    dpsi_limits: Tuple[float, float]
     """ Maximum yaw rate [rad/s] """
 
     @classmethod
     def default(cls) -> "SpacecraftParameters":
-        return SpacecraftParameters(vx_limits=(kmh2ms(-50), kmh2ms(50)), acc_limits=(-10, 10), dpsi_max=2 * math.pi)
+        return SpacecraftParameters(
+            vx_limits=(kmh2ms(-50), kmh2ms(50)), acc_limits=(-10, 10), dpsi_limits=(-2 * math.pi, 2 * math.pi)
+        )
 
     def __post_init__(self):
         super(SpacecraftParameters, self).__post_init__()
-        assert self.dpsi_max > 0
+        assert self.dpsi_limits[0] < self.dpsi_limits[1]

@@ -29,7 +29,10 @@ def velocity_of_P_given_A(vel: T2value, omega: float, vec_ap: T2value) -> T2valu
 
 def _find_intersection_points(a_shape: Polygon, b_shape: BaseGeometry) -> List[Tuple[float, float]]:
     int_shape = a_shape.intersection(b_shape)
-    points = list(int_shape.exterior.coords[:-1])
+    if isinstance(int_shape, Polygon):
+        points = list(int_shape.exterior.coords[:-1])
+    else:
+        points = list(int_shape.coords[:-1])
 
     def is_contained_in_aorb(p) -> bool:
         shapely_point = Point(p).buffer(1.0e-9)
