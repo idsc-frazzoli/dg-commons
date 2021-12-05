@@ -33,10 +33,10 @@ def apply_full_acceleration_limits(speed: float, acceleration: float, p: ModelPa
 
 # todo make it more generic also for the other models
 def apply_rot_speed_constraint(omega: float, domega: float, p: SpacecraftParameters):
-    """Enforces acceleration limits if the maximum speed is reached"""
-    if (omega <= -p.dpsi_max and domega < 0) or (omega >= p.dpsi_max and domega > 0):
+    """Enforces rot acceleration limits if the maximum speed is reached"""
+    if (omega <= p.dpsi_limits[0] and domega < 0) or (omega >= p.dpsi_limits[1] and domega > 0):
         domega = 0
         logger.warn(
-            f"Reached min or max rotation speed, acceleration set to {domega:.2f}: \nspeed {omega:.2f}\tspeed limits [{-p.dpsi_max:.2f},{p.dpsi_max:.2f}]"
+            f"Reached min or max rotation speed, acceleration set to {domega:.2f}: \nspeed {omega:.2f}\tspeed limits [{p.dpsi_limits[0]:.2f},{p.dpsi_limits[1]:.2f}]"
         )
     return domega

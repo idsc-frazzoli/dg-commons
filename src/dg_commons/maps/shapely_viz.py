@@ -1,4 +1,4 @@
-from typing import Union, Dict
+from typing import Union, Dict, Optional
 
 import matplotlib.patches as mpatches
 from matplotlib import pyplot as plt
@@ -24,8 +24,9 @@ from dg_commons import logger
 
 
 class ShapelyViz:
-    def __init__(self, ax: Axes = plt.gca()):
-        self.ax: Axes = ax
+    def __init__(self, ax: Optional[Axes] = None):
+        self.ax = plt.gca() if ax is None else ax
+        # self.fig = self.ax.figure
 
     def add_shape(self, shape: BaseGeometry, **style_kwargs: Dict):
         """Plot a given shapely object.

@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, Tuple
 
 import numpy as np
 from geometry import (
@@ -82,3 +82,12 @@ def apply_SE2_to_shapely_geo(shapely_geometry: BaseGeometry, se2_value: SE2value
     """Apply SE2 transform to shapely geometry"""
     coeffs = [se2_value[0, 0], se2_value[1, 0], se2_value[0, 1], se2_value[1, 1], se2_value[0, 2], se2_value[1, 2]]
     return affine_transform(shapely_geometry, coeffs)
+
+
+def transform_xy(q: np.ndarray, points: Sequence[Tuple[float, float]]) -> Tuple[Tuple[float, float]]:
+    """Transform a list of points according to q"""
+    points_array = np.array([(x, y, 1) for x, y in points]).T
+    points = q @ points_array
+    x = points[0, :]
+    y = points[1, :]
+    return tuple(zip(x, y))
