@@ -26,7 +26,7 @@ def get_maze_scenario() -> SimContext:
 
     dobs_shape = Polygon([[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]])
     x0_dobs1: DynObstacleState = DynObstacleState(x=7, y=9, psi=deg2rad(-45), vx=6, vy=0, dpsi=0)
-    og_dobs1: ObstacleGeometry = ObstacleGeometry(m=100, Iz=100, e=0.3)
+    og_dobs1: ObstacleGeometry = ObstacleGeometry(m=1000, Iz=1000, e=0.2)
     op_dops1: DynObstacleParameters = DynObstacleParameters(vx_limits=(-10, 10), acc_limits=(-1, 1))
 
     models = {
