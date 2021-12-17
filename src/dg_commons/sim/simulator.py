@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from decimal import Decimal
 from itertools import combinations
+from time import perf_counter
 from typing import Mapping, Optional, List, Dict
 
 from dg_commons import PlayerName, U
@@ -8,6 +9,7 @@ from dg_commons.planning import PlanningGoal
 from dg_commons.sim import SimTime, CollisionReport, logger
 from dg_commons.sim.agents.agent import Agent, TAgent
 from dg_commons.sim.collision_utils import CollisionException
+from dg_commons.sim.models.obstacles_dyn import DynObstacleModel
 from dg_commons.sim.scenarios.structures import DgScenario
 from dg_commons.sim.simulator_structures import *
 from dg_commons.time import time_function
@@ -101,9 +103,12 @@ class Simulator:
         # fixme this can be parallelized later with ProcessPoolExecutor?
         for player_name, model in sim_context.models.items():
             if update_commands:
+                tic = perf_counter()
                 actions = sim_context.players[player_name].get_commands(self.last_observations)
+                toc = perf_counter()
                 self.last_commands[player_name] = actions
                 self.simlogger[player_name].actions.add(t=t, v=actions)
+                self.simlogger[player_name].info.add(t=t, v=toc - tic)
                 extra = sim_context.players[player_name].on_get_extra()
                 if extra is not None:
                     self.simlogger[player_name].extra.add(t=t, v=extra)
@@ -167,7 +172,7 @@ class Simulator:
                     except CollisionException as e:
                         logger.warn(f"Failed to resolve collision of {p} with environment because:\n{e.args}")
                         report = None
-                    if report is not None:
+                    if report is not None and not isinstance(p_model, DynObstacleModel):
                         logger.info(f"Player {p} collided with the environment")
                         collision = True
                         sim_context.collision_reports.append(report)

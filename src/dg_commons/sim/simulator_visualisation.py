@@ -14,10 +14,12 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon, Circle
 from zuper_commons.types import ZValueError
 
-from dg_commons import Color
+from dg_commons import Color, transform_xy, apply_SE2_to_shapely_geo
 from dg_commons import PlayerName, X, U
 from dg_commons.maps.shapely_viz import ShapelyViz
 from dg_commons.planning.trajectory import Trajectory
+from dg_commons.sim.models import extract_pose_from_state
+from dg_commons.sim.models.obstacles_dyn import DynObstacleState, DynObstacleModel
 from dg_commons.sim.models.pedestrian import PedestrianState, PedestrianGeometry
 from dg_commons.sim.models.spacecraft import SpacecraftState
 from dg_commons.sim.models.spacecraft_structures import SpacecraftGeometry
@@ -125,7 +127,16 @@ class SimRenderer(SimRendererABC):
                 scraft_poly=model_poly,
             )
             return scraft_poly, []
-
+        elif issubclass(type(state), DynObstacleState):
+            # todo merge with shapely viz
+            shape = self.sim_context.models[player_name].shape
+            geo = self.sim_context.models[player_name].get_geometry()
+            if model_poly is None:
+                model_poly = ax.fill([], [], color=geo.color, alpha=alpha, zorder=ZOrders.MODEL)
+            q = SE2_from_xytheta((state.x, state.y, state.psi))
+            transformed_shape = apply_SE2_to_shapely_geo(shape, q)
+            model_poly[0].set_xy(np.array(transformed_shape.exterior.xy).T)
+            return model_poly, []
         else:
             raise ZValueError(msg=f"Unknown state type, {type(state)}", state=state)
 
@@ -302,18 +313,20 @@ def plot_spacecraft(
         ax.text(
             x4, y4, player_name, zorder=ZOrders.PLAYER_NAME, horizontalalignment="center", verticalalignment="center"
         )
+        thrusters_boxes = [
+            ax.fill([], [], color="k", alpha=alpha, zorder=ZOrders.MODEL)[0] for _ in range(sg.n_thrusters)
+        ]
+        scraft_poly.extend(thrusters_boxes)
+    # body
     ped_outline: Sequence[Tuple[float, float], ...] = sg.outline
     outline_xy = transform_xy(q, ped_outline)
     scraft_poly[0].set_xy(outline_xy)
+    # thrusters
+    thrusters_outline = np.array([transform_xy(q, t_outline) for t_outline in sg.thrusters_outline_in_body_frame])
+    for t_idx, thruster in enumerate(scraft_poly[1:]):
+        xy_poly = thrusters_outline[t_idx]
+        thruster.set_xy(xy_poly)
     return scraft_poly
-
-
-def transform_xy(q: np.ndarray, points: Sequence[Tuple[float, float]]) -> Sequence[Tuple[float, float]]:
-    points_array = np.array([(x, y, 1) for x, y in points]).T
-    points = q @ points_array
-    x = points[0, :]
-    y = points[1, :]
-    return list(zip(x, y))
 
 
 def approximate_bounding_box_players(obj_list: Sequence[X]) -> Union[Sequence[List], None]:

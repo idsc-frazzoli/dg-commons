@@ -13,6 +13,7 @@ __all__ = [
     "PEDESTRIAN",
     "TRUCK",
     "SPACECRAFT",
+    "DYNAMIC_OBSTACLE",
     "ModelGeometry",
     "ModelParameters",
     "TwoWheelsTypes",
@@ -26,6 +27,7 @@ MOTORCYCLE = ModelType("motorcycle")
 BICYCLE = ModelType("bicycle")
 PEDESTRIAN = ModelType("pedestrian")
 SPACECRAFT = ModelType("spacecraft")
+DYNAMIC_OBSTACLE = ModelType("dynamic_obstacle")
 TwoWheelsTypes = frozenset({BICYCLE, MOTORCYCLE})
 FourWheelsTypes = frozenset({CAR, TRUCK})
 

@@ -55,8 +55,13 @@ class LogEntry:
     """A log entry for a player"""
 
     state: X
+    """Player's state"""
     commands: U
+    """Commands of the player"""
     extra: Any
+    """Extra object for rendering afterwards"""
+    info: float
+    """For now it is only the computation time"""
 
 
 @dataclass
@@ -66,6 +71,7 @@ class PlayerLog:
     states: DgSampledSequence[X]
     actions: DgSampledSequence[U]
     extra: DgSampledSequence[Any]
+    info: DgSampledSequence[float]
 
     def at_interp(self, t: Timestamp) -> LogEntry:
         """State gets interpolated, commands and extra not."""
@@ -74,7 +80,12 @@ class PlayerLog:
         except (UndefinedAtTime, ZValueError):
             extra = None
 
-        return LogEntry(state=self.states.at_interp(t), commands=self.actions.at_or_previous(t), extra=extra)
+        return LogEntry(
+            state=self.states.at_interp(t),
+            commands=self.actions.at_or_previous(t),
+            extra=extra,
+            info=self.info.at_or_previous(t),
+        )
 
 
 @dataclass
@@ -84,12 +95,16 @@ class PlayerLogger(Generic[X, U]):
     states: DgSampledSequenceBuilder[X] = field(default_factory=DgSampledSequenceBuilder[X])
     actions: DgSampledSequenceBuilder[U] = field(default_factory=DgSampledSequenceBuilder[U])
     extra: DgSampledSequenceBuilder[Any] = field(default_factory=DgSampledSequenceBuilder[Any])
+    info: DgSampledSequenceBuilder[float] = field(default_factory=DgSampledSequenceBuilder[float])
 
     def as_sequence(
         self,
     ) -> PlayerLog:
         return PlayerLog(
-            states=self.states.as_sequence(), actions=self.actions.as_sequence(), extra=self.extra.as_sequence()
+            states=self.states.as_sequence(),
+            actions=self.actions.as_sequence(),
+            extra=self.extra.as_sequence(),
+            info=self.info.as_sequence(),
         )
 
 

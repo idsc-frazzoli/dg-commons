@@ -10,13 +10,11 @@ from scipy.integrate import solve_ivp
 from shapely.affinity import affine_transform
 from shapely.geometry import Polygon
 
-from dg_commons.sim import logger, ImpactLocation, IMPACT_EVERYWHERE
+from dg_commons.sim import ImpactLocation, IMPACT_EVERYWHERE
 from dg_commons.sim.models import ModelType
 from dg_commons.sim.models.model_utils import apply_acceleration_limits, apply_rot_speed_constraint
 from dg_commons.sim.models.spacecraft_structures import SpacecraftGeometry, SpacecraftParameters
 from dg_commons.sim.simulator_structures import SimModel
-
-logger.error("Quadrotor model is not completed. It will be released in the future.")
 
 
 @dataclass(unsafe_hash=True, eq=True, order=True)
@@ -206,7 +204,7 @@ class SpacecraftModel(SimModel[SpacecraftState, SpacecraftCommands]):
         return SpacecraftState(x=dx, y=dy, psi=x0.dpsi, vx=ax, vy=ay, dpsi=ddpsi)
 
     def get_footprint(self) -> Polygon:
-        """Returns current footprint of the vehicle (mainly for collision checking)"""
+        """Returns current footprint of the spacecraft (mainly for collision checking)"""
         footprint = self.sg.outline_as_polygon
         transform = self.get_pose()
         matrix_coeff = transform[0, :2].tolist() + transform[1, :2].tolist() + transform[:2, 2].tolist()

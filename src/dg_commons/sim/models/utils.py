@@ -27,15 +27,19 @@ def extract_pose_from_state(state: X) -> SE2value:
     try:
         pose = SE2_from_xytheta([state.x, state.y, state.theta])
         return pose
-    except Exception:
-        msg = "Unable to extract pose from state"
-        raise ZValueError(msg=msg, state=state, state_type=type(state))
+    except AttributeError:
+        try:
+            pose = SE2_from_xytheta([state.x, state.y, state.psi])
+            return pose
+        except AttributeError:
+            msg = "Unable to extract pose from state"
+            raise ZValueError(msg=msg, state=state, state_type=type(state))
 
 
 def extract_vel_from_state(state: X) -> SE2value:
     try:
         vel = state.vx
         return vel
-    except Exception:
+    except AttributeError:
         msg = "Unable to extract vel from state"
         raise ZValueError(msg=msg, state=state, state_type=type(state))
