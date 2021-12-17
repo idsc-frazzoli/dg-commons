@@ -5,7 +5,7 @@ from typing import List, Tuple, Callable, Set, Optional
 
 import numpy as np
 
-from dg_commons import logger, Timestamp, LinSpaceTuple
+from dg_commons import logger, Timestamp, LinSpaceTuple, DgSampledSequence
 from dg_commons.planning.trajectory import Trajectory
 from dg_commons.planning.trajectory_generator_abc import TrajGenerator
 from dg_commons.sim.models.vehicle import VehicleState, VehicleCommands
@@ -53,7 +53,7 @@ class MotionPrimitivesGenerator(TrajGenerator):
         self.param = param
 
     @time_function
-    def generate(self, x0: Optional[VehicleState] = None) -> Set[Trajectory]:
+    def generate(self, x0: Optional[VehicleState] = None, t0: Optional[Decimal] = None) -> Set[Trajectory]:
         """
         :param x0: optionally if one wants to generate motion primitives only from a specific state
         :return:
@@ -75,6 +75,8 @@ class MotionPrimitivesGenerator(TrajGenerator):
                 x0.delta,
             ]
         )
+        if t0 is None:
+            t0 = Decimal(0)
 
         n = len(v_samples) * len(steer_samples) * len(v_samples_init) * len(s_samples_init)
         logger.debug(f"Attempting to generate {n} motion primitives")
@@ -86,7 +88,7 @@ class MotionPrimitivesGenerator(TrajGenerator):
 
                 init_state = VehicleState(x=0, y=0, theta=0, vx=v_start, delta=sa_start) if x0 is None else x0
                 timestamps = [
-                    Decimal(0),
+                    t0,
                 ]
                 states = [
                     init_state,
@@ -95,7 +97,7 @@ class MotionPrimitivesGenerator(TrajGenerator):
                 cmds = VehicleCommands(acc=input_a, ddelta=input_sa_rate)
                 for n_step in range(1, self.param.n_steps + 1):
                     next_state = self.vehicle_dynamics(next_state, cmds, float(self.param.dt))
-                    timestamps.append(n_step * self.param.dt)
+                    timestamps.append(t0 + n_step * self.param.dt)
                     states.append(next_state)
                 motion_primitives.add(Trajectory(timestamps=timestamps, values=states))
         logger.info(f"{type(self).__name__}:Found {len(motion_primitives)} feasible motion primitives")
