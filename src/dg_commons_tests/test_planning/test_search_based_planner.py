@@ -5,14 +5,17 @@ import os
 from geometry import SE2_from_xytheta
 from reprep import Report, MIME_GIF
 from shapely.geometry import Polygon
+from commonroad.scenario.obstacle import StaticObstacle as CRStaticObstacle
 
 from dg_commons import PlayerName, apply_SE2_to_shapely_geo
+from dg_commons.controllers.speed import SpeedBehavior, SpeedBehaviorParam
 from dg_commons.dynamics import BicycleDynamics
 from dg_commons.maps import LaneCtrPoint, DgLanelet
 from dg_commons.planning import MPGParam, MotionPrimitivesGenerator, PolygonGoal
 from dg_commons.planning.search_algorithms.best_first_search import GreedyBestFirstSearch
 from dg_commons.sim import SimParameters
 from dg_commons.sim.agents.plan_lane_follower import PlanLFAgent
+from dg_commons.sim.models import kmh2ms
 from dg_commons.sim.models.vehicle import VehicleState
 from dg_commons.sim.models.vehicle_dynamic import VehicleStateDyn, VehicleModelDyn
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
@@ -21,11 +24,19 @@ from dg_commons.sim.scenarios import load_commonroad_scenario, DgScenario
 from dg_commons.sim.simulator import SimContext, Simulator
 from dg_commons.sim.simulator_animation import create_animation
 from dg_commons_tests import OUT_TESTS_DIR
-from dg_commons_tests.test_planning.test_planning import static_object_cr2dg
+from dg_commons.sim.models.obstacles import StaticObstacle
 
 P1 = (
     PlayerName("P1"),
 )
+
+def static_object_cr2dg(static_obstacle: CRStaticObstacle) -> StaticObstacle:
+    position = static_obstacle.initial_state.position
+    orientation = static_obstacle.initial_state.orientation
+    poly1 = Polygon(static_obstacle.obstacle_shape.vertices)
+    poly2 = apply_SE2_to_shapely_geo(poly1, SE2_from_xytheta((position[0], position[1], orientation)))
+    return StaticObstacle(poly2)
+
 
 def generate_report(sim_context: SimContext) -> Report:
     r = Report("EpisodeVisualisation")
@@ -80,7 +91,11 @@ def get_simple_scenario() -> SimContext:
         for s in p:
             ctr_points.append(LaneCtrPoint(s, r=0.01))
     lane = DgLanelet(ctr_points)
-    players = {P1: PlanLFAgent(trajectories=trajectory, all_queries_list=all_queries_list, lane=lane, return_extra=True)}
+    speed_params = SpeedBehaviorParam(nominal_speed=kmh2ms(10))
+    speed_behavior = SpeedBehavior()
+    speed_behavior.params = speed_params
+    players = {P1: PlanLFAgent(trajectories=trajectory, all_queries_list=all_queries_list,
+                               lane=lane, return_extra=True, speed_behavior=speed_behavior)}
 
     return SimContext(
         dg_scenario=DgScenario(scenario=scenario, static_obstacles=static_obstacles),
