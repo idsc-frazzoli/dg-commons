@@ -5,12 +5,12 @@ from typing import List, Tuple, Mapping, Dict
 import numpy as np
 from commonroad.scenario.lanelet import LaneletNetwork
 from geometry import T2value, SO2value, SO2_from_angle, SE2value
-from shapely.geometry import Polygon, Point, LineString
+from shapely.geometry import Polygon, Point, LineString, MultiPolygon
 from shapely.geometry.base import BaseGeometry
 from toolz import remove
 
 from dg_commons.maps.lanes import DgLanelet, DgLanePose
-from dg_commons import X, PlayerName
+from dg_commons import X, PlayerName, logger
 from dg_commons.sim.models.model_structures import ModelGeometry
 
 
@@ -28,11 +28,18 @@ def velocity_of_P_given_A(vel: T2value, omega: float, vec_ap: T2value) -> T2valu
 
 
 def _find_intersection_points(a_shape: Polygon, b_shape: BaseGeometry) -> List[Tuple[float, float]]:
+    """#todo"""
     int_shape = a_shape.intersection(b_shape)
-    if isinstance(int_shape, Polygon):
-        points = list(int_shape.exterior.coords[:-1])
-    else:
-        points = list(int_shape.coords[:])
+    if isinstance(int_shape, MultiPolygon):
+        int_shape: Polygon = int_shape.minimum_rotated_rectangle
+        logger.warn(
+            f"Found multiple contact points between two geometries, collision resolution might not be accurate. "
+            f"Use a smaller physics step for improved accuracy."
+        )
+    elif isinstance(int_shape, LineString):
+        int_shape = Polygon(int_shape)
+    assert isinstance(int_shape, Polygon), f"Intersection shape is not a polygon: {int_shape}"
+    points = list(int_shape.exterior.coords[:-1])
 
     def is_contained_in_aorb(p) -> bool:
         shapely_point = Point(p).buffer(1.0e-9)
@@ -139,7 +146,7 @@ def kinetic_energy(velocity: np.ndarray, m: float) -> float:
     return 0.5 * m * np.linalg.norm(velocity) ** 2
 
 
-def chek_who_is_at_fault(
+def check_who_is_at_fault(
     p_poses: Mapping[PlayerName, SE2value], impact_point: Point, lanelet_network: LaneletNetwork
 ) -> Mapping[PlayerName, bool]:
     """

@@ -21,7 +21,7 @@ Ego = PlayerName("ego")
 DObs1 = PlayerName("DObs1")
 
 
-def get_maze_scenario() -> SimContext:
+def get_simple_scenario() -> SimContext:
     x0_p1 = VehicleStateDyn(x=7, y=4, theta=deg2rad(60), vx=2, delta=0)
 
     dobs_shape = Polygon([[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]])
@@ -43,7 +43,7 @@ def get_maze_scenario() -> SimContext:
         timestamps=[0, 1, 2, 3, 4, 5],
         values=[
             VehicleCommands(acc=0, ddelta=0),
-            VehicleCommands(acc=2, ddelta=+1),
+            VehicleCommands(acc=2, ddelta=+0.1),
             VehicleCommands(acc=1, ddelta=-0.5),
             VehicleCommands(acc=3, ddelta=+0.4),
             VehicleCommands(acc=5, ddelta=-1),
@@ -67,7 +67,7 @@ def get_maze_scenario() -> SimContext:
 
 
 def test_sim_with_obstacles():
-    sim_context = get_maze_scenario()
+    sim_context = get_simple_scenario()
     sim = Simulator()
     # run simulations
     sim.run(sim_context)
