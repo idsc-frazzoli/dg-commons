@@ -36,8 +36,7 @@ def create_animation(
     plot_limits: Optional[Union[str, Sequence[Sequence[float]]]] = "auto",
 ) -> None:
     """
-    Creates an animation
-
+    Creates an animation of the simulation.
     :param plot_limits:
     :param sim_context:
     :param file_path: filename of generated video (ends on .mp4/.gif/.avi, default mp4, when nothing is specified)

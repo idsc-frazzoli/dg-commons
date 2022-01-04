@@ -10,4 +10,4 @@ shapely>=1.8.0
 zuper-commons-z6>=6.1.5
 PyGeometry-z6>=2.0
 
-commonroad-io==2021.3
+commonroad-io==2021.4

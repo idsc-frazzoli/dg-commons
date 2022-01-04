@@ -129,7 +129,8 @@ class SimRenderer(SimRendererABC):
             return scraft_poly, []
         elif issubclass(type(state), DynObstacleState):
             # todo merge with shapely viz
-            shape = self.sim_context.models[player_name].shape
+            dyn_obs_model: DynObstacleModel = self.sim_context.models[player_name]
+            shape = dyn_obs_model.shape
             geo = self.sim_context.models[player_name].get_geometry()
             if model_poly is None:
                 model_poly = ax.fill([], [], color=geo.color, alpha=alpha, zorder=ZOrders.MODEL)
