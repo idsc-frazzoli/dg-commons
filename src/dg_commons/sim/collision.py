@@ -16,7 +16,7 @@ from dg_commons.sim.collision_utils import (
     rot_velocity_after_collision,
     velocity_of_P_given_A,
     CollisionException,
-    chek_who_is_at_fault,
+    check_who_is_at_fault,
 )
 from dg_commons.sim.models.obstacles import StaticObstacle
 from dg_commons.sim.simulator import SimContext
@@ -75,7 +75,7 @@ def resolve_collision(a: PlayerName, b: PlayerName, sim_context: SimContext) -> 
 
     # Check who is at fault
     if sim_context.dg_scenario.scenario:
-        who_is_at_fault = chek_who_is_at_fault(
+        who_is_at_fault = check_who_is_at_fault(
             {a: a_model.get_pose(), b: b_model.get_pose()},
             impact_point=impact_point,
             lanelet_network=sim_context.dg_scenario.scenario.lanelet_network,

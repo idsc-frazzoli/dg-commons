@@ -17,10 +17,11 @@ class DgScenario:
     scenario: Optional[Scenario] = None
     """A commonroad scenario"""
     static_obstacles: Dict[int, StaticObstacle] = field(default_factory=dict)
-    """A sequence of Shapely geometries"""
+    """A mapping of indexed static obstacles"""
     use_road_boundaries: bool = False
     """If True the external boundaries of the road are forced to be obstacles """
     strtree_obstacles: STRtree = field(init=False)
+    """Store the obstacles in a spatial index for fast collision detection"""
 
     def __post_init__(self):
         if self.scenario:
