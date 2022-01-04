@@ -29,7 +29,7 @@ def get_simple_scenario() -> SimContext:
     x0_p1 = VehicleStateDyn(x=7, y=4, theta=deg2rad(60), vx=2, delta=0)
 
     dobs_shape = Polygon([[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]])
-    x0_dobs1: DynObstacleState = DynObstacleState(x=7, y=11, psi=deg2rad(0), vx=2, vy=-1, dpsi=1)
+    x0_dobs1: DynObstacleState = DynObstacleState(x=7, y=11, psi=deg2rad(0), vx=3, vy=-1, dpsi=1)
     og_dobs1: ObstacleGeometry = ObstacleGeometry(m=1000, Iz=1000, e=0.2)
     op_dops1: DynObstacleParameters = DynObstacleParameters(vx_limits=(-10, 10), acc_limits=(-1, 1))
 
@@ -90,5 +90,5 @@ def test_sim_with_obstacles():
     report = generate_report(sim_context)
     report.add_child(get_collisions_report(sim_context))
     # save report
-    report_file = os.path.join(OUT_TESTS_DIR, f"sim_with_obstacles_tmp.html")
+    report_file = os.path.join(OUT_TESTS_DIR, f"sim_with_obstacles.html")
     report.to_html(report_file)
