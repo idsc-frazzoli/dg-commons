@@ -1,0 +1,159 @@
+import copy
+
+import numpy as np
+from commonroad.planning.planning_problem import PlanningProblem
+
+from dg_commons import SE2Transform
+from dg_commons.planning import PlanningGoal
+from dg_commons.planning.sampling_algorithms import reeds_shepp_path
+from dg_commons.planning.sampling_algorithms.node import StarNode
+from dg_commons.planning.sampling_algorithms.rrt_star import RRTStar
+from dg_commons.sim.models.vehicle import VehicleState
+from dg_commons.sim.models.vehicle_dynamic import VehicleStateDyn
+from dg_commons.sim.scenarios import DgScenario
+
+
+class RRTStarReedsShepp(RRTStar):
+    def __init__(self, scenario: DgScenario, planningProblem: PlanningProblem,
+                 initial_vehicle_state: VehicleState, goal: PlanningGoal, goal_state: VehicleState,
+                 max_iter: int, goal_sample_rate: int, expand_dis: float, path_resolution: float,
+                 curvature: float, goal_yaw_th: float, goal_xy_th: float, connect_circle_dist: float,
+                 search_until_max_iter: bool, seed: int):
+        super().__init__(scenario=scenario, planningProblem=planningProblem,
+                         initial_vehicle_state=initial_vehicle_state, goal=goal, goal_state=goal_state,
+                         max_iter=max_iter, goal_sample_rate=goal_sample_rate,
+                         expand_dis=expand_dis, path_resolution=path_resolution,
+                         connect_circle_dist=connect_circle_dist,
+                         search_until_max_iter=search_until_max_iter, seed=seed)
+        self.curvature = curvature  # for dubins path
+        self.goal_yaw_th = np.deg2rad(goal_yaw_th)
+        self.goal_xy_th = goal_xy_th
+
+    def planning(self):
+        """
+        planning
+        animation: flag for animation on or off
+        """
+
+        self.node_list = [StarNode(SE2Transform(p=np.array([self.state_initial.x, self.state_initial.y]),
+                                                theta=self.state_initial.theta))]
+        for i in range(self.max_iter):
+            rnd = self.get_random_node()
+            nearest_ind = self.get_nearest_node_index(self.node_list, rnd)
+            new_node = self.constrained_steer(self.node_list[nearest_ind], rnd, self.expand_dis)
+
+            if not self.check_collision(new_node):
+                near_indexes = self.find_near_nodes(new_node)
+                new_node = self.choose_parent(new_node, near_indexes)
+                if new_node:
+                    self.node_list.append(new_node)
+                    self.rewire(new_node, near_indexes)
+                    self.try_goal_path(new_node)
+
+            if (not self.search_until_max_iter) and new_node:  # check reaching the goal
+                last_index = self.search_best_goal_node()
+                if last_index:
+                    return self.generate_final_course(last_index)
+
+        print("reached max iteration")
+
+        last_index = self.search_best_goal_node()
+        if last_index:
+            return self.generate_final_course(last_index)
+        else:
+            print("Cannot find path")
+
+        return None
+
+    def try_goal_path(self, node):
+        new_node = self.steer(node, self.goal_node, self.expand_dis)
+        if new_node is None:
+            return
+
+        if not self.check_collision(new_node):
+            self.node_list.append(new_node)
+
+    def steer(self, from_node: StarNode, to_node: StarNode, extend_length: float):
+
+        path, mode, course_lengths = reeds_shepp_path.reeds_shepp_path_planning(
+            from_node.pose.p[0], from_node.pose.p[1], from_node.pose.theta,
+            to_node.pose.p[0], to_node.pose.p[1], to_node.pose.theta, self.curvature, step_size=self.path_resolution)
+
+        if not path:  # cannot find a dubins path
+            return None
+        new_node = copy.deepcopy(from_node)
+        new_node.pose = SE2Transform(p=np.array([path[-1].p[0], path[-1].p[1]]),
+                                     theta=path[-1].theta)
+        new_node.path = path
+        new_node.cost += sum([abs(c) for c in course_lengths])
+        new_node.parent = from_node
+
+        return new_node
+
+    def constrained_steer(self, from_node: StarNode, to_node: StarNode, extend_length: float):
+        path, mode, course_lengths = reeds_shepp_path.reeds_shepp_path_planning(
+            from_node.pose.p[0], from_node.pose.p[1], from_node.pose.theta,
+            to_node.pose.p[0], to_node.pose.p[1], to_node.pose.theta, self.curvature, step_size=self.path_resolution)
+
+        if not path:  # cannot find a dubins path
+            return None
+        path_idx = int(3 / self.path_resolution)
+
+        new_node = copy.deepcopy(from_node)
+        if path_idx < len(path) - 1:
+            path, mode, course_lengths = reeds_shepp_path.reeds_shepp_path_planning(
+                from_node.pose.p[0], from_node.pose.p[1], from_node.pose.theta,
+                path[path_idx].p[0], path[path_idx].p[1], path[path_idx].theta, self.curvature,
+                step_size=self.path_resolution)
+        new_node.pose = SE2Transform(p=np.array([path[-1].p[0], path[-1].p[1]]),
+                                     theta=path[-1].theta)
+        new_node.path = path
+        new_node.cost += sum([abs(c) for c in course_lengths])
+        new_node.parent = from_node
+
+        return new_node
+
+    def calc_new_cost(self, from_node, to_node):
+
+        _, _, course_lengths = reeds_shepp_path.reeds_shepp_path_planning(
+            from_node.pose.p[0], from_node.pose.p[1], from_node.pose.theta,
+            to_node.pose.p[0], to_node.pose.p[1], to_node.pose.theta, self.curvature, step_size=self.path_resolution)
+        if not course_lengths:
+            return float("inf")
+        cost = sum([abs(c) for c in course_lengths])
+
+        return from_node.cost + cost
+
+    def reached_goal(self, node: StarNode):
+        x0_p1 = VehicleStateDyn(x=node.pose.p[0], y=node.pose.p[1], theta=node.pose.theta,
+                                vx=0.0, delta=0.0)
+        if self.goal.is_fulfilled(x0_p1):
+            return True
+        return False
+
+    def search_best_goal_node(self):
+
+        # goal_indexes = []
+        # for (i, node) in enumerate(self.node_list):
+        #     if self.calc_dist_to_goal(node) <= self.goal_xy_th:
+        #         goal_indexes.append(i)
+        #
+        # # angle check
+        # final_goal_indexes = []
+        # for i in goal_indexes:
+        #     if abs(self.node_list[i].pose.theta - self.goal_node.pose.theta) <= self.goal_yaw_th:
+        #         final_goal_indexes.append(i)
+        final_goal_indexes = []
+        for (i, node) in enumerate(self.node_list):
+            if self.reached_goal(node):
+                final_goal_indexes.append(i)
+
+        if not final_goal_indexes:
+            return None
+
+        min_cost = min([self.node_list[i].cost for i in final_goal_indexes])
+        for i in final_goal_indexes:
+            if self.node_list[i].cost == min_cost:
+                return i
+
+        return None
