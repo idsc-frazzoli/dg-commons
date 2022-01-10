@@ -5,20 +5,23 @@ import os
 import numpy as np
 from geometry import SE2_from_xytheta
 from matplotlib import pyplot as plt
+from numpy import deg2rad
 from reprep import Report, MIME_GIF
 from shapely.geometry import Polygon
 from commonroad.scenario.obstacle import StaticObstacle as CRStaticObstacle
 
-from dg_commons import PlayerName, apply_SE2_to_shapely_geo
+from dg_commons import PlayerName, apply_SE2_to_shapely_geo, DgSampledSequence
 from dg_commons.controllers.speed import SpeedBehavior, SpeedBehaviorParam
 from dg_commons.maps import LaneCtrPoint, DgLanelet
 from dg_commons.planning import PolygonGoal, Trajectory
 from dg_commons.planning.sampling_algorithms.anytime_rrt_dubins import AnytimeRRTDubins
 from dg_commons.planning.sampling_algorithms.cl_rrt_star import ClosedLoopRRTStar
 from dg_commons.sim import SimParameters
+from dg_commons.sim.agents import NPAgent
 from dg_commons.sim.agents.plan_lane_follower import PlanLFAgent
 from dg_commons.sim.agents.real_time_plan_lane_follower import RealTimePlanLFAgent
 from dg_commons.sim.models import kmh2ms
+from dg_commons.sim.models.obstacles_dyn import DynObstacleModel, DynObstacleState, DynObstacleCommands
 from dg_commons.sim.models.vehicle import VehicleState
 from dg_commons.sim.models.vehicle_dynamic import VehicleStateDyn, VehicleModelDyn
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
@@ -28,12 +31,11 @@ from dg_commons.sim.simulator import SimContext, Simulator
 from dg_commons.sim.simulator_animation import create_animation
 from dg_commons.sim.simulator_visualisation import plot_trajectories
 from dg_commons_tests import OUT_TESTS_DIR
-from dg_commons.sim.models.obstacles import StaticObstacle
+from dg_commons.sim.models.obstacles import StaticObstacle, DynObstacleParameters, ObstacleGeometry
 
-P1 = (
-    PlayerName("P1"),
-)
+P1 = PlayerName("P1")
 
+DObs1 = PlayerName("DObs1")
 
 def _viz(trajectories, name=""):
     # viz
@@ -73,6 +75,10 @@ def get_simple_scenario() -> SimContext:
     scenario, planning_problem_set = load_commonroad_scenario(scenario_name)
     static_obstacles = {id: static_object_cr2dg(static_obstacle) for id, static_obstacle in
                         enumerate(scenario.static_obstacles)}
+    dobs_shape = Polygon([[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]])
+    x0_dobs1: DynObstacleState = DynObstacleState(x=90, y=3, psi=deg2rad(0), vx=-6, vy=0, dpsi=0)
+    og_dobs1: ObstacleGeometry = ObstacleGeometry(m=1000, Iz=1000, e=0.2)
+    op_dops1: DynObstacleParameters = DynObstacleParameters(vx_limits=(-10, 10), acc_limits=(-1, 1))
     planning_problem = list(planning_problem_set.planning_problem_dict.values())[0]
     initial_position = planning_problem.initial_state.position
     initial_velocitiy = planning_problem.initial_state.velocity
@@ -91,11 +97,11 @@ def get_simple_scenario() -> SimContext:
     goal_poly = apply_SE2_to_shapely_geo(goal_poly, SE2_from_xytheta((85, 0, goal_state.theta)))
     goal = PolygonGoal(goal_poly)
     dg_scenario_planner = DgScenario(scenario=scenario, static_obstacles=static_obstacles, use_road_boundaries=True)
-    planner = AnytimeRRTDubins(scenario=dg_scenario_planner,
+    planner = AnytimeRRTDubins(player_name=P1, scenario=dg_scenario_planner,
                                planningProblem=planning_problem, initial_vehicle_state=x0_p1, goal=goal,
-                               goal_state=goal_state, max_iter=2000, goal_sample_rate=10, expand_dis=10.0,
+                               goal_state=goal_state, max_iter=2000, goal_sample_rate=70, expand_dis=10.0,
                                path_resolution=0.25, curvature=1.0,
-                               search_until_max_iter=False, seed=1, expand_iter=10)
+                               search_until_max_iter=True, seed=5, expand_iter=20)
 
     goal = {
         P1: goal,
@@ -103,41 +109,19 @@ def get_simple_scenario() -> SimContext:
 
     models = {
         P1: VehicleModelDyn.default_car(x0_p1),
+        DObs1: DynObstacleModel(x0_dobs1, dobs_shape, og_dobs1, op_dops1),
     }
-    # path = planner.planning()
-    # ctr_points = []
-    # timestamp = 0.0
-    # v_state_list = []
-    # timestamp_list = []
-    # for p in path:
-    #     ctr_points.append(LaneCtrPoint(p, r=0.01))
-    #     v_state = VehicleState(x=p.p[0], y=p.p[1], theta=p.theta, vx=0, delta=0)
-    #     timestamp_list.append(timestamp)
-    #     v_state_list.append(v_state)
-    #     timestamp += 1
-    #
-    # trajectory = Trajectory(timestamps=timestamp_list, values=v_state_list)
-    # _viz([trajectory], "opt_rrt_star_dubins")
-    # lane = DgLanelet(ctr_points)
-    # all_path_list = [node.path for node in planner.node_list if node.path]
-    # all_queries_list = []
-    # for p in all_path_list:
-    #     vs_list = []
-    #     ts_list = []
-    #     ts = 0.0
-    #     for s in p:
-    #         vs = VehicleState(x=s.p[0], y=s.p[1], theta=s.theta, vx=0, delta=0)
-    #         ts_list.append(ts)
-    #         vs_list.append(vs)
-    #         ts += 1
-    #     tra = Trajectory(timestamps=ts_list, values=vs_list)
-    #     all_queries_list.append(tra)
-    # _viz(all_queries_list, "all_rrt_star_dubins")
+    dyn_obstacle_commands = DgSampledSequence[DynObstacleCommands](
+        timestamps=[0],
+        values=[DynObstacleCommands(acc_x=0, acc_y=0, acc_psi=0)],
+    )
+
     speed_params = SpeedBehaviorParam(nominal_speed=kmh2ms(10))
     speed_behavior = SpeedBehavior()
     speed_behavior.params = speed_params
     players = {P1: RealTimePlanLFAgent(planner=planner, dt_plan=Decimal("1.0"), dt_expand_tree=Decimal("0.1"),
-                                       return_extra=True, speed_behavior=speed_behavior)}
+                                       return_extra=True, speed_behavior=speed_behavior),
+               DObs1: NPAgent(dyn_obstacle_commands)}
     # players = {P1: NPAgent(p_cmds)}
 
     return SimContext(

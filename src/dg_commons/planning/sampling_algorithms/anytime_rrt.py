@@ -1,23 +1,27 @@
 import random
+from decimal import Decimal
 from typing import Optional, List, Tuple
 
 import numpy as np
 from commonroad.planning.planning_problem import PlanningProblem
+from shapely.geometry import Polygon
 
-from dg_commons import SE2Transform, logger
+from dg_commons import SE2Transform, logger, PlayerName
 from dg_commons.planning import PlanningGoal
 from dg_commons.planning.sampling_algorithms.node import Node, Tree, AnyNode
 from dg_commons.planning.sampling_algorithms.rrt import RRT
+from dg_commons.sim import SimObservations
 from dg_commons.sim.models.vehicle import VehicleState
+from dg_commons.sim.models.vehicle_dynamic import VehicleStateDyn, VehicleModelDyn
 from dg_commons.sim.scenarios import DgScenario
 
 
 class AnytimeRRT(RRT):
-    def __init__(self, scenario: DgScenario, planningProblem: PlanningProblem,
+    def __init__(self, player_name: PlayerName, scenario: DgScenario, planningProblem: PlanningProblem,
                  initial_vehicle_state: VehicleState, goal: PlanningGoal, goal_state: VehicleState,
                  max_iter: int, goal_sample_rate: int, expand_dis: float, path_resolution: float,
                  search_until_max_iter: bool, seed: int, expand_iter: int):
-        super().__init__(scenario=scenario, planningProblem=planningProblem,
+        super().__init__(player_name=player_name, scenario=scenario, planningProblem=planningProblem,
                          initial_vehicle_state=initial_vehicle_state, goal=goal, goal_state=goal_state,
                          max_iter=max_iter, goal_sample_rate=goal_sample_rate,
                          expand_dis=expand_dis, path_resolution=path_resolution, seed=seed)
@@ -28,6 +32,7 @@ class AnytimeRRT(RRT):
         self.path = None
         self.expand_iter = expand_iter
         self.number_nodes = 0
+        self.sim_observation: SimObservations = SimObservations(players={}, time=Decimal(0.0))
 
     def planning(self) -> Optional[List[SE2Transform]]:
         """
@@ -85,26 +90,25 @@ class AnytimeRRT(RRT):
     def check_path_valid(self) -> bool:
         if self.path:
             for node in self.path.nodes:
-                if self.check_collision(node):
-                    self.tree.set_invalid_node(node)
-                    self.tree.invalid_childs(node)
-                    return False
+                if node.id in self.tree.tree:
+                    if self.check_collision(node):
+                        self.tree.set_invalid_node(node)
+                        self.tree.invalid_childs(node)
+                        return False
 
             return True
         else:
             return False
 
     def remove_driven_nodes(self, current_pose: SE2Transform) -> None:
-        id_list = [self.get_min_dist_point(n, current_pose) for n in self.path.nodes]
-        d_list = [d[1] for d in id_list]
-        min_d = d_list.index(min(d_list))
-        min_idx_node = id_list[min_d][0]
-        node = self.path.nodes[min_d]
-        self.tree.set_new_root_node(node, current_pose, min_idx_node)
-
-        # self.path = self.tree.find_best_path(self.path.nodes[-1])
-
-
+        if self.path is not None:
+            id_list = [self.get_min_dist_point(n, current_pose) for n in self.path.nodes]
+            d_list = [d[1] for d in id_list]
+            min_d = d_list.index(min(d_list))
+            min_idx_node = id_list[min_d][0]
+            node = self.path.nodes[min_d]
+            self.tree.set_new_root_node(node, current_pose, min_idx_node)
+            # self.path = self.tree.find_best_path(self.path.nodes[-1])
 
     @staticmethod
     def get_min_dist_point(node: AnyNode, pose: SE2Transform) -> Tuple[int, float]:
@@ -120,6 +124,7 @@ class AnytimeRRT(RRT):
         if self.check_path_valid():
             return self.path.path
         else:
+            self.tree.remove()
             if self.calc_dist_to_goal(self.tree.last_node()) <= self.expand_dis:
                 final_node = self.steer(self.tree.last_node(), self.goal_node,
                                         self.expand_dis)
@@ -144,3 +149,39 @@ class AnytimeRRT(RRT):
                 new_node.id = str(self.number_nodes)
                 self.tree.set_child(parent=nearest_node, child=new_node)
                 self.tree.insert(new_node)
+
+    def check_collision(self, node: Node) -> bool:
+        """Check collisions of the planned trajectory with the environment
+        :param trajectory: The planned trajectory
+        :return: True if at least one collision happened, False otherwise"""
+        if node is None:
+            return True
+        env_obstacles = self.sim_context.dg_scenario.strtree_obstacles
+        dynamic_obstacles = [obs_val for obs_key, obs_val in self.sim_observation.players.items() if
+                             obs_key != self.player_name]
+        collision = False
+        for pose in node.path:
+            x0_p1 = VehicleStateDyn(x=pose.p[0], y=pose.p[1], theta=pose.theta,
+                                    vx=0.0, delta=0.0)
+            p_model = VehicleModelDyn.default_car(x0_p1)
+            footprint = p_model.get_footprint()
+            # f_bounds = footprint.bounds
+            # delta_increase = 0.05
+            # p_shape = Polygon(((f_bounds[0] - delta_increase, f_bounds[1] - delta_increase),
+            #                    (f_bounds[2] + delta_increase, f_bounds[1] - delta_increase),
+            #                    (f_bounds[2] + delta_increase, f_bounds[3] + delta_increase),
+            #                    (f_bounds[0] - delta_increase, f_bounds[3] + delta_increase)))
+            p_shape = footprint
+            assert p_shape.is_valid
+            items = env_obstacles.query_items(p_shape)
+            for idx in items:
+                candidate = self.sim_context.dg_scenario.static_obstacles[idx]
+                if p_shape.intersects(candidate.shape):
+                    collision = True
+            for do in dynamic_obstacles:
+                if do == self.player_name:
+                    continue
+                do_shape = do.occupancy
+                if do_shape.intersects(p_shape):
+                    collision = True
+        return collision

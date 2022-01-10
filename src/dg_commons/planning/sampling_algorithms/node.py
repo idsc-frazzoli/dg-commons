@@ -42,13 +42,16 @@ class Tree:
     def invalid_childs(self, parent_node: AnyNode):
         if parent_node.children:
             for child in parent_node.children:
-                self.tree[child.id].valid = False
+                if child.id in self.tree:
+                    self.tree[child.id].valid = False
 
 
     def remove(self):
-        for key in self.tree:
-            if not self.tree[key].valid:
-                self.tree.pop(key)
+        invalid_nodes = []
+        for val in self.tree.values():
+            if not val.valid:
+                invalid_nodes.append(val)
+        self.remove_nodes(invalid_nodes)
 
     def find_best_path(self, last_node: AnyNode) -> Path:
         path = []

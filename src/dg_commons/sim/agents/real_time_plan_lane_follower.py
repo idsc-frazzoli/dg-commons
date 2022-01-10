@@ -9,6 +9,7 @@ from dg_commons.controllers.speed import SpeedBehavior, SpeedController
 from dg_commons.controllers.steer import SteerController
 from dg_commons.maps import DgLanelet, LaneCtrPoint
 from dg_commons.planning.sampling_algorithms.anytime_rrt_dubins import AnytimeRRTDubins
+from dg_commons.planning.sampling_algorithms.node import Path
 from dg_commons.planning.trajectory import Trajectory
 from dg_commons.sim import SimObservations, DrawableTrajectoryType, SimTime, logger
 from dg_commons.sim.agents.agent import Agent
@@ -54,6 +55,11 @@ class RealTimePlanLFAgent(Agent):
         self.speed_behavior.my_name = my_name
         logger.info("Planning first initial path.")
         path = self.planner.planning()
+        while path is None:
+            self.planner.expand_tree()
+            init_pose = SE2Transform(p=[self.planner.state_initial.x, self.planner.state_initial.y],
+                                     theta=self.planner.state_initial.theta)
+            path = self.planner.replanning(init_pose)
         logger.info("Found initial path.")
         self.ref_lane = self.get_lane_from_path(path)
         self.pure_pursuit.update_path(self.ref_lane)
@@ -67,10 +73,12 @@ class RealTimePlanLFAgent(Agent):
         # update planner
         update_tree: bool = (t - self.last_tree_update) >= self.dt_expand_tree
         if update_tree:
+            self.planner.sim_observation = sim_obs
             self.last_tree_update = t
             self.planner.expand_tree()
         update_planner: bool = (t - self.last_get_plan_ts) >= self.dt_plan
         if update_planner:
+            self.planner.sim_observation = sim_obs
             self.last_get_plan_ts = t
             path = self.planner.replanning(SE2Transform(p=[self._my_obs.x, self._my_obs.y],
                                                                  theta=self._my_obs.theta))
@@ -95,6 +103,7 @@ class RealTimePlanLFAgent(Agent):
             else:
                 self._emergency = False
                 self.ref_lane = self.get_lane_from_path(path)
+                self.pure_pursuit.update_path(self.ref_lane)
 
         # update observations
         self.speed_behavior.update_observations(sim_obs.players)
@@ -129,12 +138,16 @@ class RealTimePlanLFAgent(Agent):
         if not self.return_extra:
             return None
         all_queries_list = self.get_all_queries([node.path for node in self.planner.tree.tree.values()])
-        trajectories = [self.get_best_trajectory(self.planner.path.path)]
-        colors_opt = ["gold" for traj in trajectories]
-        traj_opt = list(zip(trajectories, colors_opt))
         colors_queries = ["blue" for traj in all_queries_list]
         queries = list(zip(all_queries_list, colors_queries))
-        trajectory = queries + traj_opt
+        trajectories = self.get_best_trajectory(self.planner.path)
+        if trajectories is not None:
+            trajectories = [trajectories]
+            colors_opt = ["gold" for traj in trajectories]
+            traj_opt = list(zip(trajectories, colors_opt))
+            trajectory = queries + traj_opt
+        else:
+            trajectory = queries
         _, gpoint = self.pure_pursuit.find_goal_point()
         pgoal = translation_from_SE2(gpoint)
         l = self.pure_pursuit.param.length
@@ -177,13 +190,13 @@ class RealTimePlanLFAgent(Agent):
 
         return all_queries_list
 
-    def get_best_trajectory(self, path: List[SE2Transform]):
+    def get_best_trajectory(self, path: Path):
         if path is None:
-            return []
+            return None
         timestamp = 0.0
         v_state_list = []
         timestamp_list = []
-        for p in path:
+        for p in path.path:
             v_state = VehicleState(x=p.p[0], y=p.p[1], theta=p.theta, vx=0, delta=0)
             timestamp_list.append(timestamp)
             v_state_list.append(v_state)

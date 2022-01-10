@@ -5,6 +5,7 @@ from decimal import Decimal
 from shapely.geometry import Polygon, Point
 from commonroad.planning.planning_problem import PlanningProblem
 
+from dg_commons import PlayerName
 from dg_commons.planning import PlanningGoal
 from dg_commons.planning.sampling_algorithms.utils import SamplingArea
 from dg_commons.sim import SimParameters
@@ -21,7 +22,7 @@ class SamplingBaseClass(ABC):
     https://gitlab.lrz.de/tum-cps/commonroad-search/-/blob/master/SMP/motion_planner/search_algorithms/base_class.py
     """
 
-    def __init__(self, scenario: DgScenario, planningProblem: PlanningProblem,
+    def __init__(self, player_name: PlayerName, scenario: DgScenario, planningProblem: PlanningProblem,
                  initial_vehicle_state: VehicleState,
                  goal: PlanningGoal, goal_state: VehicleState, seed: int):
         self.dgscenario: DgScenario = scenario
@@ -40,6 +41,7 @@ class SamplingBaseClass(ABC):
         self.node_list = []
         self.sampling_area = self.get_sampling_area()
         self.goal_state = goal_state
+        self.player_name = player_name
         random.seed(seed)
 
 
