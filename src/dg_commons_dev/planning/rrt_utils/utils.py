@@ -1,7 +1,7 @@
 from typing import List, Optional, Tuple, Union
 import math
-from shapely.geometry import Point, LineString, Polygon
-from shapely.affinity import rotate, translate, scale
+from shapely.geometry import Polygon
+from shapely.affinity import rotate, translate
 from dg_commons.sim.models.vehicle import VehicleGeometry
 
 

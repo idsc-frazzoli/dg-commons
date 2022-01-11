@@ -217,16 +217,6 @@ class RRT(Planner):
                 return_val = False
                 break
 
-        '''n = len(node.path_x) - 1
-        for i in range(n):
-            p = (node.path_x[i], node.path_y[i])
-            p_next = (node.path_x[i + 1], node.path_y[i + 1])
-            line = move_vehicle(self.vg, p, p_next, self.enl_f)
-            for obs in obstacle_list:
-                if line.intersects(obs):
-                    return_val = False
-        '''
-
         return return_val
 
     def update_nodes_to_end(self) -> None:

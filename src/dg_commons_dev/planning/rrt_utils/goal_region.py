@@ -11,6 +11,9 @@ from shapely.geometry import Polygon, Point
 
 
 class GoalRegion:
+    """
+    Class for defining a goal region
+    """
     def __init__(self, goal_node: Node, region_orientation: float,
                  tol_x: float, tol_y: float, tol_theta: float = None):
         self.goal_node: Node = goal_node

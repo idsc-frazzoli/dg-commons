@@ -1,5 +1,4 @@
 import math
-
 import numpy as np
 from dg_commons_dev.planning.rrt_star import RRTStar, RRTStarParams
 from shapely.geometry import Point, Polygon, LineString

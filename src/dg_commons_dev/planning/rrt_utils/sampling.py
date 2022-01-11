@@ -3,8 +3,7 @@ import math
 from abc import ABC, abstractmethod
 import random
 from typing import Tuple
-from shapely.geometry import Polygon, MultiPolygon, MultiPoint, Point
-import numpy as np
+from shapely.geometry import Polygon, Point
 
 
 class BaseBoundaries(ABC):

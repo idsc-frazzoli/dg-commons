@@ -20,7 +20,7 @@ class Planner(ABC):
         pass
 
     @abstractmethod
-    def plot_results(self) -> None:
+    def plot_results(self, create_animation: bool) -> None:
         """ Generate and save plots and animations """
         pass
 

@@ -88,7 +88,7 @@ class RRTDubins(RRT):
         self.node_list = [self.start]
 
         for i in range(self.max_iter):
-            print("Iter:", i, ", number of nodes:", len(self.node_list))
+            #print("Iter:", i, ", number of nodes:", len(self.node_list))
             rnd = self.sampling_fct(self.boundaries, self.end, self.goal_sample_rate, limit_angles)
             nearest_ind = self.nearest(rnd, self.node_list, self.distance_meas, self.curvature)
             new_node = self.steering_fct(self.node_list[nearest_ind], rnd, self.expand_dis,

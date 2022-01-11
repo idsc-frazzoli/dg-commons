@@ -4,8 +4,6 @@ author Atsushi Sakai(@Atsushi_twi)
 """
 
 import math
-import time
-
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial.transform import Rotation as Rot
