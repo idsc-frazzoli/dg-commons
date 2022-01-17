@@ -1,4 +1,3 @@
-import copy
 import itertools
 import math
 
@@ -19,6 +18,7 @@ import matplotlib.animation as animation
 import time
 from scipy.ndimage import measurements
 from shapely.geometry import Point, Polygon, MultiPoint, LineString, shape
+from shapely.affinity import affine_transform
 
 
 @dataclass
@@ -95,21 +95,15 @@ class ObstacleBayesian(Estimator):
         if self.previous_state is None:
             self.previous_state = u_k
             return
-
         delta_x, delta_y = u_k.x - self.previous_state.x, u_k.y - self.previous_state.y
         delta_pos = np.matmul(rot2d_from_angle(-self.previous_state.theta), np.array([delta_x, delta_y]))
         delta_theta = u_k.theta - self.previous_state.theta
         delta_se2 = SE2_from_translation_angle(delta_pos, delta_theta)
-
         self.previous_state = u_k
-        current_belief = copy.deepcopy(self.current_belief)
-        query_positions = []
-        for idx, position in current_belief.gen_structure():
-            old_position = SE2_apply_T2(delta_se2, position)
-            query_positions.append(old_position)
-
-        results = current_belief.values_by_positions(np.array(query_positions), if_nan=self.prior_p_ext)
-        res = np.reshape(results, current_belief.values.shape)
+        results = self.current_belief.values_by_positions(self.current_belief.apply_se2(delta_se2),
+                                                          if_nan=self.prior_p_ext)
+        results = np.where(np.isnan(results), self.prior_p_ext, results)
+        res = np.reshape(results, self.current_belief.values.shape)
         self.current_belief.values = res
 
     def update_measurement(self, detections: List[Tuple[float, float]], max_dependency_dist: float = 0) -> None:
@@ -119,21 +113,19 @@ class ObstacleBayesian(Estimator):
         @param detections: x- and y-position of the detections
         @param max_dependency_dist: dependency between detections that are more distant than this parameter is discarded
         """
-        current_belief: CircularGrid = copy.deepcopy(self.current_belief)
-        current_b = current_belief.as_numpy()
-        # current_b = 0.5 * np.ones(current_b.shape)
+        current_b = self.current_belief.as_numpy()
 
         mat = self.p_did_not_cause_any_given_d_only(detections, max_dependency_dist)
         num = np.multiply(1-self.fn, current_b)
         den = num + np.multiply(self.fp, 1-current_b)
         p_obs_given_causing = np.divide(num, den)
-
         num = np.multiply(self.fn, current_b)
         den = num + np.multiply(1-self.fp, 1 - current_b)
         p_obs_given_not_causing = np.divide(num, den)
 
         result = np.multiply(p_obs_given_causing, 1-mat) + np.multiply(p_obs_given_not_causing, mat)
         self.current_belief.values = result
+        self.current_belief.update_regular_grid()
 
         if self.generate_moving_dist:
             self.data.append((result, SE2_from_translation_angle(
@@ -151,22 +143,22 @@ class ObstacleBayesian(Estimator):
         candidates = []
         independent: bool = max_dependency_dist == 0
         res = np.ones(self.shape)
-
         for detection in detections:
             in_accuracy: np.ndarray = np.where((self.pos_x - self.acc <= detection[0]) &
                                                (detection[0] <= self.pos_x + self.acc) &
                                                (self.pos_y - self.acc <= detection[1]) &
                                                (detection[1] <= self.pos_y + self.acc),
                                                self.p_detection_given_origin, 0)
-            candidates_i = np.nonzero(in_accuracy)
-            candidates.append(list(zip(list(candidates_i[0]), list(candidates_i[1]))))
 
             sum_acc_prob: float = float(np.sum(in_accuracy))
             in_accuracy = in_accuracy / sum_acc_prob if sum_acc_prob != 0 else in_accuracy
 
-            involvement[detection] = in_accuracy
             if independent:
                 res = np.multiply(res, 1 - in_accuracy)
+            else:
+                candidates_i = np.nonzero(in_accuracy)
+                candidates.append(list(zip(list(candidates_i[0]), list(candidates_i[1]))))
+                involvement[detection] = in_accuracy
 
         if not independent:
             def helper_fct(nth: int, idx: Tuple[int, int]):
@@ -219,7 +211,7 @@ class ObstacleBayesian(Estimator):
 
         return mat
 
-    def get_shapely(self, threshold: float = 0.7, resampling_resolution: float = 0.1) -> List[Polygon]:
+    def get_shapely(self, threshold: float = 0.7, resampling_resolution: float = 0.2) -> List[Polygon]:
         """
         Returns a list of polygons representing the estimated obstacles in world coordinate frame
         @param threshold: Threshold for probability. Above this value, a point is considered as belonging to an obstacle
@@ -229,11 +221,6 @@ class ObstacleBayesian(Estimator):
         pose = SE2_from_translation_angle(np.array([self.previous_state.x, self.previous_state.y]),
                                           self.previous_state.theta)
 
-        def apply(x: float, y: float) -> Tuple[float, float]:
-            new_pos = SE2_apply_T2(pose, np.array([x, y]))
-            return new_pos[0], new_pos[1]
-
-        # TODO: commented better but intefficient or uncommented worse but efficient??
         radius = self.current_belief.radius
         int_radius = self.current_belief.internal
         n_shape = 2 * int(radius / resampling_resolution)
@@ -241,33 +228,27 @@ class ObstacleBayesian(Estimator):
         steps = list(np.linspace(-radius, radius, n_shape))
         ys, xs = np.meshgrid(steps, steps)
         query_pos = np.vstack((xs.ravel(), ys.ravel())).T
-
         results = self.current_belief.values_by_positions(query_pos, if_nan=0)
         res = np.reshape(results, (n_shape, n_shape))
         res[int((n_shape / 2) - half_n_internal):int((n_shape / 2) + half_n_internal),
             int((n_shape / 2) - half_n_internal):int((n_shape / 2) + half_n_internal)] = 0
-
         thresholded = np.where(res > threshold, 1, 0)
-        # thresholded = np.where(self.current_belief.values > threshold, 1, 0)
         connectivity_array = np.array([[1, 1, 1],
                                        [1, 1, 1],
                                        [1, 1, 1]])
-
         polygons = []
         labeled_array, num_features = measurements.label(thresholded, structure=connectivity_array)
-
+        labeled_array = np.reshape(labeled_array, n_shape*n_shape)
         for i in range(num_features):
             idx_s = np.argwhere(labeled_array == (i+1))
-            points = []
-            for idx in idx_s:
-                points.append(shape(Point(apply(steps[idx[0]], steps[idx[1]]))))
-                # points.append(shape(Point(apply(self.pos_x[idx[0], idx[1]], self.pos_y[idx[0], idx[1]]))))
+            points = query_pos[idx_s, :]
+            points = np.reshape(points, (points.shape[0], 2))
 
             multipoint = MultiPoint(points)
             poly = multipoint.convex_hull
-            poly = poly.buffer(0.2)
-            if isinstance(poly, Point) or isinstance(poly, LineString):
-                poly = poly.buffer(resampling_resolution)
+            poly = poly.buffer(resampling_resolution)
+            poly = affine_transform(poly, [pose[0, 0], pose[0, 1], pose[1, 0],
+                                           pose[1, 1], pose[0, 2], pose[1, 2]])
             polygons.append(poly)
         return polygons
 

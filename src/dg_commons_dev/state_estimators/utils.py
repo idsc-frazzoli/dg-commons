@@ -1,4 +1,5 @@
 import copy
+import time
 from dataclasses import dataclass
 from typing import Union, List, Tuple, Optional
 import math
@@ -6,10 +7,10 @@ import numpy as np
 import itertools
 from dg_commons_dev.utils import BaseParams
 from scipy.interpolate import griddata
-from shapely.geometry import Point
 from geometry import SE2value
-from dg_commons.geo import SE2_apply_T2, translation_angle_from_SE2, transform_xy
-
+from scipy.interpolate import RegularGridInterpolator
+from dg_commons_dev.state_estimators.interpolation_utils import interp_weights, interpolate
+from shapely.geometry import MultiPoint
 
 @dataclass
 class ExponentialParams(BaseParams):
@@ -374,11 +375,22 @@ class CircularGrid:
         self._ext_radius = self.ext_radius * math.cos(self.delta_ang/2) * safety_against_numerical_errors
         self._int_radius = self.int_radius * 1 / safety_against_numerical_errors
 
-        self._griddata_positions = np.zeros((n_lines * n_point_per_line, 2))
-        self._griddata_values = np.zeros((n_lines * n_point_per_line, 1))
+        self.griddata_positions = np.zeros((n_lines * n_point_per_line, 2))
+        self.griddata_values = np.zeros((n_lines * n_point_per_line, 1))
         for i, out in enumerate(self.gen_structure()):
-            self._griddata_positions[i, :] = out[1]
-            self._griddata_values[i] = self._values[out[0]]
+            self.griddata_positions[i, :] = out[1]
+            self.griddata_values[i] = self._values[out[0]]
+
+        self.multi_point_description = MultiPoint(self.griddata_positions)
+
+        self.interpolator = None
+        self.resampling_resolution = 0.1
+        self.n_shape = 2 * int(self.radius / self.resampling_resolution)
+        self.steps = list(np.linspace(-self.radius, self.radius, self.n_shape))
+        ys, xs = np.meshgrid(self.steps, self.steps)
+        query_pos = np.vstack((xs.ravel(), ys.ravel())).T
+        self.griddata_weights = interp_weights(self.griddata_positions, query_pos)
+        self._can_use_interpolation: bool = False
 
     @property
     def values(self) -> np.ndarray:
@@ -422,12 +434,24 @@ class CircularGrid:
     def values(self, values: np.ndarray):
         """
         Values setter enforcing correct dimensions
+        Update regular grid for interpolation to be usable
         """
         assert (values.shape[0], values.shape[1]) == (self.n_lines, self.n_points)
         self._values = values
-        self._griddata_values = np.zeros((self._values.shape[0] * self._values.shape[1], 1))
-        for i, out in enumerate(self.gen_structure()):
-            self._griddata_values[i] = self._values[out[0]]
+        self.griddata_values = np.zeros((self._values.shape[0] * self._values.shape[1], 1))
+        self.griddata_values = np.reshape(self.values, (self._values.shape[0] * self._values.shape[1], 1))
+
+        self._can_use_interpolation = False  # can be used only if regular grid is updated
+
+    def update_regular_grid(self):
+        """
+        Update regular grid based on new values
+        """
+        results = interpolate(self.griddata_values, self.griddata_weights[0], self.griddata_weights[1])
+        res = np.reshape(results, (self.n_shape, self.n_shape))
+        self.interpolator = RegularGridInterpolator((self.steps, self.steps), res, bounds_error=False,
+                                                    fill_value=np.nan)
+        self._can_use_interpolation = True
 
     def set(self, idx: Tuple[int, int], value: float):
         """
@@ -569,10 +593,12 @@ class CircularGrid:
         @param if_nan: Value to set for query points outside of the convex hull of the input points
         @return: (m, 1) values of interest
         """
-        if if_nan:
-            res = griddata(self._griddata_positions, self._griddata_values, pos, fill_value=if_nan)
-        else:
-            res = griddata(self._griddata_positions, self._griddata_values, pos)
+        assert self._can_use_interpolation
+
+        if if_nan is not None:
+            self.interpolator.fill_value = if_nan
+        res = self.interpolator(pos)
+        self.interpolator.fill_value = np.nan
 
         return res
 
@@ -598,7 +624,7 @@ class CircularGrid:
         return self._int_radius < np.linalg.norm(pos) < self._ext_radius
 
     def apply_se2(self, q: SE2value):
-        points_array = np.hstack((self._griddata_positions, np.ones((self._griddata_positions.shape[0], 1)))).T
+        points_array = np.hstack((self.griddata_positions, np.ones((self.griddata_positions.shape[0], 1)))).T
         points = q @ points_array
         return points.T[:, :2]
 

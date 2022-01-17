@@ -1,3 +1,5 @@
+import time
+
 from dg_commons_dev.behavior.behavior_types import Situation
 from dataclasses import dataclass
 from typing import Optional, Union, List, Tuple, MutableMapping
@@ -65,33 +67,27 @@ class Cruise(Situation[SituationObservations, CruiseDescription]):
         self.found_something = None
         self.current_look_ahead: float = float("nan")
 
-    def update_observations(self, new_obs: SituationObservations)\
+    def update_observations(self, new_obs: SituationObservations, polygon: Polygon, polygons: List[Polygon])\
             -> Tuple[List[Polygon], List[SituationPolygons.PolygonClass]]:
         """
         Use new SituationObservations to update the situation:
         1) Establish whether a cruise situation is occurring
         2) Compute its parameters
-        @param new_obs: Current SituationObervations
+        @param new_obs: Current Situation Obervations
+        @param polygon: Polygon of planned path
+        @param polygons: Polygon of planned path divided into sub-polygons
         @return: Polygons and polygon classes for plotting purposes
         """
         self.obs = new_obs
         my_name: PlayerName = new_obs.my_name
         agents: MutableMapping[PlayerName, PlayerObservations] = new_obs.agents
-
-        my_state: X = agents[my_name].state
         my_occupancy: Polygon = agents[my_name].occupancy
-
-        path: DgLanelet = self.obs.planned_path[0]
-        along_lane: float = self.obs.planned_path[1]
         self.current_look_ahead = new_obs.distances[0]
-        my_polygon, _ = intentions_prediction(self.current_look_ahead, path, along_lane)
-
-        # my_polygon, _ = occupancy_prediction(agents[my_name].state, self._get_look_ahead_time(my_vel))
+        my_polygon = polygon
         self.polygon_plotter.plot_polygon(my_polygon, SituationPolygons.PolygonClass(dangerous_zone=True))
 
         self.cruise_situation = CruiseDescription(is_cruise=True, is_following=False,
                                                   speed_ref=self.params.nominal_speed, my_player=my_name)
-
         # TODO: merge together, lot of duplicated code
         for other_name, _ in agents.items():
             if other_name == my_name:
@@ -128,7 +124,9 @@ class Cruise(Situation[SituationObservations, CruiseDescription]):
             other_occupancy: BaseGeometry = obs.shape
             if isinstance(other_occupancy, LineString):
                 continue
-            intersection: BaseGeometry = my_polygon.intersection(other_occupancy)
+
+            intersection: BaseGeometry = my_polygon.intersection(other_occupancy)  # TODO: solve problem
+
             other_name: PlayerName = PlayerName("StaticObs")
 
             if not intersection.is_empty:
@@ -150,7 +148,6 @@ class Cruise(Situation[SituationObservations, CruiseDescription]):
                 self.polygon_plotter.plot_polygon(my_plot, SituationPolygons.PolygonClass(following=True))
                 self.polygon_plotter.plot_polygon(other_occupancy, SituationPolygons.PolygonClass(following=True))
                 # This is only for plotting purposes
-
         return self.polygon_plotter.next_frame()
 
     def _get_look_ahead_time(self, vel: float) -> float:

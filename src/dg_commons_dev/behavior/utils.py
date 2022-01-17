@@ -1,9 +1,10 @@
 import copy
+import time
 from dataclasses import dataclass, field
 from dg_commons import PlayerName, SE2Transform
 from dg_commons.sim import PlayerObservations
 from typing import MutableMapping, Dict, Optional, Tuple, Callable, List
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, LineString
 from dg_commons.geo import SE2_apply_T2, T2value, SE2value
 from dg_commons import X, U
 from scipy.integrate import solve_ivp
@@ -71,14 +72,13 @@ def l_w_from_rectangle(occupacy: Polygon) -> Tuple[float, float]:
     return length, width
 
 
-def intentions_prediction(look_ahead_distance: float, path: DgLanelet, along_lane: float, resolution: float = 0.3):
+def intentions_prediction(look_ahead_distance: float, path: DgLanelet, along_lane: float):
     """
-    Generate a polygon covering the lanes involved in the short term plan and a list of polygons describing subdividing
+    Generate a polygon covering the lanes involved in the short term plan and a list of polygons subdividing
     these lanes.
     @param look_ahead_distance: How far in current plan to look ahead
     @param path: Current plan
     @param along_lane: Current position on path
-    @param resolution: Interval of subdivision
     @return: Short term polygon and subdivision list
     """
     l_polygon, r_polygon = [], []
@@ -88,10 +88,12 @@ def intentions_prediction(look_ahead_distance: float, path: DgLanelet, along_lan
         l_polygon.append(tuple(position + normal))
         r_polygon.append(tuple(position - normal))
 
-    n: int = math.ceil(look_ahead_distance / resolution)
-    for i in range(n):
-        along = along_lane + i * resolution
-        beta = path.beta_from_along_lane(along)
+    start_beta = path.beta_from_along_lane(along_lane)
+    end_beta = path.beta_from_along_lane(along_lane + look_ahead_distance)
+    betas = [start_beta] + [i for i in range(math.ceil(start_beta), math.floor(end_beta) + 1)] + [end_beta]
+    betas = list(dict.fromkeys(betas))
+
+    for beta in betas:
         p = path.center_point(beta)
         r = path.radius(beta)
 
@@ -99,15 +101,17 @@ def intentions_prediction(look_ahead_distance: float, path: DgLanelet, along_lan
         polygon_data(pos, ang, r)
 
     polygons: Dict[float, Polygon] = {}
+    n = len(betas)
     for i in range(n - 1):
         p1, p2 = l_polygon[i], l_polygon[i + 1]
         p3, p4 = r_polygon[i + 1], r_polygon[i]
-        polygons[along_lane + (i + 0.5) * resolution] = Polygon((p1, p2, p3, p4, p1))
+        dist = (np.linalg.norm(np.array(p2) - np.array(p1)) + np.linalg.norm(np.array(p3) - np.array(p4))) / 2
+        along_lane = path.along_lane_from_beta(betas[i])
+        polygons[along_lane + 0.5*dist] = Polygon((p1, p2, p3, p4, p1))
 
     r_polygon.reverse()
 
-    polygon: Polygon() = Polygon(tuple(l_polygon + r_polygon + [l_polygon[0]]))
-
+    polygon: Polygon = Polygon(tuple(l_polygon + r_polygon + [l_polygon[0]]))
     return polygon, polygons
 
 
@@ -158,9 +162,7 @@ def occupancy_prediction(current_state: X, time_span: float,
     @param vp: Vehicle Parameters
     @return: Integral Area
     """
-    # TODO fix for negative velocities
-
-    dt = 0.2
+    dt = 0.3
     l_polygon, r_polygon = [], []
 
     width = vg.width + SAFETY_FACTOR
@@ -191,7 +193,48 @@ def occupancy_prediction(current_state: X, time_span: float,
         polygon_data(final_state)
 
     polygon = Polygon(tuple(l_polygon + r_polygon + [l_polygon[0]]))
+    return polygon, states
 
+
+def occupancy_prediction_var(current_state: X, time_span: float,
+                         vg=VehicleGeometry.default_car(), vp: VehicleParameters = VehicleParameters.default_car()) \
+        -> Polygon:
+    """
+    Computes the polygon describing the integral area occupied by a car starting at current_state and proceeding with
+    constant steering angle and velocity up until time_span.
+    The underlying vehicle model is the kinematic bicycle model
+
+    @param current_state: Current vehicle state
+    @param time_span: How far in time it should be looked
+    @param vg: Vehicle Geometry
+    @param vp: Vehicle Parameters
+    @return: Integral Area
+    """
+    dt = 0.3
+    l_polygon, r_polygon = [], []
+    positions = []
+
+    width = vg.width + SAFETY_FACTOR
+    lf = vg.lf + vg.bumpers_length[0] + SAFETY_FACTOR
+    lr = vg.lr + vg.bumpers_length[1] + SAFETY_FACTOR
+
+    def rear_state(state):
+        position = np.array([state.x, state.y])
+        vec = np.array([math.cos(state.theta), math.sin(state.theta)]) * lr
+        r_position = position - vec
+        return np.array([r_position[0], r_position[1]])
+
+    states = states_prediction(current_state, time_span, dt, vg, vp)
+    for state in states:
+        positions.append(rear_state(state))
+
+    if current_state.vx >= 0:
+        final_state = np.array([state.x + math.cos(state.theta) * lf,
+                                state.y + math.sin(state.theta) * lf])
+
+        positions.append(final_state)
+
+    polygon = LineString(positions).buffer(width)
     return polygon, states
 
 

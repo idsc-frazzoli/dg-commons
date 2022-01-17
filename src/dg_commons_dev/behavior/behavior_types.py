@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, List
 from dg_commons.maps.lanes import DgLanelet
-
+from shapely.geometry import Polygon
 
 Obs = TypeVar('Obs')
 Rel = TypeVar('Rel')
@@ -13,7 +13,7 @@ class Situation(ABC, Generic[Obs, SParams]):
     """ A situation is a set of circumstances in which one finds oneself """
 
     @abstractmethod
-    def update_observations(self, new_obs: Obs):
+    def update_observations(self, new_obs: Obs, polygon: Polygon, polygons: List[Polygon]):
         """
         Update the information about the circumstances, choose whether the considered situation is occurring and
         computes some key parameters

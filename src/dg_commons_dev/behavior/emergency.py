@@ -67,13 +67,15 @@ class Emergency(Situation[SituationObservations, EmergencyDescription]):
         self.polygon_plotter = SituationPolygons(plot=plot)
         self.counter = 0
 
-    def update_observations(self, new_obs: SituationObservations) \
+    def update_observations(self, new_obs: SituationObservations, polygon: Polygon, polygons: List[Polygon]) \
             -> Tuple[List[Polygon], List[SituationPolygons.PolygonClass]]:
         """
         Use new SituationObservations to update the situation:
         1) Establish whether an emergency is occurring
         2) Compute its parameters
-        @param new_obs: Current SituationObervations
+        @param new_obs: Current Situation Obervations
+        @param polygon: Polygon of planned path
+        @param polygons: Polygon of planned path divided into sub-polygons
         @return: Polygons and polygon classes for plotting purposes
         """
         self.obs = new_obs

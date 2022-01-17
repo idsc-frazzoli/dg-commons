@@ -95,7 +95,7 @@ class LQR(LateralController):
                                                                                 control_sol=control_sol_params)'''
 
         self.current_beta = self.control_path.find_along_lane_initial_guess(back_position, self.along_lane,
-                                                                            100 * len(self.path.control_points))
+                                                                            len(self.path.control_points), tol=10e-4)
         q0 = self.path.center_point(self.current_beta)
 
         path_approx = True
@@ -153,8 +153,8 @@ class LQR(LateralController):
         along_lane1 = along_lane + delta_step / 2
         along_lane2 = along_lane1 + delta_step / 2
 
-        beta1, beta2, beta3 = current_beta, self.path.beta_from_along_lane(along_lane1), \
-            self.path.beta_from_along_lane(along_lane2)
+        beta1, beta2, beta3 = current_beta, self.control_path.beta_from_along_lane(along_lane1), \
+            self.control_path.beta_from_along_lane(along_lane2)
 
         q1 = self.path.center_point(beta1)
         q2 = self.path.center_point(beta2)

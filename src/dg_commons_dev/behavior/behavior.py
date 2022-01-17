@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass
 from typing import MutableMapping, Dict, Optional, List, Union, Tuple, Any
 from duckietown_world import relative_pose, SE2Transform
@@ -17,6 +18,8 @@ from dg_commons_dev.utils import BaseParams
 from dg_commons.sim.scenarios.structures import StaticObstacle
 from dg_commons.maps.lanes import DgLanelet
 from dg_commons_dev.controllers.controller_types import Reference
+from dg_commons_dev.behavior.utils import SituationObservations, occupancy_prediction, SituationPolygons,\
+    PlayerObservations, intentions_prediction
 
 
 @dataclass
@@ -133,9 +136,11 @@ class SpeedBehavior(Behavior[MutableMapping[PlayerName, PlayerObservations], Tup
     def get_situation(self, at: float) -> Tuple[float, BehaviorSituation, Any]:
         self.obs.my_name = self.my_name
 
-        c_frames, c_classes = self.cruise.update_observations(self.obs)
-        e_frames, e_classes = self.emergency.update_observations(self.obs)
-        _, _ = self.replan.update_observations(self.obs)
+        polygon, polygons = \
+            intentions_prediction(self.obs.distances[0], self.obs.planned_path[0], self.obs.planned_path[1])
+        c_frames, c_classes = self.cruise.update_observations(self.obs, polygon, polygons)
+        _, _ = self.replan.update_observations(self.obs, polygon, polygons)
+        e_frames, e_classes = self.emergency.update_observations(self.obs, polygon, polygons)
         if self.emergency.is_true():
             self.situation.situation = self.emergency
             self.speed_ref = 0
@@ -149,17 +154,6 @@ class SpeedBehavior(Behavior[MutableMapping[PlayerName, PlayerObservations], Tup
             self.speed_ref = self.cruise.infos().speed_ref
             if self.cruise.infos().is_following:
                 self.something_found = self.obs.distances[0]
-
-            # TODO: after having fixed yield_to class, find condition for which situation between cruise and yield
-            # TODO: is more prominent
-            '''
-            self.yield_to.update_observations(self.obs)
-            if self.yield_to.is_true() and self.yield_to.infos().drac < self.cruise.infos().drac:
-                self.situation.situation = self.yield_to
-                self.speed_ref = 0
-            else:
-                self.situation.situation = self.cruise
-                self.speed_ref = self.cruise.infos().speed_ref'''
 
         frames = c_frames + e_frames
         classes = c_classes + e_classes

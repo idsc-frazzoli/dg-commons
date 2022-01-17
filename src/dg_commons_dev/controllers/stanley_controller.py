@@ -79,7 +79,7 @@ class Stanley(LateralController):
 
         p, _, _ = translation_angle_scale_from_E2(front_pose)
         self.current_beta = self.control_path.find_along_lane_initial_guess(p, self.along_lane,
-                                                                            100 * len(self.path.control_points))
+                                                                            len(self.path.control_points))
         q0 = self.path.center_point(self.current_beta)
 
         path_approx = True
@@ -119,8 +119,8 @@ class Stanley(LateralController):
         along_lane1 = along_lane + delta_step / 2
         along_lane2 = along_lane1 + delta_step / 2
 
-        beta1, beta2, beta3 = current_beta, self.path.beta_from_along_lane(along_lane1), \
-                              self.path.beta_from_along_lane(along_lane2)
+        beta1, beta2, beta3 = current_beta, self.control_path.beta_from_along_lane(along_lane1), \
+                              self.control_path.beta_from_along_lane(along_lane2)
 
         q1 = self.path.center_point(beta1)
         q2 = self.path.center_point(beta2)

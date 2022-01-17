@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass
 from math import sin, atan
 from typing import Tuple, Callable
@@ -68,9 +69,8 @@ class PurePursuit(LateralController):
         self.pose = SE2_from_translation_angle([new_obs.x, new_obs.y], new_obs.theta)
         p, ang = translation_angle_from_SE2(self.pose)
         self.speed = new_obs.vx
-
         self.current_beta = self.control_path.find_along_lane_initial_guess(p, self.along_lane,
-                                                                            100 * len(self.path.control_points))
+                                                                            len(self.path.control_points), tol=10e-4)
         self.along_path = self.path.along_lane_from_beta(self.current_beta)
 
     def find_goal_point(self) -> Tuple[float, SE2value]:
@@ -84,7 +84,7 @@ class PurePursuit(LateralController):
             """
             returns error between desired distance from pose to point along path
             """
-            beta = self.path.beta_from_along_lane(along_path)
+            beta = self.control_path.beta_from_along_lane(along_path)
             cp = self.path.center_point(beta)
             dist = norm_between_SE2value(self.pose, cp)
             return np.linalg.norm(dist - lookahead)
@@ -93,7 +93,7 @@ class PurePursuit(LateralController):
 
         bounds = [min_along_path, min_along_path + lookahead]
         res = scipy.optimize.minimize_scalar(fun=goal_point_error, bounds=bounds, method='Bounded')
-        goal_point = self.path.center_point(self.path.beta_from_along_lane(res.x))
+        goal_point = self.path.center_point(self.control_path.beta_from_along_lane(res.x))
         return res.x, goal_point
 
     def _get_steering(self, at: float) -> float:
