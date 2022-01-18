@@ -73,9 +73,12 @@ class RealTimePlanLFAgent(Agent):
         # update planner
         update_tree: bool = (t - self.last_tree_update) >= self.dt_expand_tree
         if update_tree:
+            # logger.info(f"Update tree at {str(t)}.")
             self.planner.sim_observation = sim_obs
             self.last_tree_update = t
-            self.planner.expand_tree()
+            self.planner.expand_tree(SE2Transform(p=[self._my_obs.x, self._my_obs.y],
+                                                                 theta=self._my_obs.theta))
+            # logger.info(f"Finished updating tree {str(t)}.")
         update_planner: bool = (t - self.last_get_plan_ts) >= self.dt_plan
         if update_planner:
             self.planner.sim_observation = sim_obs

@@ -31,9 +31,7 @@ from dg_commons.sim.simulator_visualisation import plot_trajectories
 from dg_commons_tests import OUT_TESTS_DIR
 from dg_commons.sim.models.obstacles import StaticObstacle
 
-P1 = (
-    PlayerName("P1"),
-)
+P1 = PlayerName("P1")
 
 
 def _viz(trajectories, name=""):
@@ -92,28 +90,28 @@ def get_simple_scenario() -> SimContext:
     goal_poly = apply_SE2_to_shapely_geo(goal_poly, SE2_from_xytheta((85, 0, goal_state.theta)))
     goal = PolygonGoal(goal_poly)
     dg_scenario_planner = DgScenario(scenario=scenario, static_obstacles=static_obstacles, use_road_boundaries=True)
-    # planner = RRTStarDubins(scenario=dg_scenario_planner,
-    #                         planningProblem=planning_problem, initial_vehicle_state=x0_p1, goal=goal,
-    #                         goal_state=goal_state, max_iter=2000, goal_sample_rate=10, expand_dis=10.0,
-    #                         path_resolution=0.25, curvature=1.0, goal_yaw_th=np.deg2rad(30.0), goal_xy_th=2.0,
-    #                         connect_circle_dist=30.0, search_until_max_iter=True, seed=0)
-    # planner = RRTDubins(scenario=dg_scenario_planner,
-    #                     planningProblem=planning_problem, initial_vehicle_state=x0_p1, goal=goal,
+    planner = RRTStarDubins(player_name=P1, scenario=dg_scenario_planner,
+                            initial_vehicle_state=x0_p1, goal=goal,
+                            goal_state=goal_state, max_iter=2000, goal_sample_rate=10, expand_dis=10.0,
+                            path_resolution=0.25, path_length=3.0, curvature=1.0, goal_yaw_th=np.deg2rad(30.0), goal_xy_th=2.0,
+                            connect_circle_dist=30.0, search_until_max_iter=True, seed=0)
+    # planner = RRTDubins(player_name=P1, scenario=dg_scenario_planner,
+    #                     initial_vehicle_state=x0_p1, goal=goal,
     #                     goal_state=goal_state, max_iter=2000, goal_sample_rate=10, expand_dis=10.0,
-    #                     path_resolution=0.25, curvature=1.0, goal_yaw_th=np.deg2rad(30.0), goal_xy_th=2.0,
+    #                     path_resolution=0.25, path_length=3.0, curvature=1.0, goal_yaw_th=np.deg2rad(30.0), goal_xy_th=2.0,
     #                     search_until_max_iter=True, seed=0)
-    # planner = RRTStarReedsShepp(scenario=dg_scenario_planner,
-    #                             planningProblem=planning_problem, initial_vehicle_state=x0_p1, goal=goal,
+    # planner = RRTStarReedsShepp(player_name=P1, scenario=dg_scenario_planner,
+    #                             initial_vehicle_state=x0_p1, goal=goal,
+    #                             goal_state=goal_state, max_iter=1000, goal_sample_rate=10, expand_dis=10.0,
+    #                             path_resolution=0.25, path_length=3.0, curvature=1.0, goal_yaw_th=np.deg2rad(30.0),
+    #                             goal_xy_th=2.0, connect_circle_dist=30.0, search_until_max_iter=True, seed=0)
+    # planner = ClosedLoopRRTStar(scenario=dg_scenario_planner,
+    #                             initial_vehicle_state=x0_p1, goal=goal,
     #                             goal_state=goal_state, max_iter=1000, goal_sample_rate=10, expand_dis=10.0,
     #                             path_resolution=0.25, curvature=1.0, goal_yaw_th=np.deg2rad(30.0), goal_xy_th=2.0,
-    #                             connect_circle_dist=30.0, search_until_max_iter=True, seed=0)
-    planner = ClosedLoopRRTStar(scenario=dg_scenario_planner,
-                                planningProblem=planning_problem, initial_vehicle_state=x0_p1, goal=goal,
-                                goal_state=goal_state, max_iter=1000, goal_sample_rate=10, expand_dis=10.0,
-                                path_resolution=0.25, curvature=1.0, goal_yaw_th=np.deg2rad(30.0), goal_xy_th=2.0,
-                                connect_circle_dist=30.0, search_until_max_iter=False, seed=0,
-                                target_speed=initial_velocitiy,
-                                yaw_th=np.deg2rad(3.0), xy_th=0.5, invalid_travel_ratio=5.0)
+    #                             connect_circle_dist=30.0, search_until_max_iter=False, seed=0,
+    #                             target_speed=initial_velocitiy,
+    #                             yaw_th=np.deg2rad(3.0), xy_th=0.5, invalid_travel_ratio=5.0)
     goal = {
         P1: goal,
     }

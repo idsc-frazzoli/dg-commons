@@ -3,25 +3,26 @@ from decimal import Decimal
 from typing import Optional, List, Tuple
 
 import numpy as np
-from commonroad.planning.planning_problem import PlanningProblem
-from shapely.geometry import Polygon
 
-from dg_commons import SE2Transform, logger, PlayerName
+from dg_commons import SE2Transform, PlayerName
 from dg_commons.planning import PlanningGoal
 from dg_commons.planning.sampling_algorithms.node import Node, Tree, AnyNode
 from dg_commons.planning.sampling_algorithms.rrt import RRT
 from dg_commons.sim import SimObservations
+from dg_commons.sim.models import Pacejka4p
 from dg_commons.sim.models.vehicle import VehicleState
 from dg_commons.sim.models.vehicle_dynamic import VehicleStateDyn, VehicleModelDyn
+from dg_commons.sim.models.vehicle_structures import VehicleGeometry
+from dg_commons.sim.models.vehicle_utils import VehicleParameters
 from dg_commons.sim.scenarios import DgScenario
 
 
 class AnytimeRRT(RRT):
-    def __init__(self, player_name: PlayerName, scenario: DgScenario, planningProblem: PlanningProblem,
+    def __init__(self, player_name: PlayerName, scenario: DgScenario,
                  initial_vehicle_state: VehicleState, goal: PlanningGoal, goal_state: VehicleState,
                  max_iter: int, goal_sample_rate: int, expand_dis: float, path_resolution: float,
                  search_until_max_iter: bool, seed: int, expand_iter: int):
-        super().__init__(player_name=player_name, scenario=scenario, planningProblem=planningProblem,
+        super().__init__(player_name=player_name, scenario=scenario,
                          initial_vehicle_state=initial_vehicle_state, goal=goal, goal_state=goal_state,
                          max_iter=max_iter, goal_sample_rate=goal_sample_rate,
                          expand_dis=expand_dis, path_resolution=path_resolution, seed=seed)
@@ -41,7 +42,8 @@ class AnytimeRRT(RRT):
         """
         for i in range(self.max_iter):
             rnd_node = self.get_random_node()
-            nearest_node = self.get_nearest_node_from_tree(self.tree.tree, rnd_node)
+            # nearest_node = self.get_nearest_node_from_tree(self.tree.tree, rnd_node)
+            nearest_node = self.tree.get_nearest_node_from_tree(rnd_node.pose.p.tolist())
             new_node = self.steer(nearest_node, rnd_node, self.expand_dis)
 
             if not self.check_collision(new_node):
@@ -107,7 +109,8 @@ class AnytimeRRT(RRT):
             min_d = d_list.index(min(d_list))
             min_idx_node = id_list[min_d][0]
             node = self.path.nodes[min_d]
-            self.tree.set_new_root_node(node, current_pose, min_idx_node)
+            if node.id != "0":
+                self.tree.set_new_root_node(node, current_pose, min_idx_node)
             # self.path = self.tree.find_best_path(self.path.nodes[-1])
 
     @staticmethod
@@ -138,10 +141,10 @@ class AnytimeRRT(RRT):
 
         return None
 
-    def expand_tree(self):
+    def expand_tree(self, current_pose: SE2Transform):
         for i in range(self.expand_iter):
             rnd_node = self.get_random_node()
-            nearest_node = self.get_nearest_node_from_tree(self.tree.tree, rnd_node)
+            nearest_node = self.tree.get_nearest_node_from_tree(rnd_node.pose.p.tolist())
             new_node = self.steer(nearest_node, rnd_node, self.expand_dis)
 
             if not self.check_collision(new_node):
@@ -163,8 +166,13 @@ class AnytimeRRT(RRT):
         for pose in node.path:
             x0_p1 = VehicleStateDyn(x=pose.p[0], y=pose.p[1], theta=pose.theta,
                                     vx=0.0, delta=0.0)
-            p_model = VehicleModelDyn.default_car(x0_p1)
-            footprint = p_model.get_footprint()
+            # p_model = VehicleModelDyn.default_car(x0_p1)
+            # footprint = p_model.get_footprint()
+            vm = VehicleModelDyn(x0=x0_p1, vg=VehicleGeometry.default_car(w_half=0.9+0.1, lf=1.7+0.1, lr=1.7+0.1),
+                                 vp=VehicleParameters.default_car(),
+                                 pacejka_front=Pacejka4p.default_car_front(),
+                                 pacejka_rear=Pacejka4p.default_car_rear(),)
+            footprint = vm.get_footprint()
             # f_bounds = footprint.bounds
             # delta_increase = 0.05
             # p_shape = Polygon(((f_bounds[0] - delta_increase, f_bounds[1] - delta_increase),

@@ -3,6 +3,7 @@ from decimal import Decimal
 import os
 
 import numpy as np
+import pandas as pd
 from geometry import SE2_from_xytheta
 from matplotlib import pyplot as plt
 from numpy import deg2rad
@@ -15,6 +16,7 @@ from dg_commons.controllers.speed import SpeedBehavior, SpeedBehaviorParam
 from dg_commons.maps import LaneCtrPoint, DgLanelet
 from dg_commons.planning import PolygonGoal, Trajectory
 from dg_commons.planning.sampling_algorithms.anytime_rrt_dubins import AnytimeRRTDubins
+from dg_commons.planning.sampling_algorithms.anytime_rrt_star_dubins import AnytimeRRTStarDubins
 from dg_commons.planning.sampling_algorithms.cl_rrt_star import ClosedLoopRRTStar
 from dg_commons.sim import SimParameters
 from dg_commons.sim.agents import NPAgent
@@ -75,9 +77,12 @@ def get_simple_scenario() -> SimContext:
     scenario, planning_problem_set = load_commonroad_scenario(scenario_name)
     static_obstacles = {id: static_object_cr2dg(static_obstacle) for id, static_obstacle in
                         enumerate(scenario.static_obstacles)}
-    dobs_shape = Polygon([[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]])
-    x0_dobs1: DynObstacleState = DynObstacleState(x=90, y=3, psi=deg2rad(0), vx=-6, vy=0, dpsi=0)
-    og_dobs1: ObstacleGeometry = ObstacleGeometry(m=1000, Iz=1000, e=0.2)
+    static_obstacles = {}
+    # dobs_shape = Polygon([[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]])
+    d_obs = 0.25
+    dobs_shape = Polygon([[-d_obs, -d_obs], [d_obs, -d_obs], [d_obs, d_obs], [-d_obs, d_obs], [-d_obs, -d_obs]])
+    x0_dobs1: DynObstacleState = DynObstacleState(x=75, y=-1, psi=deg2rad(90), vx=-6, vy=0, dpsi=0)
+    og_dobs1: ObstacleGeometry = ObstacleGeometry(m=75, Iz=100, e=0.1)
     op_dops1: DynObstacleParameters = DynObstacleParameters(vx_limits=(-10, 10), acc_limits=(-1, 1))
     planning_problem = list(planning_problem_set.planning_problem_dict.values())[0]
     initial_position = planning_problem.initial_state.position
@@ -97,11 +102,16 @@ def get_simple_scenario() -> SimContext:
     goal_poly = apply_SE2_to_shapely_geo(goal_poly, SE2_from_xytheta((85, 0, goal_state.theta)))
     goal = PolygonGoal(goal_poly)
     dg_scenario_planner = DgScenario(scenario=scenario, static_obstacles=static_obstacles, use_road_boundaries=True)
-    planner = AnytimeRRTDubins(player_name=P1, scenario=dg_scenario_planner,
-                               planningProblem=planning_problem, initial_vehicle_state=x0_p1, goal=goal,
-                               goal_state=goal_state, max_iter=2000, goal_sample_rate=70, expand_dis=10.0,
-                               path_resolution=0.25, curvature=1.0,
-                               search_until_max_iter=True, seed=5, expand_iter=20)
+    planner = AnytimeRRTStarDubins(player_name=P1, scenario=dg_scenario_planner,
+                               initial_vehicle_state=x0_p1, goal=goal,
+                               goal_state=goal_state, max_iter=2000, goal_sample_rate=20, expand_dis=10.0,
+                               path_resolution=0.25, path_length=3.0, curvature=1.0,
+                               search_until_max_iter=True, seed=5, expand_iter=50, connect_circle_dist=30.0)
+    # planner = AnytimeRRTDubins(player_name=P1, scenario=dg_scenario_planner,
+    #                                initial_vehicle_state=x0_p1, goal=goal,
+    #                                goal_state=goal_state, max_iter=2000, goal_sample_rate=20, expand_dis=10.0,
+    #                                path_resolution=0.25, path_length: 3.0, curvature=1.0,
+    #                                search_until_max_iter=True, seed=5, expand_iter=50)
 
     goal = {
         P1: goal,
@@ -130,7 +140,7 @@ def get_simple_scenario() -> SimContext:
         players=players,
         missions=goal,
         param=SimParameters(dt=Decimal("0.01"), dt_commands=Decimal("0.01"), sim_time_after_collision=Decimal(1),
-                            max_sim_time=Decimal(14)),
+                            max_sim_time=Decimal(20)),
     )
 
 

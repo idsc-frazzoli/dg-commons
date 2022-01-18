@@ -2,9 +2,8 @@ import copy
 from typing import Optional, List
 
 import numpy as np
-from commonroad.planning.planning_problem import PlanningProblem
 
-from dg_commons import SE2Transform
+from dg_commons import SE2Transform, PlayerName
 from dg_commons.planning import PlanningGoal
 from dg_commons.planning.sampling_algorithms import dubins_path
 from dg_commons.planning.sampling_algorithms.node import StarNode
@@ -16,12 +15,12 @@ from dg_commons.sim.scenarios import DgScenario
 
 class RRTStarDubins(RRTStar):
 
-    def __init__(self, scenario: DgScenario, planningProblem: PlanningProblem,
+    def __init__(self, player_name: PlayerName,scenario: DgScenario,
                  initial_vehicle_state: VehicleState, goal: PlanningGoal, goal_state: VehicleState,
-                 max_iter: int, goal_sample_rate: int, expand_dis: float, path_resolution: float,
+                 max_iter: int, goal_sample_rate: int, expand_dis: float, path_resolution: float, path_length: float,
                  curvature: float, goal_yaw_th: float, goal_xy_th: float, connect_circle_dist: float,
                  search_until_max_iter: bool, seed: int):
-        super().__init__(scenario=scenario, planningProblem=planningProblem,
+        super().__init__(player_name=player_name, scenario=scenario,
                          initial_vehicle_state=initial_vehicle_state, goal=goal, goal_state=goal_state,
                          max_iter=max_iter, goal_sample_rate=goal_sample_rate,
                          expand_dis=expand_dis, path_resolution=path_resolution,
@@ -30,6 +29,7 @@ class RRTStarDubins(RRTStar):
         self.curvature = curvature  # for dubins path
         self.goal_yaw_th = np.deg2rad(goal_yaw_th)
         self.goal_xy_th = goal_xy_th
+        self.path_length = path_length
 
     def planning(self) -> Optional[List[SE2Transform]]:
         """
@@ -97,7 +97,7 @@ class RRTStarDubins(RRTStar):
 
         if len(path) <= 1:  # cannot find a dubins path
             return None
-        path_idx = int(3 / self.path_resolution)
+        path_idx = int(self.path_length / self.path_resolution)
 
         new_node = copy.deepcopy(from_node)
         if path_idx < len(path) - 1:

@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 from decimal import Decimal
 
 from shapely.geometry import Polygon, Point
-from commonroad.planning.planning_problem import PlanningProblem
 
 from dg_commons import PlayerName
 from dg_commons.planning import PlanningGoal
@@ -22,12 +21,10 @@ class SamplingBaseClass(ABC):
     https://gitlab.lrz.de/tum-cps/commonroad-search/-/blob/master/SMP/motion_planner/search_algorithms/base_class.py
     """
 
-    def __init__(self, player_name: PlayerName, scenario: DgScenario, planningProblem: PlanningProblem,
+    def __init__(self, player_name: PlayerName, scenario: DgScenario,
                  initial_vehicle_state: VehicleState,
                  goal: PlanningGoal, goal_state: VehicleState, seed: int):
-        self.dgscenario: DgScenario = scenario
         self.scenario = scenario.scenario
-        self.planningProblem: PlanningProblem = planningProblem
         self.goal = goal
         self.sim_context = SimContext(
             dg_scenario=scenario,
@@ -35,7 +32,6 @@ class SamplingBaseClass(ABC):
             players={},
             param=SimParameters(dt=Decimal("0.01"), dt_commands=Decimal("0.1"), sim_time_after_collision=Decimal(1),
                                 max_sim_time=Decimal(7)), )
-        self.lanelet_network = self.scenario.lanelet_network
         self.list_obstacles = self.scenario.obstacles
         self.state_initial: VehicleState = initial_vehicle_state
         self.node_list = []
@@ -58,7 +54,12 @@ class SamplingBaseClass(ABC):
             y = coords[1]
             polygon_bounds.append([x[0], y[0]])
             polygon_bounds.append([x[1], y[1]])
-
+        polygon_bounds[0][0] = 40
+        polygon_bounds[1][0] = 100
+        polygon_bounds[2][0] = 100
+        polygon_bounds[3][0] = 40
+        polygon_bounds[0][1] = 1.9
+        polygon_bounds[1][1] = 1.9
         pol = Polygon(polygon_bounds)
 
         return SamplingArea(pol)
@@ -74,5 +75,3 @@ class SamplingBaseClass(ABC):
             num_it += 1
             if num_it > 100:
                 raise Exception('Could not sample point')
-
-

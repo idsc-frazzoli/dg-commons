@@ -5,7 +5,6 @@ from copy import deepcopy
 from typing import List, Tuple, Optional
 
 import numpy as np
-from commonroad.planning.planning_problem import PlanningProblem
 
 from dg_commons import SE2Transform, PlayerName
 from dg_commons.planning import PlanningGoal
@@ -21,10 +20,10 @@ class RRT(SamplingBaseClass, ABC):
         Class for RRT planning
         """
 
-    def __init__(self, player_name: PlayerName, scenario: DgScenario, planningProblem: PlanningProblem,
+    def __init__(self, player_name: PlayerName, scenario: DgScenario,
                  initial_vehicle_state: VehicleState, goal: PlanningGoal, goal_state: VehicleState,
                  max_iter: int, goal_sample_rate: int, expand_dis: float, path_resolution: float, seed: int):
-        super().__init__(player_name=player_name, scenario=scenario, planningProblem=planningProblem,
+        super().__init__(player_name=player_name, scenario=scenario,
                          initial_vehicle_state=initial_vehicle_state, goal=goal, goal_state=goal_state, seed=seed)
         self.max_iter = max_iter
         self.goal_sample_rate = goal_sample_rate

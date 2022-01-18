@@ -1,7 +1,6 @@
 from typing import List
 
 import numpy as np
-from commonroad.planning.planning_problem import PlanningProblem
 
 from dg_commons import SE2Transform
 from dg_commons.planning import PlanningGoal
@@ -13,13 +12,13 @@ from dg_commons.sim.scenarios import DgScenario
 
 
 class ClosedLoopRRTStar(RRTStarReedsShepp):
-    def __init__(self, scenario: DgScenario, planningProblem: PlanningProblem,
+    def __init__(self, scenario: DgScenario,
                  initial_vehicle_state: VehicleState, goal: PlanningGoal, goal_state: VehicleState,
                  max_iter: int, goal_sample_rate: int, expand_dis: float, path_resolution: float,
                  curvature: float, goal_yaw_th: float, goal_xy_th: float, connect_circle_dist: float,
                  search_until_max_iter: bool, seed: int, target_speed: float, yaw_th: float, xy_th: float,
                  invalid_travel_ratio: float):
-        super().__init__(scenario=scenario, planningProblem=planningProblem,
+        super().__init__(scenario=scenario,
                          initial_vehicle_state=initial_vehicle_state, goal=goal, goal_state=goal_state,
                          max_iter=max_iter, goal_sample_rate=goal_sample_rate,
                          expand_dis=expand_dis, path_resolution=path_resolution,

@@ -7,16 +7,17 @@ from reprep import Report, MIME_GIF
 from shapely.geometry import Polygon
 from commonroad.scenario.obstacle import StaticObstacle as CRStaticObstacle
 
-from dg_commons import PlayerName, apply_SE2_to_shapely_geo
+from dg_commons import PlayerName, apply_SE2_to_shapely_geo, DgSampledSequence
 from dg_commons.controllers.speed import SpeedBehavior, SpeedBehaviorParam
 from dg_commons.dynamics import BicycleDynamics
 from dg_commons.maps import LaneCtrPoint, DgLanelet
 from dg_commons.planning import MPGParam, MotionPrimitivesGenerator, PolygonGoal
 from dg_commons.planning.search_algorithms.best_first_search import GreedyBestFirstSearch
 from dg_commons.sim import SimParameters
+from dg_commons.sim.agents import NPAgent
 from dg_commons.sim.agents.plan_lane_follower import PlanLFAgent
 from dg_commons.sim.models import kmh2ms
-from dg_commons.sim.models.vehicle import VehicleState
+from dg_commons.sim.models.vehicle import VehicleState, VehicleCommands
 from dg_commons.sim.models.vehicle_dynamic import VehicleStateDyn, VehicleModelDyn
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 from dg_commons.sim.models.vehicle_utils import VehicleParameters
@@ -78,12 +79,13 @@ def get_simple_scenario() -> SimContext:
 
     params = MPGParam(dt=Decimal(".1"), n_steps=10, velocity=(0, 10, 5), steering=(-vp.delta_max, vp.delta_max, 5))
     vehicle = BicycleDynamics(vg=vg, vp=vp)
+    vehicle = VehicleModelDyn.default_car(x0_p1)
     mpg = MotionPrimitivesGenerator(param=params, vehicle_dynamics=vehicle.successor_ivp, vehicle_param=vp)
     x0 = VehicleState(x=initial_position[0], y=initial_position[1], theta=initial_orientation,
                       vx=initial_velocitiy, delta=0)
     planner = GreedyBestFirstSearch(DgScenario(scenario=scenario, static_obstacles=static_obstacles, use_road_boundaries=True), planning_problem,
-                          mpg, x0, goal[P1])
-    path, trajectory = planner.execute_search()
+                          mpg, x0_p1, goal[P1])
+    path, trajectory, commands_sequence_list = planner.execute_search()
     all_queries_list = [f_elements[2].list_trajectories for f_elements in planner.frontier.list_elements]
     all_queries_list = list(itertools.chain(*all_queries_list))
     ctr_points = []
@@ -91,11 +93,22 @@ def get_simple_scenario() -> SimContext:
         for s in p:
             ctr_points.append(LaneCtrPoint(s, r=0.01))
     lane = DgLanelet(ctr_points)
+    time_stamps_list = []
+    cmds_list = []
+    for cmds_seq in commands_sequence_list:
+        cmds = list(cmds_seq.values)
+        time_stamps = list(cmds_seq.timestamps)
+        cmds.pop()
+        time_stamps.pop()
+        cmds_list = cmds_list + cmds
+        time_stamps_list = time_stamps_list + time_stamps
+    p_cmds = DgSampledSequence[VehicleCommands](time_stamps_list, cmds_list)
     speed_params = SpeedBehaviorParam(nominal_speed=kmh2ms(10))
     speed_behavior = SpeedBehavior()
     speed_behavior.params = speed_params
     players = {P1: PlanLFAgent(trajectories=trajectory, all_queries_list=all_queries_list,
                                lane=lane, return_extra=True, speed_behavior=speed_behavior)}
+    # players = {P1: NPAgent(p_cmds)}
 
     return SimContext(
         dg_scenario=DgScenario(scenario=scenario, static_obstacles=static_obstacles),
