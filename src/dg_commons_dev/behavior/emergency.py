@@ -1,7 +1,7 @@
 from dg_commons_dev.behavior.behavior_types import Situation
 from dataclasses import dataclass
 from typing import Union, List, Tuple, MutableMapping, Optional
-from dg_commons_dev.behavior.utils import SituationObservations, \
+from dg_commons_dev.behavior.utils import SituationObservations, entry_exit_t_plan, \
     occupancy_prediction, entry_exit_t, SituationPolygons, Polygon, PlayerObservations
 from dg_commons.sim.models import kmh2ms, extract_vel_from_state
 from dg_commons.sim.models.vehicle import VehicleParameters
@@ -85,7 +85,14 @@ class Emergency(Situation[SituationObservations, EmergencyDescription]):
         my_state: X = agents[my_name].state
         my_vel: float = my_state.vx
         my_occupancy: Polygon = agents[my_name].occupancy
-        my_polygon, _ = occupancy_prediction(agents[my_name].state, self.safety_time_braking)
+
+        plan: bool = True
+        if plan:
+            my_polygon = polygon
+            if not my_polygon.is_valid:
+                my_polygon = my_polygon.buffer(0)  # Trick to fix polygons with interior points
+        else:
+            my_polygon, _ = occupancy_prediction(agents[my_name].state, self.safety_time_braking)
 
         # TODO: fix duplicated code
         for other_name, _ in agents.items():
@@ -100,8 +107,12 @@ class Emergency(Situation[SituationObservations, EmergencyDescription]):
             if intersection.is_empty:
                 self.emergency_situation = EmergencyDescription(False)
             else:
-                my_entry_time, my_exit_time = entry_exit_t(intersection, my_state, my_occupancy,
-                                                           self.safety_time_braking, my_vel, tol=0.01)
+                if plan:
+                    my_entry_time, my_exit_time = entry_exit_t_plan(intersection, my_state, my_occupancy, polygons,
+                                                                    self.safety_time_braking, my_vel, tol=0.01)
+                else:
+                    my_entry_time, my_exit_time = entry_exit_t(intersection, my_state, my_occupancy,
+                                                               self.safety_time_braking, my_vel, tol=0.01)
                 other_entry_time, other_exit_time = entry_exit_t(intersection, other_state, other_occupancy,
                                                                  self.safety_time_braking, other_vel, tol=0.01)
 
@@ -109,14 +120,14 @@ class Emergency(Situation[SituationObservations, EmergencyDescription]):
                 collision_max: float = 1  # if collision_score > collision_max then there is an emergency
 
                 def pet_score(pet: float):
-                    pet_min = self.safety_time_braking*2
+                    pet_min = self.safety_time_braking*1.2
                     if pet < pet_min:
                         return 1.0
                     else:
                         return 0.0
 
                 def ttc_score(ttc: float):
-                    ttc_min = self.safety_time_braking*2
+                    ttc_min = self.safety_time_braking*1.2
                     if ttc < ttc_min:
                         return 1.0
                     else:
@@ -166,11 +177,15 @@ class Emergency(Situation[SituationObservations, EmergencyDescription]):
             other_polygon: Polygon = obs.shape
 
             intersection: Polygon = my_polygon.intersection(other_polygon)
-            if intersection.is_empty:
+            if intersection.is_empty or my_vel < 0:
                 self.emergency_situation = EmergencyDescription(False)
             else:
-                my_entry_time, my_exit_time = entry_exit_t(intersection, my_state, my_occupancy,
-                                                           self.safety_time_braking, my_vel, tol=0.01)
+                if plan:
+                    my_entry_time, my_exit_time = entry_exit_t_plan(intersection, my_state, my_occupancy, polygons,
+                                                                    self.safety_time_braking, my_vel, tol=0.01)
+                else:
+                    my_entry_time, my_exit_time = entry_exit_t(intersection, my_state, my_occupancy,
+                                                               self.safety_time_braking, my_vel, tol=0.01)
                 other_entry_time, other_exit_time = 0, 10e6
 
                 collision_score: float = 0

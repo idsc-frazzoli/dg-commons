@@ -1,5 +1,7 @@
 import time
 
+import matplotlib.pyplot as plt
+
 from dg_commons_dev.behavior.behavior_types import Situation
 from dataclasses import dataclass
 from typing import Optional, Union, List, Tuple, MutableMapping
@@ -84,6 +86,9 @@ class Cruise(Situation[SituationObservations, CruiseDescription]):
         my_occupancy: Polygon = agents[my_name].occupancy
         self.current_look_ahead = new_obs.distances[0]
         my_polygon = polygon
+        if not my_polygon.is_valid:
+            my_polygon = my_polygon.buffer(0)  # Trick to fix polygons with interior points
+
         self.polygon_plotter.plot_polygon(my_polygon, SituationPolygons.PolygonClass(dangerous_zone=True))
 
         self.cruise_situation = CruiseDescription(is_cruise=True, is_following=False,

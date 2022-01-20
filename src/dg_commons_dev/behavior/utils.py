@@ -72,19 +72,22 @@ def l_w_from_rectangle(occupacy: Polygon) -> Tuple[float, float]:
     return length, width
 
 
-def intentions_prediction(look_ahead_distance: float, path: DgLanelet, along_lane: float):
+def intentions_prediction(look_ahead_distance: float, path: DgLanelet, along_lane: float,
+                          vg=VehicleGeometry.default_car(), min_distance: float = 0.1):
     """
     Generate a polygon covering the lanes involved in the short term plan and a list of polygons subdividing
     these lanes.
     @param look_ahead_distance: How far in current plan to look ahead
     @param path: Current plan
     @param along_lane: Current position on path
+    @param min_distance: min distance to keep from obstacles
     @return: Short term polygon and subdivision list
     """
     l_polygon, r_polygon = [], []
+    width = vg.width / 2 + min_distance
 
-    def polygon_data(position: np.ndarray, orientation: float, width: float):
-        normal = np.array([-math.sin(orientation), math.cos(orientation)]) * width / 2
+    def polygon_data(position: np.ndarray, orientation: float):
+        normal = np.array([-math.sin(orientation), math.cos(orientation)]) * width
         l_polygon.append(tuple(position + normal))
         r_polygon.append(tuple(position - normal))
 
@@ -95,10 +98,9 @@ def intentions_prediction(look_ahead_distance: float, path: DgLanelet, along_lan
 
     for beta in betas:
         p = path.center_point(beta)
-        r = path.radius(beta)
 
         pos, ang = translation_angle_from_SE2(p)
-        polygon_data(pos, ang, r)
+        polygon_data(pos, ang)
 
     polygons: Dict[float, Polygon] = {}
     n = len(betas)
@@ -196,48 +198,6 @@ def occupancy_prediction(current_state: X, time_span: float,
     return polygon, states
 
 
-def occupancy_prediction_var(current_state: X, time_span: float,
-                         vg=VehicleGeometry.default_car(), vp: VehicleParameters = VehicleParameters.default_car()) \
-        -> Polygon:
-    """
-    Computes the polygon describing the integral area occupied by a car starting at current_state and proceeding with
-    constant steering angle and velocity up until time_span.
-    The underlying vehicle model is the kinematic bicycle model
-
-    @param current_state: Current vehicle state
-    @param time_span: How far in time it should be looked
-    @param vg: Vehicle Geometry
-    @param vp: Vehicle Parameters
-    @return: Integral Area
-    """
-    dt = 0.3
-    l_polygon, r_polygon = [], []
-    positions = []
-
-    width = vg.width + SAFETY_FACTOR
-    lf = vg.lf + vg.bumpers_length[0] + SAFETY_FACTOR
-    lr = vg.lr + vg.bumpers_length[1] + SAFETY_FACTOR
-
-    def rear_state(state):
-        position = np.array([state.x, state.y])
-        vec = np.array([math.cos(state.theta), math.sin(state.theta)]) * lr
-        r_position = position - vec
-        return np.array([r_position[0], r_position[1]])
-
-    states = states_prediction(current_state, time_span, dt, vg, vp)
-    for state in states:
-        positions.append(rear_state(state))
-
-    if current_state.vx >= 0:
-        final_state = np.array([state.x + math.cos(state.theta) * lf,
-                                state.y + math.sin(state.theta) * lf])
-
-        positions.append(final_state)
-
-    polygon = LineString(positions).buffer(width)
-    return polygon, states
-
-
 def entry_exit_t(intersection: Polygon, current_state, occupacy: Polygon, safety_t, vel,
                  vg=VehicleGeometry.default_car(), vp=VehicleParameters.default_car(), tol=0.01) \
         -> Tuple[float, float]:
@@ -305,6 +265,58 @@ def entry_exit_t(intersection: Polygon, current_state, occupacy: Polygon, safety
 
     if exit_t is None:
         exit_t = safety_t
+
+    return entry_t, exit_t
+
+
+def entry_exit_t_plan(intersection: Polygon, current_state, occupacy: Polygon, polygons: Dict[float, Polygon],
+                      safety_t, vel, vg=VehicleGeometry.default_car(), vp=VehicleParameters.default_car(), tol=0.01) \
+        -> Tuple[float, float]:
+    """
+    Computes with a tolerance of tol when a certain vehicle enters and exites intersection based on predictions
+    formulated with its current_state and assuming the steering angle and the velocity to be constant.
+    The underlying vehicle model is the kinematic bicycle model.
+
+    @param intersection: Query area
+    @param current_state: Current vehicle state
+    @param occupacy: Vehicle occupancy
+    @param safety_t: Safety time braking
+    @param vel: Vehicle velocity
+    @param vg: Vehicle Geometry
+    @param vp: Vehicle Parameters
+    @param tol: Search tolerance [s]
+    @return: Prediction time vehicle enters and exites the query area
+    """
+    if vel < 0:
+        return 10e6, 10e6 + 1
+
+    stopped_inside: bool = vel <= 10e-6
+    going: bool = vel > 10e-6
+    if stopped_inside:
+        return 0, 10e6
+
+    alongs: List[float] = list(polygons.keys())
+    start_along_lane = alongs[0]
+    end_along_lane = alongs[-1]
+    time_to_end: float = (end_along_lane - start_along_lane) / vel
+    time_to_cross = intersection.length / vel
+
+    entered = False
+    entry_t = None
+    exit_t = None
+    for along, poly in polygons.items():
+        if poly.intersects(intersection):
+            if not entered:
+                entered = True
+                entry_t = (along - start_along_lane) / vel
+        elif entered:
+                entered = False
+                exit_t = (along - start_along_lane) / vel
+
+    if entry_t is None:
+        entry_t, exit_t = time_to_end, time_to_end + time_to_cross
+    elif exit_t is None:
+        exit_t = entry_t + time_to_cross
 
     return entry_t, exit_t
 

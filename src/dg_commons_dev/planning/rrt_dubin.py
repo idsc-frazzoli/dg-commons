@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from dg_commons_dev.planning.rrt import RRT, RRTParams
 from shapely.geometry import Point, Polygon, LineString
@@ -45,8 +46,6 @@ class RRTDubinParams(RRTParams):
     Method for nearest neighbor search. Searches for the nearest neighbor to a node through a list of nodes wrt distance
     function.
     """
-    dist_from_obstacles: float = 0.3
-    """ Distance to keep from obstacles """
     connect_circle_dist: float = 50.0
     """ Radius of near neighbors is proportional to this one """
     max_curvature: float = 0.2
@@ -68,7 +67,8 @@ class RRTDubins(RRT):
 
     def planning(self, start: Node, goal: GoalRegion, obstacle_list: List[BaseGeometry],
                  sampling_bounds: BaseBoundaries, search_until_max_iter: bool = False,
-                 limit_angles: Tuple[float, float] = (-math.pi, math.pi)) -> Optional[List[Node]]:
+                 limit_angles: Tuple[float, float] = (-math.pi, math.pi),
+                 min_distance: float = 0.1) -> Optional[List[Node]]:
         """
         RRT Dubin planning
         @param start: Starting node
@@ -77,6 +77,7 @@ class RRTDubins(RRT):
         @param sampling_bounds: Boundaries in the samples space
         @param search_until_max_iter: flag for whether to search until max_iter
         @param limit_angles: Sampling space for angle
+        @param min_distance: minimal distance to keep from obstacles
         @return: sequence of nodes corresponding to path found or None if no path was found
         """
 
@@ -86,9 +87,10 @@ class RRTDubins(RRT):
         self.obstacle_list = obstacle_list
         self.can_reach_end = []
         self.node_list = [self.start]
+        self.dist_from_obstacles = min_distance
 
         for i in range(self.max_iter):
-            #print("Iter:", i, ", number of nodes:", len(self.node_list))
+            # print("Iter:", i, ", number of nodes:", len(self.node_list))
             rnd = self.sampling_fct(self.boundaries, self.end, self.goal_sample_rate, limit_angles)
             nearest_ind = self.nearest(rnd, self.node_list, self.distance_meas, self.curvature)
             new_node = self.steering_fct(self.node_list[nearest_ind], rnd, self.expand_dis,
@@ -113,6 +115,17 @@ class RRTDubins(RRT):
             print("Cannot find path")
             print(self.end.goal_node.x, self.end.goal_node.y, self.end.goal_node.yaw)
             print(self.start.x, self.start.y, self.start.yaw)
+            print(limit_angles)
+            plt.clf()
+            plt.scatter(self.start.x, self.start.y, c="r")
+            plt.scatter(self.end.goal_node.x, self.end.goal_node.y, c="b")
+            plt.plot(*self.boundaries.polygon.exterior.xy)
+            for obs in obstacle_list:
+                if isinstance(obs, LineString):
+                    continue
+                plt.plot(*obs.exterior.xy)
+            plt.gca().set_aspect('equal', adjustable='box')
+            plt.savefig("testing")
 
         return None
 

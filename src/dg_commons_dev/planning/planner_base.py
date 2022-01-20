@@ -15,7 +15,8 @@ class Planner(ABC):
     @abstractmethod
     def planning(self, start: Node, goal: GoalRegion, obstacle_list: List[BaseGeometry],
                  sampling_bounds: BaseBoundaries, search_until_max_iter: bool = False,
-                 limit_angles: Tuple[float, float] = (-math.pi, math.pi)) -> Optional[List[Node]]:
+                 limit_angles: Tuple[float, float] = (-math.pi, math.pi),
+                 min_distance: float = 0.1) -> Optional[List[Node]]:
         """ Find path and returns it as a sequence of nodes """
         pass
 

@@ -50,8 +50,6 @@ class RRTParams(BaseParams):
     """
     vehicle_geom: VehicleGeometry = VehicleGeometry.default_car()
     """ vehicle geometry """
-    dist_from_obstacles: float = 0.3
-    """ Distance to keep from obstacles """
     connect_circle_dist: float = 50.0
     """ Radius of near neighbors is proportional to this one, only used in RRT star """
     max_curvature: float = 0.2
@@ -63,7 +61,6 @@ class RRTParams(BaseParams):
         assert 0 <= self.goal_sample_rate <= 100
         assert 0 < self.max_distance
         assert 0 < self.max_distance_to_goal
-        assert 0 <= self.dist_from_obstacles
         assert 0 <= self.connect_circle_dist
         assert 0 <= self.max_curvature
 
@@ -92,6 +89,8 @@ class RRT(Planner):
         self.obstacle_list: List[BaseGeometry] = []
         """ List of obstacles present in the scene """
         self.boundaries = None
+        self.dist_from_obstacles = 0.1
+        """ Minimal distance to keep from obstacles"""
 
         self.expand_dis: float = params.max_distance
         self.max_dist_to_goal: float = params.max_distance_to_goal
@@ -105,13 +104,13 @@ class RRT(Planner):
         self.nearest: Callable[[Node, List[Node], Callable[[Node, Node], float]], int] = params.nearest_neighbor_search
 
         self.vg: VehicleGeometry = params.vehicle_geom
-        self.dist_from_obstacles: float = params.dist_from_obstacles
         self.curvature = params.max_curvature
         self.connect_circle_dist = params.connect_circle_dist
 
     def planning(self, start: Node, goal: GoalRegion, obstacle_list: List[BaseGeometry],
                  sampling_bounds: BaseBoundaries, search_until_max_iter: bool = False,
-                 limit_angles: Tuple[float, float] = (-math.pi, math.pi)) -> Optional[List[Node]]:
+                 limit_angles: Tuple[float, float] = (-math.pi, math.pi),
+                 min_distance: float = 0.1) -> Optional[List[Node]]:
         """
         RRT planning
         @param start: Starting node
@@ -120,6 +119,7 @@ class RRT(Planner):
         @param sampling_bounds: Boundaries in the samples space
         @param search_until_max_iter: flag for whether to search until max_iter
         @param limit_angles: Sampling space for angle
+        @param min_distance: minimal distance to keep from obstacles
         @return: sequence of nodes corresponding to path found or None if no path was found
         """
 
@@ -130,6 +130,7 @@ class RRT(Planner):
         self.obstacle_list = obstacle_list
         self.node_list = [self.start]
         self.boundaries = sampling_bounds
+        self.dist_from_obstacles = min_distance
 
         for i in range(self.max_iter):
             print("Iter:", i, ", number of nodes:", len(self.node_list))

@@ -58,7 +58,7 @@ class Replanner:
         self.params = params
 
     def replan(self, my_obs: X, t: float, situation: Replan, current_ref: Reference,
-               lane_boundaries: List[StaticObstacle]) -> Optional[DgLanelet]:
+               lane_boundaries: List[StaticObstacle], min_distance: float) -> Optional[DgLanelet]:
         """
         Generate a new path based on current situation and on current long-term plan
         @param my_obs: Observation of my state
@@ -66,6 +66,7 @@ class Replanner:
         @param current_ref: Current long term plan
         @param lane_boundaries: list of lane boundaries
         @param t: Current time instant
+        @param min_distance: Minimal distance to keep from obstacles
         @return: New path or None if not found
         """
         lane: DgLanelet = current_ref.path
@@ -75,7 +76,11 @@ class Replanner:
         if abs(current_ref.along_lane - entry_points[0]) < self.params.min_dist_from_obs:
             return None
 
-        get_back_in_lane_dist: float = my_obs.vx * self.params.get_back_in[0] + self.params.get_back_in[1]
+        if my_obs.vx < 0:
+            get_back_in_lane_dist: float = self.params.get_back_in[1]
+        else:
+            get_back_in_lane_dist: float = my_obs.vx * self.params.get_back_in[0] + self.params.get_back_in[1]
+
         n_points = len(entry_points)
         entry_along_lane = None
         for i in range(n_points - 1):
@@ -89,7 +94,10 @@ class Replanner:
             else:
                 return None
 
-        entry_along_lane += my_obs.vx * self.params.entry_distance[0] + self.params.entry_distance[1]
+        if my_obs.vx < 0:
+            entry_along_lane += self.params.entry_distance[1]
+        else:
+            entry_along_lane += my_obs.vx * self.params.entry_distance[0] + self.params.entry_distance[1]
         beta = lane.beta_from_along_lane(entry_along_lane)
         pos, ang = translation_angle_from_SE2(lane.center_point(beta))
         idx = min(math.ceil(beta) + 1, len(lane.control_points))
@@ -140,7 +148,7 @@ class Replanner:
         rand_area = PolygonBoundaries(poly)
 
         path = self.planner.planning(start=start, goal=goal, obstacle_list=obs_list,
-                                     sampling_bounds=rand_area, limit_angles=angle_limits)
+                                     sampling_bounds=rand_area, limit_angles=angle_limits, min_distance=min_distance)
         if path is None:
             return None
         self.planner.plot_results(False)

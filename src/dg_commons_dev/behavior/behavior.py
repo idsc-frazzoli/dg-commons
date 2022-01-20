@@ -85,6 +85,8 @@ class SpeedBehaviorParam(BaseParams):
     """ Minimal look ahead distance """
     min_safety_dist: float = 20
     """ Minimal safety distance """
+    distance_from_obstacles: float = 0.5
+    """ Minimal distance to keep from obstacles """
 
     dt_commands: float = 0.1
     """ Period of decision making """
@@ -94,6 +96,7 @@ class SpeedBehaviorParam(BaseParams):
         assert isinstance(self.yield_params, self.yield_to.REF_PARAMS)
         assert isinstance(self.cruise_params, self.cruise.REF_PARAMS)
         assert isinstance(self.replan_params, self.replan.REF_PARAMS)
+        assert 0 < self.distance_from_obstacles
         assert 0 <= self.dt_commands <= 50
 
 
@@ -137,7 +140,8 @@ class SpeedBehavior(Behavior[MutableMapping[PlayerName, PlayerObservations], Tup
         self.obs.my_name = self.my_name
 
         polygon, polygons = \
-            intentions_prediction(self.obs.distances[0], self.obs.planned_path[0], self.obs.planned_path[1])
+            intentions_prediction(self.obs.distances[0], self.obs.planned_path[0],
+                                  self.obs.planned_path[1], min_distance=self.params.distance_from_obstacles)
         c_frames, c_classes = self.cruise.update_observations(self.obs, polygon, polygons)
         _, _ = self.replan.update_observations(self.obs, polygon, polygons)
         e_frames, e_classes = self.emergency.update_observations(self.obs, polygon, polygons)
@@ -172,8 +176,13 @@ class SpeedBehavior(Behavior[MutableMapping[PlayerName, PlayerObservations], Tup
         @param vel: Current velocity
         @return: Look ahead distance
         """
-        look_ahead = self.params.safety_time_braking * vel + self.params.min_look_ahead
+        if vel < 0:
+            look_ahead = self.params.min_look_ahead
+            safety_dist = self.params.min_safety_dist
+        else:
+            look_ahead = self.params.safety_time_braking * vel + self.params.min_look_ahead
+            safety_dist = self.params.safety_time_braking * vel + self.params.min_safety_dist
+
         if self.something_found:
             look_ahead = max(self.something_found, look_ahead)
-        safety_dist = self.params.safety_time_braking * vel + self.params.min_safety_dist
         return look_ahead, safety_dist
