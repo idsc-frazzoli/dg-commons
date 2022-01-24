@@ -116,7 +116,7 @@ class RRTDubins(RRT):
             print(self.end.goal_node.x, self.end.goal_node.y, self.end.goal_node.yaw)
             print(self.start.x, self.start.y, self.start.yaw)
             print(limit_angles)
-            plt.clf()
+            plt.clf()   
             plt.scatter(self.start.x, self.start.y, c="r")
             plt.scatter(self.end.goal_node.x, self.end.goal_node.y, c="b")
             plt.plot(*self.boundaries.polygon.exterior.xy)

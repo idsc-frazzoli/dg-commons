@@ -13,6 +13,7 @@ from dg_commons import PlayerName, X
 from dg_commons_dev.utils import BaseParams
 from shapely.geometry.base import BaseGeometry
 from dg_commons.maps.lanes import DgLanelet
+from dg_commons_dev.flying_unit import FlyingUnit
 
 
 @dataclass
@@ -95,7 +96,7 @@ class Cruise(Situation[SituationObservations, CruiseDescription]):
                                                   speed_ref=self.params.nominal_speed, my_player=my_name)
         # TODO: merge together, lot of duplicated code
         for other_name, _ in agents.items():
-            if other_name == my_name:
+            if other_name == my_name or other_name.startswith("Drone"):
                 continue
             other_state: X = agents[other_name].state
             other_vel: float = extract_vel_from_state(other_state)

@@ -136,20 +136,22 @@ class SpeedBehavior(Behavior[MutableMapping[PlayerName, PlayerObservations], Tup
         self.obs.planned_path = (ref.path, ref.along_lane)
         self.obs.distances = self._get_look_ahead(agents[self.my_name].state.vx)
 
-    def get_situation(self, at: float) -> Tuple[float, BehaviorSituation, Any]:
+    def get_situation(self, at: float,
+                      consider_replanning: bool = True) -> Tuple[float, BehaviorSituation, Any]:
         self.obs.my_name = self.my_name
 
         polygon, polygons = \
             intentions_prediction(self.obs.distances[0], self.obs.planned_path[0],
                                   self.obs.planned_path[1], min_distance=self.params.distance_from_obstacles)
         c_frames, c_classes = self.cruise.update_observations(self.obs, polygon, polygons)
-        _, _ = self.replan.update_observations(self.obs, polygon, polygons)
+        if consider_replanning:
+            _, _ = self.replan.update_observations(self.obs, polygon, polygons)
         e_frames, e_classes = self.emergency.update_observations(self.obs, polygon, polygons)
         if self.emergency.is_true():
             self.situation.situation = self.emergency
             self.speed_ref = 0
             self.something_found = self.obs.distances[0]
-        elif self.replan.is_true():
+        elif consider_replanning and self.replan.is_true():
             self.situation.situation = self.replan
             self.speed_ref = self.cruise.infos().speed_ref
             self.something_found = self.obs.distances[0]

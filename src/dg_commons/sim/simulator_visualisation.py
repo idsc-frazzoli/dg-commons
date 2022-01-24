@@ -26,6 +26,9 @@ from dg_commons.sim.models.spacecraft_structures import SpacecraftGeometry
 from dg_commons.sim.models.vehicle import VehicleState, VehicleGeometry
 from dg_commons.sim.models.vehicle_ligths import LightsColors
 from dg_commons.sim.simulator import SimContext
+from dg_commons_dev.flying_unit import FlyingUnit
+import shapely.geometry as sg
+
 
 __all__ = ["SimRenderer", "plot_vehicle", "plot_pedestrian", "plot_trajectories"]
 
@@ -138,6 +141,44 @@ class SimRenderer(SimRendererABC):
             q = SE2_from_xytheta((state.x, state.y, state.psi))
             transformed_shape = apply_SE2_to_shapely_geo(shape, q)
             model_poly[0].set_xy(np.array(transformed_shape.exterior.xy).T)
+            return model_poly, []
+        elif issubclass(type(state), FlyingUnit):
+            r = 0.5
+            le = 1
+            drone_outline: Sequence[Tuple[float, float], ...] = sg.box(-le, -le, le, le).exterior.coords
+
+            vec1 = np.array([le, 0])
+            vec2 = np.array([0, le])
+            pos = [vec1 + vec2, vec1 - vec2, - vec1 + vec2, - vec1 - vec2]
+
+            propeller_outlines = []
+            for p in pos:
+                propeller_outlines.append(sg.Point(p).buffer(r).exterior.coords)
+
+            q = SE2_from_xytheta((state.x, state.y, state.theta))
+            if model_poly is None:
+                drone_box = ax.fill([], [], color="b", alpha=alpha, zorder=ZOrders.MODEL)[0]
+                model_poly = [
+                    drone_box,
+                ]
+                x4, y4 = transform_xy(q, ((0, 0),))[0]
+                ax.text(
+                    x4, y4, player_name, zorder=ZOrders.PLAYER_NAME, horizontalalignment="center",
+                    verticalalignment="center"
+                )
+                propeller_boxes = [
+                    ax.fill([], [], color="k", alpha=alpha, zorder=ZOrders.MODEL)[0] for _ in range(4)
+                ]
+                model_poly.extend(propeller_boxes)
+
+            outline = transform_xy(q, drone_outline)
+            model_poly[0].set_xy(outline)
+
+            propeller_outlines = [transform_xy(q, p_outline) for p_outline in propeller_outlines]
+            for w_idx, propeller in enumerate(model_poly[1:]):
+                xy_poly = propeller_outlines[w_idx]
+                propeller.set_xy(xy_poly)
+
             return model_poly, []
         else:
             raise ZValueError(msg=f"Unknown state type, {type(state)}", state=state)
