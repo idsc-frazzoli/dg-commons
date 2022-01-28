@@ -186,7 +186,7 @@ class Replanner:
         if dist < 10e-6:
             return None, dist
 
-        poly = line.buffer(dist)
+        poly = line.buffer(0.75 * dist)
         car_point: Point = Point((my_obs.x, my_obs.y))
         for lane_bound in lane_boundaries:
             lane_bound_shape = lane_bound.shape
@@ -201,13 +201,29 @@ class Replanner:
                     break
 
         rand_area = PolygonBoundaries(poly)
-        angle_limits = (ang - math.pi / 4, ang + math.pi / 4)
+        # angle_limits = (ang - math.pi / 4, ang + math.pi / 4)
+
+        limits_min = [ang - math.pi / 4, my_obs.theta - math.pi / 4, current_ref[2] - math.pi / 4]
+        limits_max = [ang + math.pi / 4, my_obs.theta + math.pi / 4, current_ref[2] + math.pi / 4]
+
+        angle_limits = (-math.pi, math.pi)
+        max_interval = 0
+        for min_val in limits_min:
+            for max_val in limits_max:
+                res = max_val - min_val
+                if res < 0:
+                    res += 2 * math.pi
+                if res > max_interval:
+                    max_interval = res
+                    min_val = min_val if min_val <= math.pi else min_val - 2 * math.pi
+                    max_val = max_val if max_val <= math.pi else max_val - 2 * math.pi
+                    angle_limits = (min_val, max_val)
 
         path = self.planner.planning(start=start, goal=goal, obstacle_list=obs_list,
                                      sampling_bounds=rand_area, limit_angles=angle_limits, min_distance=min_distance)
         if path is None:
             return None, dist
-        self.planner.plot_results(False)
+        # self.planner.plot_results(False)
 
         se2s = [SE2Transform(np.array([step.x, step.y]), step.yaw) for step in path]
         r = self.planner.get_width()

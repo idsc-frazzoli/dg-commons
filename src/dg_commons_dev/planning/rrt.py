@@ -269,7 +269,7 @@ class RRT(Planner):
         """
         @return: Returns the enlarged width of the vehicle
         """
-        return self.vg.width + self.dist_from_obstacles
+        return self.vg.width + 2 * self.dist_from_obstacles
 
     def plot_results(self, create_animation: bool = False) -> None:
         """
@@ -374,6 +374,51 @@ class RRT(Planner):
                                  frames=len(self.path) - 1, interval=20, blit=True)
 
             anim.save('car_moving.gif', writer='imagemagick')
+
+    def plot_pseudo_results(self, create_animation: bool = False) -> None:
+        """
+        Tool to plot and save the results
+        """
+        plt.clf()
+        for node in self.node_list:
+            if node.parent:
+                plt.plot(node.path_x, node.path_y, "-g")
+
+        for ob in self.obstacle_list:
+            if isinstance(ob, Polygon):
+                x, y = ob.exterior.xy
+                plt.plot(x, y)
+            if isinstance(ob, LineString):
+                plt.plot(*ob.xy)
+
+        plt.plot(self.start.x, self.start.y, "xr")
+        x, y = self.end.polygon.exterior.xy
+        plt.plot(x, y, 'b')
+        angle_polygon = self.end.angle_polygon()
+        if angle_polygon:
+            x, y = angle_polygon.exterior.xy
+            plt.plot(x, y, 'y')
+        plt.axis("equal")
+        plt.axis([-2, 15, -2, 15])
+        plt.grid(True)
+        plt.gca().set_aspect('equal', adjustable='box')
+
+        enlargement_f: float = 0.1
+        min_enlargement: float = 10
+        x_lim = self.boundaries.x_bounds()
+        delta = enlargement_f * (x_lim[1] - x_lim[0]) + min_enlargement
+        x_lim = (x_lim[0] - delta, x_lim[1] + delta)
+        plt.xlim(x_lim)
+
+        y_lim = self.boundaries.y_bounds()
+        delta = enlargement_f * (y_lim[1] - y_lim[0]) + min_enlargement
+        y_lim = (y_lim[0] - delta, y_lim[1] + delta)
+        plt.ylim(y_lim)
+
+        if self.start.is_yaw_considered and self.end.goal_node.is_yaw_considered:
+            plot_arrow(self.start.x, self.start.y, self.start.yaw)
+            plot_arrow(self.end.goal_node.x, self.end.goal_node.y, self.end.goal_node.yaw)
+        plt.savefig("test")
 
 
 def main(gx=6.0, gy=10.0):

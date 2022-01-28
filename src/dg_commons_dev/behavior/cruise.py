@@ -141,10 +141,10 @@ class Cruise(Situation[SituationObservations, CruiseDescription]):
                 min_distance: float = new_obs.distances[1]
                 if distance < min_distance:
                     speed_ref: float = \
-                        other_vel + (distance - min_distance) / min_distance * other_vel * self.params.kp_back
+                        other_vel + (distance - min_distance) * self.params.kp_back
                 elif distance > min_distance and other_vel < self.params.nominal_speed:
                     speed_ref: float = \
-                        other_vel + (distance - min_distance) / min_distance * other_vel * self.params.kp_forward
+                        other_vel + (distance - min_distance) * self.params.kp_forward
                 else:
                     speed_ref: float = self.params.nominal_speed
                 self.cruise_situation = CruiseDescription(True, is_following=True, speed_ref=speed_ref,

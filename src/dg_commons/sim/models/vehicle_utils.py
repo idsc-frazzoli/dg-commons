@@ -58,3 +58,18 @@ def steering_constraint(steering_angle: float, steering_velocity: float, vp: Veh
         )
         steering_velocity = vp.ddelta_max
     return steering_velocity
+
+
+def partial_steering_constraint(steering_velocity: float, vp: VehicleParameters):
+    """Enforces steering limits"""
+    if steering_velocity < -vp.ddelta_max:
+        logger.warn(
+            f"Commanded steering rate out of limits, clipping value: {steering_velocity:.2f}<{-vp.ddelta_max:.2f}"
+        )
+        steering_velocity = -vp.ddelta_max
+    elif steering_velocity > vp.ddelta_max:
+        logger.warn(
+            f"Commanded steering rate out of limits, clipping value: {steering_velocity:.2f}>{vp.ddelta_max:.2f}"
+        )
+        steering_velocity = vp.ddelta_max
+    return steering_velocity
