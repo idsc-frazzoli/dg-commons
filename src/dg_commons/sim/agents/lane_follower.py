@@ -40,7 +40,7 @@ class LFAgent(Agent):
         self._my_obs: Optional[X] = None
         self.lights_test_seq = DgSampledSequence[LightsCmd](timestamps=[0, 2, 4, 6, 8], values=list(LightsValues))
 
-    def on_episode_init(self, my_name: PlayerName):
+    def on_episode_init(self, my_name: PlayerName, *args, **kwargs):
         self.my_name = my_name
         self.speed_behavior.my_name = my_name
         self.pure_pursuit.update_path(self.ref_lane)

@@ -1,180 +1,241 @@
 from __future__ import annotations
 
-from typing import List, Optional, Dict, Any, Callable, Union
-import numpy as np
-from cytoolz import update_in
-
-from dg_commons import PlayerName, valmap
-from copy import copy
+from typing import List, Dict, Callable, Union, TypeVar, Generic, get_args
+from toolz.dicttoolz import merge_with, valmap
+from dg_commons import PlayerName
 
 
-class GoalLikelihood(Dict[int, float]):
-    """A distribution over possible resources (indexed by integers)"""
+def multiply_or_keep(factors: List):
+    if len(factors) == 2:
+        return factors[0] * factors[1]
+    elif len(factors) == 1:
+        return factors[0]
+    else:
+        raise ValueError("Something is wrong in the dictionaries you are trying to multiply.")
 
+
+# constraint type of V to float (and therefore also to int) and to bool
+V = TypeVar("V", float, bool)
+
+
+class GoalMapping(Dict[int, V], Generic[V]):
+    """Values (probabilities or rewards or booleans) over possible resources (indexed by integers)."""
+
+    def __add__(self, other: GoalMapping[V]):
+        """Add two dictionaries. Can add dictionaries with different keys."""
+        assert isinstance(other, GoalMapping)
+        return merge_with(sum, self, other)
+
+    def safe_add(self, other: GoalMapping[V]):
+        """Only add dictionaries if they have the same keys."""
+        assert isinstance(other, GoalMapping)
+        assert other.keys() == self.keys(), "Safe addition can only be carried through when keys of both dicts " \
+                                            "are the identical."
+        return self.__add__(other)
+
+    def __mul__(self, other: GoalMapping[V]):
+        assert isinstance(other, GoalMapping)
+        return merge_with(multiply_or_keep, self, other)
+
+    def scalar_multiplication(self, other: float):
+        if isinstance(other, int):
+            other = float(other)
+        assert isinstance(other, float)
+        return valmap(lambda x: x * other, self)
+
+    def __sub__(self, other: GoalMapping[V]):
+        assert isinstance(other, GoalMapping)
+        other = other.scalar_multiplication(-1.0)
+        return self.__add__(other)
+
+    def valfun(self, func: Callable):
+        return GoalMapping[V](valmap(func, self))
+
+
+class GoalRewards(GoalMapping[float]):
+    """Methods specific for rewards"""
+
+
+class GoalBools(GoalMapping[bool]):
+    """Methods specific for booleans"""
+
+    def boolean_intersect(self, other: GoalBools) -> GoalBools:
+        """ Check if booleans are matching between two dicts. If they are not, other is considered the ground truth.
+            No item removal is performed, instead the boolean value is changed.
+
+            Example:
+                self = {1: True, 2: True, 3: True}
+                other = {1: True, 4: True}
+
+                return {1: True,  4: True}
+                """
+        assert isinstance(other, GoalBools)
+        for key in other:
+            self[key] = other[key]
+
+        keys_to_remove = []
+        for key in self:
+            if key in other.keys():
+                continue
+            else:
+                keys_to_remove.append(key)
+
+        for delkey in keys_to_remove:
+            del self[delkey]
+
+        return self
+
+
+class GoalLikelihoods(GoalMapping[float]):
+    """Methods specific for likelihoods"""
+
+    def normalize(self) -> GoalLikelihoods:
+        return GoalLikelihoods(valmap(lambda x: x / sum(self.values()), self))
+
+    def initialize_prior(self, distribution: str) -> GoalLikelihoods:
+        if distribution.lower() == "uniform":
+            goals = self.keys()
+            uniform = [1.0 / float(len(goals))] * len(goals)
+            return GoalLikelihoods(dict(zip(goals, uniform)))
+        elif distribution != "Uniform":
+            raise NotImplementedError("The prior distribution you asked for is not implemented yet.")
+
+
+T = TypeVar("T", GoalRewards, GoalLikelihoods, GoalBools)
+
+
+class PlayerGoalMapping(Dict[PlayerName, T], Generic[T]):
+    """A player keeps track of values for the others' possible goals/resources"""
+
+    def __add__(self, other: PlayerGoalMapping):
+        """Add two dictionaries. Can add dictionaries with different keys."""
+        assert isinstance(other, PlayerGoalMapping)
+        for player in self.keys():
+            self[player] = self[player] + other[player]
+        for player in other.keys():
+            if player not in self.keys():
+                self[player] = other[player]
+        return self
+
+    def safe_add(self, other: PlayerGoalMapping):
+        """Only add dictionaries if they have the same keys."""
+        assert isinstance(other, PlayerGoalMapping)
+        assert other.keys() == self.keys(), "Safe addition can only be carried through when keys of both dicts " \
+                                            "are the identical."
+        for player in self.keys():
+            self[player] = self[player].safe_add(other[player])
+        return self
+
+    def __mul__(self, other: PlayerGoalMapping):
+        assert isinstance(other, PlayerGoalMapping)
+        assert self.keys() == other.keys()
+        for player in self.keys():
+            self[player] * other[player]
+        return self
+
+    def scalar_multiplication(self, other: float):
+        if isinstance(other, int):
+            other = float(other)
+        assert isinstance(other, float)
+        for player in self.keys():
+            self[player].scalar_multiplication(other=other)
+        return self
+
+    def __sub__(self, other: PlayerGoalMapping):
+        assert isinstance(other, PlayerGoalMapping)
+        other = other.scalar_multiplication(-1.0)
+        return self.__add__(other)
+
+    # fixme: can we merge the three from_lists functions?
+
+    def valfun(self, func: Callable) -> PlayerGoalMapping:
+        for player, goal_likelihood in self.items():
+            self[player] = self[player].valfun(func=func)
+        return PlayerGoalMapping[T](self)
+
+
+class PlayerGoalLikelihoods(PlayerGoalMapping[GoalLikelihoods]):
     def normalize(self):
-        update_in(self, self.keys(), lambda x: x / sum(self.values()))
+        for player in self.keys():
+            self[player] = self[player].normalize()
+        return PlayerGoalLikelihoods(self)
 
-    def __add__(self, other: GoalLikelihood):
-        assert isinstance(other, GoalLikelihood)
-
-    def safe_add(self, other: GoalLikelihood):
-        assert other.keys() == self.keys()
-        self.__add__(other)
-
-
-class PlayerGoalLikelihood([Dict[PlayerName, GoalLikelihood]]):
-    """A player keeps track of the others' possible goals/resources"""
-
-
-def zero(a: Any):
-    return 0.0
-
-
-class PredDict:
-    """
-    Class to work with dictionaries.
-    """
-
-    def __init__(self, players: List[PlayerName], goals: List[List[int]], entry: Union[bool, float] = True):
-        self.data = {}
-        self.give_structure_dict(players=players, goals=goals, entry=entry)  # gives structure to data dictionary
+    def initialize_prior(self, distribution: str):
+        for player_id, player in enumerate(self.keys()):
+            self[player] = self[player].initialize_prior(distribution=distribution)
+        return PlayerGoalLikelihoods(self)
 
     @staticmethod
-    def from_dict(skeleton: Dict[PlayerName, Dict[int, bool]], entry: Union[bool, float] = True) -> PredDict:
-        players = []
-        goals = []
-        for player, player_dict in skeleton.items():
-            if player.lower() == 'ego':
-                continue
-            players.append(player)
-            player_goals = []
-            for goal, goal_data in player_dict.items():
-                player_goals.append(goal)
-            goals.append(player_goals)
-        return PredDict(players=players, goals=goals, entry=entry)
+    def from_lists(players: List[PlayerName], goals: List[List[int]], init_value: float = -1.0):
+        """Initialize a PlayerGoalLikelihoods object from lists of players and goals."""
 
-    def give_structure_dict(self, players: List[PlayerName], goals: List[List[int]],
-                            entry: Union[bool, float] = True) -> None:
-        for index, player in enumerate(players):
-            self.add_player_to_dict(player=player, goals=goals[index], data=len(goals[index]) * [entry])
-        return
+        assert len(players) == len(goals), "Number of players and number of goal-sets must match."
+        temp = {}
+        for player_id, player in enumerate(players):
+            init_values = [init_value] * len(goals[player_id])
+            temp[player] = GoalLikelihoods(dict(zip(goals[player_id], init_values)))
 
-    def add_player_to_dict(self, player: PlayerName, goals: List[Optional[int]], data: List[Any]) -> None:
-        assert len(goals) == len(data), 'Goals and data need to have the same number of elements.'
-        temp = dict.fromkeys(goals, None)
-        for i, (goal, value) in enumerate(temp.items()):
-            temp[goal] = data[i]
+        return PlayerGoalLikelihoods(temp)
 
-        self.data[player] = copy(temp)
-        temp.clear()
-        return
 
-    def add_datapoint_to_dict(self, player: PlayerName, goal: int, data: Any) -> None:
-        self.data[player][goal] = data
-        return
+class PlayerGoalRewards(PlayerGoalMapping[GoalRewards]):
+    """Comment"""
 
-    # fixme: check out utils_toolz valmap
-    def valfun(self, func: Callable) -> None:
-        for player, goals in self.data.items():
-            for goal in goals:
-                self.data[player][goal] = func(self.data[player][goal])
-        return
+    @staticmethod
+    def from_lists(players: List[PlayerName], goals: List[List[int]], init_value: float = -1.0):
+        """Initialize a PlayerGoalRewards object from lists of players and goals."""
 
-    def set_to_zero(self) -> None:
-        self.valfun(func=zero)
+        assert len(players) == len(goals), "Number of players and number of goal-sets must match."
+        temp = {}
+        for player_id, player in enumerate(players):
+            init_values = [init_value] * len(goals[player_id])
+            temp[player] = GoalRewards(dict(zip(goals[player_id], init_values)))
 
-    """def initialize_prior(self, distribution: str) -> None:
-        for player, goals in self.data.items():
-            if distribution == "Uniform":
-                goals_list = list(goals.keys())
-                uniform = np.ones((1, len(goals_list))) * 1.0 / float(len(goals_list))
-                self.add_player_to_dict(player=player, goals=goals_list, data=uniform[0].tolist())
-            elif distribution != "Uniform":
-                raise NotImplementedError
-        self.normalize()
-        return"""
+        return PlayerGoalRewards(temp)
 
-    # question: check this works
-    # fixme: division by 0 ignored. Should handle here or somewhere else?
-    def normalize(self) -> None:
-        """
-        normalize according to func
-        """
-        for player, player_dict in self.data.items():
-            if sum(player_dict.values()) == 0.0 or sum(player_dict.values()) == 0:  # just for debugging
-                print("Division by zero encountered. Approximate division done.")
-                norm_factor = 999999999.0
-            else:
-                norm_factor = 1.0 / sum(player_dict.values())
-            for goal in player_dict.items():
-                self.data[player][goal[0]] = self.data[player][goal[0]] * norm_factor
-        return
 
-    def __add__(self, other) -> None:
-        """
-        Element-wise sum for PredDict.
-        """
-        if self.data.keys() != other.data.keys():
-            raise TypeError('Keys of summing elements are not matching')
-        for player, goals in self.data.items():
-            if goals.keys() != other.data[player].keys():
-                raise TypeError('Goals for player ' + str(player) + ' are not matching in both elements.')
-        for player, goals in self.data.items():
-            for goal in goals:
-                self.data[player][goal] += other.data[player][goal]
-        return
+class PlayerGoalBools(PlayerGoalMapping[GoalBools]):
+    @staticmethod
+    def from_lists(players: List[PlayerName], goals: List[List[int]], init_value: bool = False):
+        """Initialize a PlayerGoalBools object from lists of players and goals."""
 
-    def __mul__(self, other) -> None:
-        """
-        Element-wise multiplication. Can be either between two PredDict or between
-        a PredDict and a scalar.
-        """
-        if isinstance(other, PredDict):
-            if self.data.keys() != other.data.keys():
-                raise TypeError('Keys of multiplying elements are not matching')
-            for player, goals in self.data.items():
-                if goals.keys() != other.data[player].keys():
-                    raise TypeError('Goals for player ' + str(player) + ' are not matching in both elements.')
-            for player, goals in self.data.items():
-                for goal in goals:
-                    self.data[player][goal] *= other.data[player][goal]
-        elif isinstance(other, float):
-            for player, goals in self.data.items():
-                for goal in goals:
-                    a = self.data[player][goal]
-                    self.data[player][goal] = self.data[player][goal] * other
-                    # fixme: why is [0] needed (...[player][goal] is a List, but where does that come from?
-        else:
-            raise TypeError('You can only multiply by another PredictionDictionary or by a scalar')
+        assert len(players) == len(goals), "Number of players and number of goal-sets must match."
+        temp = {}
+        for player_id, player in enumerate(players):
+            init_values = [init_value] * len(goals[player_id])
+            temp[player] = GoalBools(dict(zip(goals[player_id], init_values)))
 
-        return
+        return PlayerGoalBools(temp)
 
-    def __sub__(self, other) -> None:
-        other.__mul__(-1.0)
-        return self.__add__(other)
+    def boolean_intersect(self, other: PlayerGoalBools) -> PlayerGoalBools:
+        """ Check if items are matching between two dicts. If they are not, other is considered the ground truth."""
+        assert isinstance(other, PlayerGoalBools)
+        assert self.keys() == other.keys(), "You are comparing dictionaries with different players."
+
+        for player in self.keys():
+            self[player] = self[player].boolean_intersect(other[player])
+        return self
 
 
 class Prediction:
-    """
-        Class to handle probabilities, costs and rewards on DynamicGraphs.
-    """
+    """Class to handle probabilities, costs and rewards on DynamicGraphs."""
 
-    def __init__(self, goals_dict: Dict[PlayerName, Dict[int, bool]]):
+    def __init__(self, players: List[PlayerName], goals: List[List[int]]):
         # prediction parameters
-        self.params: PredictionParams = PredictionParams(goals_dict=goals_dict)
+        self.params: PredictionParams = PredictionParams(players=players, goals=goals)
 
         # dictionary containing information about reachability of each goal by each agent
-        self.reachability_dict: PredDict = PredDict.from_dict(skeleton=goals_dict)
+        self.reachability: PlayerGoalBools = PlayerGoalBools().from_lists(players=players, goals=goals)
 
         # probabilities
         # dictionary containing probability of each goal for each agent
-        self.prob_dict: PredDict = PredDict.from_dict(skeleton=goals_dict, entry=0.0)
+        self.probabilities: PlayerGoalLikelihoods = PlayerGoalLikelihoods().from_lists(players=players, goals=goals)
 
         # rewards
         # dictionary containing optimal rewards from current position to goal
-        self.suboptimal_reward: PredDict = PredDict.from_dict(skeleton=goals_dict)
+        self.suboptimal_reward: PlayerGoalRewards = PlayerGoalRewards().from_lists(players=players, goals=goals)
         # dictionary containing optimal rewards from initial position to goal
-        self.optimal_reward: PredDict = PredDict.from_dict(skeleton=goals_dict)
+        self.optimal_reward: PlayerGoalRewards = PlayerGoalRewards().from_lists(players=players, goals=goals)
 
 
 class PredictionParams:
@@ -182,19 +243,13 @@ class PredictionParams:
     Class for storing prediction parameters
     """
 
-    def __init__(self, goals_dict: Dict[PlayerName, Dict[int, bool]], beta: float = 1.0, distribution: str = "Uniform"):
+    def __init__(self, players: List[PlayerName], goals: List[List[int]], beta: float = 1.0,
+                 distribution: str = "Uniform"):
         self.distribution = distribution
         self.beta = beta
-        self.priors: PredDict = PredDict.from_dict(skeleton=goals_dict)
-        self._initialize_prior()
+        self.priors: PlayerGoalLikelihoods = PlayerGoalLikelihoods().from_lists(players=players, goals=goals)
+        self.priors.initialize_prior(distribution=distribution)
 
-    def _initialize_prior(self) -> None:
-        for player, goals in self.priors.data.items():
-            if self.distribution == "Uniform":
-                goals_list = list(goals.keys())
-                uniform = np.ones((1, len(goals_list))) * 1.0 / float(len(goals_list))
-                self.priors.add_player_to_dict(player=player, goals=goals_list, data=uniform[0].tolist())
-            elif self.distribution != "Uniform":
-                raise NotImplementedError
-        self.priors.normalize()
-        return
+
+if __name__ == "__main__":
+    print("hielo")

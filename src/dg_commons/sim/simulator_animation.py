@@ -1,12 +1,16 @@
 import math
 from itertools import chain
 from typing import Mapping, List, Union, Optional, Sequence
+
+from matplotlib.collections import Collection
+
 from dg_commons.planning.trajectory import Trajectory
 
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.axes import Axes
 from matplotlib.patches import Patch
+from matplotlib.pyplot import Text
 from toolz.sandbox import unzip
 
 from dg_commons import PlayerName, X
@@ -60,8 +64,8 @@ def create_animation(
     # dictionaries with the handles of the plotting stuff
     states, actions, extra, texts = {}, {}, {}, {}
     traj_lines, traj_points = {}, {}
-    polygons = {}
     patches = {}
+    collections = {}
     history = {}
     # some parameters
     plot_wheels: bool = True
@@ -76,9 +80,9 @@ def create_animation(
             + list(extra.values())
             + list(traj_lines.values())
             + list(traj_points.values())
-            #+ list(polygons.values())
             + list(texts.values())
             + list(patches.values())
+            + list(collections.values())
         )
 
     def init_plot():
@@ -103,13 +107,20 @@ def create_animation(
 
                         traj_list, traj_colors = [], []
                         patch_list, patch_colors = [], []
+                        coll_list, coll_colors = [], []
+                        text_list = []
                         for i, item in enumerate(drawable_list):
                             if isinstance(item, Trajectory):
                                 traj_list.append(item)
                                 traj_colors.append(colors_list[i])
+                            elif isinstance(item, Collection):
+                                coll_list.append(item)
+                                coll_colors.append(colors_list[i])
                             elif isinstance(item, Patch):
                                 patch_list.append(item)
                                 patch_colors.append(colors_list[i])
+                            elif isinstance(item, List[Text]):
+                                text_list.append(item)
 
                         if traj_list:
                             traj_lines[pname], traj_points[pname] = sim_viz.plot_trajectories(
@@ -120,6 +131,17 @@ def create_animation(
                                 ax=ax,
                                 patches=patch_list,
                                 colors=patch_colors,
+                            )
+                        if coll_list:
+                            collections[pname] = sim_viz.plot_collections(
+                                ax=ax,
+                                collections=coll_list,
+                                colors=coll_colors,
+                            )
+                        if text_list:
+                            texts[pname] = sim_viz.plot_texts(
+                                ax=ax,
+                                texts=text_list,
                             )
                     except:
                         logger.warn(f"Cannot plot extra", extra=plog.extra)
@@ -159,13 +181,20 @@ def create_animation(
 
                     traj_list, traj_colors = [], []
                     patch_list, patch_colors = [], []
+                    coll_list, coll_colors = [], []
+                    text_list = []
                     for i, item in enumerate(drawable_list):
                         if isinstance(item, Trajectory):
                             traj_list.append(item)
                             traj_colors.append(colors_list[i])
+                        elif isinstance(item, Collection):
+                            coll_list.append(item)
+                            coll_colors.append(colors_list[i])
                         elif isinstance(item, Patch):
                             patch_list.append(item)
                             patch_colors.append(colors_list[i])
+                        elif isinstance(item, List[Text]):
+                            text_list.append(item)
 
                     if traj_list:
                         traj_lines[pname], traj_points[pname] = sim_viz.plot_trajectories(
@@ -182,6 +211,18 @@ def create_animation(
                             patches=patch_list,
                             colors=patch_colors,
                         )
+                    if coll_list:
+                        collections[pname] = sim_viz.plot_collections(
+                            ax=ax,
+                            collections=coll_list,
+                            colors=coll_colors,
+                        )
+                    if text_list:
+                        texts[pname] = sim_viz.plot_texts(
+                            ax=ax,
+                            texts=text_list,
+                        )
+
                 except Exception as e:
                     logger.warn(f"Cannot plot extra", extra=log_at_t[pname].extra)
         adjust_axes_limits(

@@ -9,9 +9,10 @@ from commonroad.visualization.mp_renderer import MPRenderer
 from decorator import contextmanager
 from geometry import SE2_from_xytheta, SE2value
 from matplotlib.axes import Axes
-from matplotlib.collections import LineCollection, PathCollection, PatchCollection
+from matplotlib.collections import LineCollection, PathCollection, PatchCollection, Collection
 from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon, Circle, Patch
+from matplotlib.pyplot import Text
 
 from dg_commons import Color
 from dg_commons import PlayerName, X, U
@@ -56,6 +57,8 @@ class SimRenderer(SimRendererABC):
         self.sim_context = sim_context
         self.commonroad_renderer: MPRenderer = MPRenderer(ax=ax, *args, **kwargs)
         self.current_patchcollection = None
+        self.current_collection = None
+        self.current_texts = None
 
     @contextmanager
     def plot_arena(self, ax: Axes):
@@ -151,6 +154,48 @@ class SimRenderer(SimRendererABC):
         )
         return self.current_patchcollection
 
+    def plot_collections(
+        self,
+        ax: Axes,
+        collections: List[Collection],
+        colors: Optional[List[Color]] = None,
+        alpha: float = 1,
+    ) -> List[Collection]:
+
+        #remove patches from previous timeframe
+        if self.current_collection is not None:
+            self.current_collection.remove()
+
+        #assert colors is None or len(colors) == len(collections)
+
+        self.current_collection = plot_collections(
+            ax=ax,
+            collections=collections,
+            #colors=colors,
+            alpha=alpha,
+        )
+        return self.current_collection
+
+    def plot_text(
+        self,
+        ax: Axes,
+        texts: List[Text],
+        alpha: float = 1,
+    ) -> List[Text]:
+
+        #remove patches from previous timeframe
+        if self.current_texts is not None:
+            self.current_texts.remove()
+
+        #assert colors is None or len(colors) == len(collections)
+
+        self.current_texts = plot_text(
+            ax=ax,
+            texts=texts,
+            alpha=alpha,
+        )
+        return self.current_texts
+
 
 def plot_trajectories(
     ax: Axes,
@@ -197,6 +242,33 @@ def plot_patches(
     ax.add_collection(patch)
 
     return patch
+
+
+def plot_collections(
+    ax: Axes,
+    alpha: float = 1,
+    collections: Optional[List[Collection]] = None,
+    #colors: List[Color] = None
+) -> List[Collection]:
+
+    alpha = 0.5
+    collection = collections[0] #todo: fix this workaround
+    #collection.set_color(colors)
+    #collection.set_zorder(ZOrders.TRAJECTORY)
+    ax.add_collection(collection)
+
+    return collection
+
+def plot_text(
+    ax: Axes,
+    alpha: float = 1,
+    texts: Optional[List[Text]] = None,
+    #colors: List[Color] = None
+) -> List[Text]:
+    for text in texts:
+        ax.text(text)
+    return texts
+
 
 
 def plot_vehicle(

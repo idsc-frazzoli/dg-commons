@@ -14,7 +14,7 @@ class Agent(ABC):
     """This provides the abstract interface of an agent"""
 
     @abstractmethod
-    def on_episode_init(self, my_name: PlayerName):
+    def on_episode_init(self, my_name: PlayerName, *args, **kwargs):
         """This method will get called once for each player at the beginning of the simulation"""
         pass
 

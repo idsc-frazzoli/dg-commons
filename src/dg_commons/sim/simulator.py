@@ -55,7 +55,7 @@ class Simulator:
     def run(self, sim_context: SimContext):
         logger.info("Beginning simulation.")
         for player_name, player in sim_context.players.items():
-            player.on_episode_init(player_name)
+            player.on_episode_init(player_name, sim_context=sim_context)
             self.simlogger[player_name] = PlayerLogger()
         while not sim_context.sim_terminated:
             self.pre_update(sim_context)
