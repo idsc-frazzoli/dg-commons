@@ -184,7 +184,7 @@ class SpacecraftModel(SimModel[SpacecraftState, SpacecraftCommands]):
         return
 
     def dynamics(self, x0: SpacecraftState, u: SpacecraftCommands) -> SpacecraftState:
-        """Kinematic bicycle model, returns state derivative for given control inputs"""
+        """Returns state derivative for given control inputs"""
         acc_lx = apply_acceleration_limits(u.acc_left, self.sp)
         acc_rx = apply_acceleration_limits(u.acc_right, self.sp)
         acc_sum = acc_lx + acc_rx
