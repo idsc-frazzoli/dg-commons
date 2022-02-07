@@ -62,6 +62,7 @@ to install also the developer tools use `pip install dg-commons["all"]`.
 ## Publications
 The tools contained in this package have contributed to the following publications:
 
-- [**Posetal Games: Efficiency, Existence, and Refinement of Equilibria in Games with Prioritized Metrics**](https://arxiv.org/abs/2111.07099) - _A. Zanardi*, G. Zardini*, S. Srinivasan, S. Bolognani, A. Censi, F. Dörfler, E. Frazzoli._
+- **Posetal Games: Efficiency, Existence, and Refinement of Equilibria in Games with Prioritized Metrics** - [RAL](https://ieeexplore.ieee.org/document/9650727)
+_A. Zanardi*, G. Zardini*, S. Srinivasan, S. Bolognani, A. Censi, F. Dörfler, E. Frazzoli_
 
 - ...
