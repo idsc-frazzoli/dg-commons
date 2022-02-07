@@ -90,7 +90,6 @@ def dglane_from_position(
     p: T2value, network: LaneletNetwork, init_lane_selection: int = 0, succ_lane_selection: int = 0
 ) -> DgLanelet:
     """Gets the first merged lane from the current position"""
-    # todo add possibility to select the number of the lane successor (0 by default)
     lane_id = network.find_lanelet_by_position(
         [
             p,
