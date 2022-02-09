@@ -78,7 +78,7 @@ class DgSampledSequence(Generic[X]):
 
     @values.setter
     def values(self, v: Any) -> None:
-        raise RuntimeError("Cannot set timestamps of SampledSequence directly")
+        raise RuntimeError("Cannot set values of SampledSequence directly")
 
     def at(self, t: Timestamp) -> X:
         """Returns value at requested timestamp, raises UndefinedAtTime if not defined at t"""

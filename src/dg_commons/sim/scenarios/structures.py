@@ -14,6 +14,8 @@ __all__ = ["DgScenario"]
 
 @dataclass
 class DgScenario:
+    """Mainly a thin wrapper around commonroad scenarios. Yet it can work also as an empty world."""
+
     scenario: Optional[Scenario] = None
     """A commonroad scenario"""
     static_obstacles: Dict[int, StaticObstacle] = field(default_factory=dict)
