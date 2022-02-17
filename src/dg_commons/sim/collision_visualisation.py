@@ -1,5 +1,5 @@
-from collections import Mapping
 from enum import IntEnum
+from typing import Mapping
 
 import matplotlib.patches as mpatches
 import numpy as np
