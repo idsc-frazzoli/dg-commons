@@ -16,7 +16,7 @@ contracts.disable_all()
 class DgCommonsConstants:
     """Global constants for the library."""
 
-    checks: ClassVar[bool] = False
+    checks: ClassVar[bool] = True
     """
         If true activates extra safety checks and assertions.
         Mainly on object creations and methods.
