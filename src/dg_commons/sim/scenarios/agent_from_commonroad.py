@@ -81,7 +81,7 @@ def _estimate_mass_inertia(length: float, width: float) -> Tuple[float, float]:
     alpha = 50
     beta = 1.6
     area = length * width
-    mass = alpha * area ** beta
+    mass = alpha * area**beta
     inertia = mass * (length + width) / 6
     return mass, inertia
 
@@ -89,7 +89,7 @@ def _estimate_mass_inertia(length: float, width: float) -> Tuple[float, float]:
 def dglane_from_position(
     p: T2value, network: LaneletNetwork, init_lane_selection: int = 0, succ_lane_selection: int = 0
 ) -> DgLanelet:
-    """Gets the first merged lane from the current position"""
+    """Gets the merged lane from init lane select to the successive lane from the current position"""
     lane_id = network.find_lanelet_by_position(
         [
             p,
