@@ -1,9 +1,10 @@
 import math
 from itertools import chain
-from typing import Mapping, List, Union, Optional, Sequence
+from typing import Mapping, List, Union, Optional, Sequence, Iterable
 
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
+from matplotlib.artist import Artist
 from matplotlib.axes import Axes
 from toolz.sandbox import unzip
 from zuper_commons.types import ZValueError
@@ -64,7 +65,7 @@ def create_animation(
     plot_ligths: bool = True
 
     # self.f.set_size_inches(*fig_size)
-    def _get_list() -> List:
+    def _get_list() -> List[Artist]:
         # fixme this is supposed to be an iterable of artists
         return (
             list(chain.from_iterable(states.values()))
@@ -75,7 +76,7 @@ def create_animation(
             + list(texts.values())
         )
 
-    def init_plot():
+    def init_plot() -> Iterable[Artist]:
         ax.clear()
         with sim_viz.plot_arena(ax=ax):
             init_log_entry: Mapping[PlayerName, LogEntry] = sim_context.log.at_interp(time_begin)
@@ -111,7 +112,7 @@ def create_animation(
             )
         return _get_list()
 
-    def update_plot(frame: int = 0):
+    def update_plot(frame: int = 0) -> Iterable[Artist]:
         t: float = frame * dt / 1000.0
         logger.info(f"Plotting t = {t}\r")
         log_at_t: Mapping[PlayerName, LogEntry] = sim_context.log.at_interp(t)

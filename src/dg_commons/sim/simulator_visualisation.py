@@ -214,7 +214,7 @@ def plot_vehicle(
     vehicle_color: Color = vg.color
     q = SE2_from_xytheta((state.x, state.y, state.theta))
     if vehicle_poly is None:
-        vehicle_box = ax.fill([], [], color=vehicle_color, alpha=alpha, zorder=ZOrders.MODEL)[0]
+        vehicle_box = ax.fill([], [], color=vehicle_color, edgecolor="k", alpha=alpha, zorder=ZOrders.MODEL)[0]
         vehicle_poly = [
             vehicle_box,
         ]
