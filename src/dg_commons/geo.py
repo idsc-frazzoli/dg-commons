@@ -80,7 +80,7 @@ class SE2Transform:
 
 def apply_SE2_to_shapely_geo(shapely_geometry: BaseGeometry, se2_value: SE2value) -> BaseGeometry:
     """Apply SE2 transform to shapely geometry"""
-    coeffs = [se2_value[0, 0], se2_value[1, 0], se2_value[0, 1], se2_value[1, 1], se2_value[0, 2], se2_value[1, 2]]
+    coeffs = [se2_value[0, 0], se2_value[0, 1], se2_value[1, 0], se2_value[1, 1], se2_value[0, 2], se2_value[1, 2]]
     return affine_transform(shapely_geometry, coeffs)
 
 

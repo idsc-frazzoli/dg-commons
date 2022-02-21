@@ -268,6 +268,22 @@ class DgLanelet:
         q = SE2_interpolate(q0, q1, alpha)
         return q
 
+    def center_point_fast_SE2Transform(self, beta: float) -> SE2Transform:
+        """Mainly based on the assumption of very close control points, hence interpolates linearly"""
+        n = len(self.control_points)
+        i = int(np.floor(beta))
+        if i < 0:
+            return self.control_points[0].q
+        elif i >= n - 1:
+            return self.control_points[-1].q
+        else:
+            alpha = beta - i
+            c0 = self.control_points[i]
+            c1 = self.control_points[i + 1]
+            p = c0.q.p * (1 - alpha) + c1.q.p * alpha
+            theta = c0.q.theta * (1 - alpha) + c1.q.theta * alpha
+            return SE2Transform(p, theta)
+
     @cached(LRUCache(maxsize=128))
     def lane_profile(self, points_per_segment: int = 5) -> List[T2value]:
         """Lane bounds - left and right along the lane"""

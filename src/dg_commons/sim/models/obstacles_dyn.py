@@ -10,7 +10,7 @@ from shapely.geometry import Polygon
 
 from dg_commons import U, apply_SE2_to_shapely_geo
 from dg_commons.sim import SimModel, ImpactLocation, SimTime, IMPACT_EVERYWHERE
-from dg_commons.sim.models import ModelType, ModelGeometry, DYNAMIC_OBSTACLE
+from dg_commons.sim.models import ModelType, DYNAMIC_OBSTACLE
 from dg_commons.sim.models.model_utils import apply_full_acceleration_limits, apply_rot_speed_constraint
 from dg_commons.sim.models.obstacles import ObstacleGeometry, DynObstacleParameters
 
@@ -142,6 +142,8 @@ class DynObstacleModel(SimModel[DynObstacleState, DynObstacleCommands]):
     """A dynamic obstacle"""
 
     def __init__(self, x0: DynObstacleState, shape: Polygon, og: ObstacleGeometry, op: DynObstacleParameters):
+        """For realistic behavior it is important that the shape is centered around the origin
+        that will be used as the c.o.g. for the obstacle"""
         self._state: DynObstacleState = x0
         self.XT: Type[DynObstacleState] = type(x0)
         self.og: ObstacleGeometry = og
@@ -189,8 +191,8 @@ class DynObstacleModel(SimModel[DynObstacleState, DynObstacleCommands]):
         xdot = vx * costh - vy * sinth
         ydot = vx * sinth + vy * costh
 
-        acc_x = apply_full_acceleration_limits(speed=vx, acceleration=u.acc_x, p=self.op)
-        acc_y = apply_full_acceleration_limits(speed=vy, acceleration=u.acc_y, p=self.op)
+        acc_x = apply_full_acceleration_limits(speed=vx, acceleration=u.acc_x + x0.dpsi * vy, p=self.op)
+        acc_y = apply_full_acceleration_limits(speed=vy, acceleration=u.acc_y - x0.dpsi * vx, p=self.op)
         acc_psi = apply_rot_speed_constraint(omega=x0.dpsi, domega=u.acc_psi, p=self.op)
 
         return DynObstacleState(x=xdot, y=ydot, psi=x0.dpsi, vx=acc_x, vy=acc_y, dpsi=acc_psi)
@@ -219,7 +221,7 @@ class DynObstacleModel(SimModel[DynObstacleState, DynObstacleCommands]):
         self._state.vy = vel[1]
         self._state.dpsi = omega
 
-    def get_geometry(self) -> ModelGeometry:
+    def get_geometry(self) -> ObstacleGeometry:
         return self.og
 
     def get_mesh(self) -> Mapping[ImpactLocation, Polygon]:

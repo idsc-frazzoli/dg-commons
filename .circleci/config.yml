@@ -97,3 +97,6 @@ workflows:
       - install_docs_tests:
           name: "DGcommonsCI:3.9"
           version: "3.9"
+      - install_docs_tests:
+          name: "DGcommonsCI:3.10"
+          version: "3.10"

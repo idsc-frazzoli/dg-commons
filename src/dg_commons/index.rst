@@ -22,7 +22,7 @@ Planning
 General utils
 ---------------
 
-.. automodule:: dg_commons.sequence
+.. automodule:: dg_commons.seq
    :members:
 
 .. automodule:: dg_commons.seq_op

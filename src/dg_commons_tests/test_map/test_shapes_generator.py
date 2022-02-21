@@ -13,7 +13,7 @@ from dg_commons_tests import OUT_TESTS_DIR
 
 def test_generate_shapes():
     poly = Polygon(create_star_polygon(15, 8, 5, 1.5))
-    transform = SE2_from_xytheta((3, 3, deg2rad(0)))
+    transform = SE2_from_xytheta((3, 3, deg2rad(5)))
     viz = ShapelyViz()
     arena_size = 100
     boundary = LinearRing([[0, 0], [arena_size, 0], [arena_size, arena_size], [0, arena_size]])
