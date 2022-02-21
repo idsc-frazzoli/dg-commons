@@ -5,11 +5,15 @@ from dg_commons.sim.models.vehicle_utils import steering_constraint, VehiclePara
 from dg_commons.sim.models.model_utils import apply_full_acceleration_limits
 from typing import Optional
 from dg_commons_dev.utils import SemiDef
+from dg_commons_dev.state_estimators.dropping_trechniques import DroppingTechniques, \
+    LGB, LGBParam
 from dg_commons_dev.state_estimators.estimator_types import Estimator
 import math
 from dg_commons import X
 from dataclasses import dataclass
 from dg_commons_dev.utils import BaseParams
+
+# TODO: Create Generic Extended Kalman filter with parametrized state space - and measurement model.
 
 
 @dataclass
@@ -18,12 +22,20 @@ class ExtendedKalmanKinParam(BaseParams):
     """ Number of states """
     n_commands: int = VehicleCommands.get_n_commands()
     """ Number of commands """
-    model_covariance: SemiDef = SemiDef(n_states * [0])
-    """ Modeling covariance matrix """
-    meas_covariance: SemiDef = SemiDef(n_states * [0])
-    """ Measurement covariance matrix """
-    initial_variance: SemiDef = meas_covariance
+    actual_model_var: SemiDef = SemiDef(n_states * [0])
+    """ Actual Modeling covariance matrix """
+    actual_meas_var: SemiDef = SemiDef(n_states * [0])
+    """ Actual Measurement covariance matrix """
+    belief_model_var: SemiDef = actual_model_var
+    """ Belief modeling covariance matrix """
+    belief_meas_var: SemiDef = actual_meas_var
+    """ Belief measurement covariance matrix """
+    initial_variance: SemiDef = actual_model_var
     """ Initial covariance matrix """
+    dropping_technique: type(DroppingTechniques) = LGB
+    """ Dropping Technique """
+    dropping_params: BaseParams = LGBParam()
+    """ Dropping parameters """
     geometry_params: VehicleGeometry = VehicleGeometry.default_car()
     """ Vehicle Geometry """
     vehicle_params: VehicleParameters = VehicleParameters.default_car()
@@ -32,26 +44,32 @@ class ExtendedKalmanKinParam(BaseParams):
     """ Time interval between two calls """
 
     def __post_init__(self):
-        assert len(self.model_covariance.eig) == self.n_states
-        assert len(self.meas_covariance.eig) == self.n_states
+        assert len(self.actual_model_var.eig) == self.n_states
+        assert len(self.belief_model_var.eig) == self.n_states
         assert len(self.initial_variance.eig) == self.n_states
         assert 0 <= self.t_step <= 30
+        assert isinstance(self.dropping_params, self.dropping_technique.REF_PARAMS)
 
 
 class ExtendedKalmanKin(Estimator):
     """ Extended Kalman Filter with kinematic bicycle model and identity measurement model """
     REF_PARAMS: dataclass = ExtendedKalmanKinParam
 
-    def __init__(self, x0=None, params=ExtendedKalmanKinParam()):
+    def __init__(self, x0=None, params=ExtendedKalmanKinParam(),
+                 model_noise_realization=None):
         self.params: ExtendedKalmanKinParam = params
 
-        self.model_covariance: np.ndarray = params.model_covariance.matrix
-        self.meas_covariance: np.ndarray = params.meas_covariance.matrix
+        self.actual_model_noise: np.ndarray = params.actual_model_var.matrix
+        self.actual_meas_noise: np.ndarray = params.actual_meas_var.matrix
+        self.belief_model_noise: np.ndarray = params.belief_model_var.matrix
+        self.belief_meas_noise: np.ndarray = params.belief_meas_var.matrix
         self.p: np.ndarray = params.initial_variance.matrix
+
+        self.dropping: DroppingTechniques = params.dropping_technique(params.dropping_params)
 
         self.state: X = x0
         self.dt: float = self.params.t_step
-        self.current_model_noise_realization: X = None
+        self.current_model_noise_realization: X = model_noise_realization
 
     def update_prediction(self, u_k: Optional[VehicleCommands]) -> None:
         """
@@ -77,14 +95,16 @@ class ExtendedKalmanKin(Estimator):
             self.state = measurement_k
             return
 
-        if measurement_k is not None:
+        if not self.dropping.drop():
             h = self._h(self.state)
             state = self.state.as_ndarray().reshape((n_states, 1))
+            # Perturb measurement and reshape
+            measurement_k = measurement_k + ExtendedKalmanKin._realization(self.actual_meas_noise)
             meas = measurement_k.as_ndarray().reshape((n_states, 1))
 
             try:
                 self.p = self.p.astype(float)
-                helper = np.linalg.inv(np.matmul(np.matmul(h, self.p), h.T) + self.meas_covariance)
+                helper = np.linalg.inv(np.matmul(np.matmul(h, self.p), h.T) + self.belief_meas_noise)
                 k = np.matmul(np.matmul(self.p, h.T), helper)
                 state = state + np.matmul(k, (meas - state))
 
@@ -117,10 +137,11 @@ class ExtendedKalmanKin(Estimator):
 
             f = self._f(state0)
             p = vec_to_mat(part2)
-            dp = np.matmul(f, p) + np.matmul(p, f.T) + self.model_covariance
+            dp = np.matmul(f, p) + np.matmul(p, f.T) + self.belief_model_noise
 
             return np.concatenate([dx.as_ndarray(), du, mat_to_vec(dp)])
 
+        self.current_model_noise_realization = self._realization(self.actual_model_noise)
         state_zero = np.concatenate([self.state.as_ndarray(), u_k.as_ndarray(), mat_to_vec(self.p)])
         result = solve_ivp(fun=_dynamics, t_span=(0.0, float(self.dt)), y0=state_zero)
         if not result.success:
@@ -165,4 +186,9 @@ class ExtendedKalmanKin(Estimator):
 
         ddelta = steering_constraint(x0.delta, u.ddelta, self.params.vehicle_params)
         acc = apply_full_acceleration_limits(x0.vx, u.acc, self.params.vehicle_params)
-        return VehicleState(x=xdot, y=ydot, theta=dtheta, vx=acc, delta=ddelta)
+        return VehicleState(x=xdot, y=ydot, theta=dtheta, vx=acc, delta=ddelta) + self.current_model_noise_realization
+
+    @staticmethod
+    def _realization(var: np.ndarray):
+        dim = int(var.shape[0])
+        return VehicleState.from_array(np.random.multivariate_normal(np.zeros(dim), var))

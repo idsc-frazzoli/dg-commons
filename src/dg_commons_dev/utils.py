@@ -3,6 +3,7 @@ from typing import List
 import numpy as np
 import scipy.linalg
 from abc import ABC
+from typing import Any
 
 
 @dataclass
@@ -74,7 +75,10 @@ class SemiDef:
         return eig
 
     def __eq__(self, other):
-        return self.matrix == other.matrix
+        return np.allclose(self.matrix, other.matrix)
+
+    def to_str(self):
+        return str(np.round(np.array(self.eig), 4))
 
     def __lt__(self, other):
         self.eig.sort()
@@ -105,3 +109,54 @@ class BaseParams(ABC):
             string += field.name + " of type {}: ".format(field.type) + str(value) + "\n"
             string += "--------------------------------------------------\n"
         return string
+
+    def is_close(self, other: "BaseParams"):
+        return_val: bool = isinstance(self, type(other))
+        if return_val:
+            for field in fields(self):
+                return_val = return_val and self.compare(getattr(self, field.name), getattr(other, field.name))
+        return return_val
+
+    def to_str(self):
+        string = self.__class__.__name__
+        for field in fields(self):
+            value = getattr(self, field.name)
+
+            if hasattr(value, 'to_str'):
+                value = value.to_str()
+            else:
+                value = str(self.rounding(value))
+            string += field.name + value
+        return string
+
+    @staticmethod
+    def rounding(val: Any):
+        if isinstance(val, tuple):
+            return (round(num, 4) for num in val)
+        elif isinstance(val, list):
+            return [round(num, 4) for num in val]
+        elif isinstance(val, bool):
+            if val:
+                return 1
+            else:
+                return 0
+        elif isinstance(val, int) or isinstance(val, float):
+            return np.round(val, 4)
+        elif isinstance(val, np.ndarray):
+            return np.round(val, 4)
+        else:
+            return val
+
+    @staticmethod
+    def compare(val1: Any, val2: Any, tol=10e-6):
+        if not isinstance(val1, type(val2)):
+            return False
+
+        is_number: bool = isinstance(val1, int) or isinstance(val1, float)
+        is_numpy: bool = isinstance(val1, np.ndarray)
+        if is_number:
+            return abs(val1 - val2) < tol
+        elif is_numpy:
+            return np.allclose(val1, val2)
+        else:
+            return val1 == val2
