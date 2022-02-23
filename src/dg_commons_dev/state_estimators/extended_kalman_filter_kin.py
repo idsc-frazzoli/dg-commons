@@ -10,6 +10,7 @@ import math
 from dg_commons import X
 from dataclasses import dataclass
 from dg_commons_dev.utils import BaseParams
+from dg_commons_dev.state_estimators.dropping_trechniques import DroppingTechniques, LGB
 
 
 @dataclass
@@ -30,6 +31,8 @@ class ExtendedKalmanKinParam(BaseParams):
     """ Vehicle Parameters """
     t_step: float = 0.1
     """ Time interval between two calls """
+    dropping_techniques: DroppingTechniques = LGB()
+    """ Dropping technique """
 
     def __post_init__(self):
         assert len(self.model_covariance.eig) == self.n_states

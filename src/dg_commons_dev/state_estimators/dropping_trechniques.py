@@ -16,7 +16,7 @@ class LGBParam(BaseParams):
     """ Failure Probability """
 
     def __post_init__(self):
-        assert 0 <= self.failure_p <= 0
+        assert 0 <= self.failure_p <= 1
 
 
 class LGB(DroppingTechniques):
