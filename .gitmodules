@@ -1,4 +1,4 @@
 [submodule "scenarios/commonroad-scenarios"]
 	path = scenarios/commonroad-scenarios
-	url = https://gitlab.lrz.de/webhat/commonroad-scenarios.git
+	url = https://gitlab.lrz.de/tum-cps/commonroad-scenarios.git
 	branch = 2020a_scenarios
