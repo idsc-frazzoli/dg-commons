@@ -30,7 +30,7 @@ class RRTStarDubinParams(RRTStarParams):
     Steering function: takes two nodes (start and goal); Maximum distance; Resolution of path; Max curvature
     and returns the new node fulfilling the passed requirements
     """
-    distance_meas: Callable[[Node, Node, ...], float] = dubin_distance_cost
+    distance_meas: Callable[[Node, Node, float], float] = dubin_distance_cost
     """ 
     Formulation of a distance between two nodes, in general not symmetric: from second node to first
     """
