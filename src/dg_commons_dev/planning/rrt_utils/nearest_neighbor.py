@@ -68,7 +68,7 @@ def distance_angle_cost(node1: Node, node2: Node, curvature: float = 0) -> float
     return dist + factor * delta3
 
 
-def naive(node: Node, node_list: List[Node], cost_fct: Callable[[Node, Node, ...], float], curvature: float = 0) -> int:
+def naive(node: Node, node_list: List[Node], cost_fct: Callable[[Node, Node, float], float], curvature: float = 0) -> int:
     """
     Naive nearest neighbor search with cost_fct as discriminant choice
     @param node: Node of interest

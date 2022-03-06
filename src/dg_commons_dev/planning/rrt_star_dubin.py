@@ -40,7 +40,7 @@ class RRTStarDubinParams(RRTStarParams):
     """
     max_distance_to_goal: float = 3
     """ Max distance to goal """
-    nearest_neighbor_search: Callable[[Node, List[Node], Callable[[Node, Node], float]], int] = naive
+    nearest_neighbor_search: Callable[[Node, List[Node], Callable[[Node, Node, float], float]], int] = naive
     """ 
     Method for nearest neighbor search. Searches for the nearest neighbor to a node through a list of nodes wrt distance
     function.
