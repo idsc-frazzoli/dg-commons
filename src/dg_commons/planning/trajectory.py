@@ -1,22 +1,56 @@
 from dataclasses import replace
 from functools import partial
 from itertools import product
-from typing import List, Optional, Type, Mapping, Set, Iterator
+from typing import List, Optional, Type, Mapping, Set, Iterator, Tuple
 
 import numpy as np
 from geometry import xytheta_from_SE2
 from networkx import DiGraph, is_directed_acyclic_graph, all_simple_paths, descendants, has_path, shortest_path
 
 from dg_commons import SE2Transform, PlayerName, X
-from dg_commons.seq.sequence import DgSampledSequence, iterate_with_dt
+from dg_commons.seq.sequence import DgSampledSequence, iterate_with_dt, Timestamp
 from dg_commons.sim.models import extract_pose_from_state
 from dg_commons.sim.models.vehicle import VehicleState, VehicleCommands
 
-__all__ = ["Trajectory", "JointTrajectories", "TrajectoryGraph", "commands_plan_from_trajectory"]
+__all__ = ["Trajectory", "JointTrajectories", "TrajectoryGraph", "commands_plan_from_trajectory", "TimedVehicleState"]
 
 
 class Trajectory(DgSampledSequence[VehicleState]):
     """Container for a trajectory as a sampled sequence"""
+
+    # def __init__(
+    #     self,
+    #     values: List[Union[VehicleState, "Trajectory"]],
+    #     lane: DgLanelet,
+    #     goal: Optional[Polygon] = None,
+    #     states: Optional[Tuple[VehicleState, VehicleState]] = None,
+    # ):
+    #     assert len(values) > 0
+    #     self.lane = lane
+    #     self.goal = goal
+    #     if all(isinstance(val, VehicleState) for val in values):
+    #         if states is not None:
+    #             values[0] = states[0]
+    #             values[-1] = states[-1]
+    #         self.trim_trajectory(states=values, goal=goal)
+    #         times: List[Timestamp] = [x.t for x in values]
+    #         self.states = DgSampledSequence(timestamps=times, values=values)
+    #         self.traj = []
+    #     else:
+    #         raise TypeError(f"Input is of wrong type - {type(values[0])}!")
+    #
+    # @staticmethod
+    # def trim_trajectory(states: List[VehicleState], goal: Optional[Polygon]) -> bool:
+    #      """Trims trajectory till goal region (if longer) and returns if trimming was performed or not"""
+    #      if goal is None:
+    #          return False
+    #      goal_idx = Trajectory.get_goal_reached_index(states=states, goal=goal)
+    #      if goal_idx is None:
+    #          return False
+    #      n_states = len(states)
+    #      for _ in range(goal_idx + 1, n_states):
+    #          states.pop()
+    #      return True
 
     @property
     def XT(self) -> Type[X]:
@@ -43,18 +77,50 @@ class Trajectory(DgSampledSequence[VehicleState]):
 
         :param other: the motion primitive to which the connectivity is examined
         """
-        diff = self.at(self.get_end()) - other.at(other.get_end())
+        if self.is_empty():
+            return True
+        diff = self.at(self.get_end()) - other.at(other.get_start())
         return abs(diff.vx) < tol and abs(diff.delta) < tol
+
+    def is_empty(self):
+        return len(self.timestamps) == 0 and len(self.values) == 0
 
     def __add__(self, other: Optional["Trajectory"]) -> "Trajectory":
         assert self.is_connectable(other)
-        # todo
-        pass
+        values = list(self.values)
+        timestamps=list(self.timestamps)
+        if self.is_empty():
+            other_val = list(other.values)
+            other_timestamps = (list(other.timestamps))
+        else:
+            other_val = list(other.values[1:])
+            other_timestamps = (list(other.timestamps[1:]))
+        values.append(other_val)
+        timestamps.append(other_timestamps)
+        return Trajectory(values=values[0], timestamps=timestamps[0])
 
     def upsample(self, n: int) -> "Trajectory":
-        """"""
-        # todo
-        pass
+        """
+        Add n points between each subsequent point in the original trajectory by interpolation
+        """
+        timestamps = list(self.timestamps)
+        up_values: List[VehicleState] = []
+        up_timestamps: List[Timestamp] = []
+
+        for t_previous, t_next in zip(timestamps, timestamps[1:]):
+            up_timestamps.append(t_previous)
+            up_values.append(self.at(t_previous))
+            assert t_next > t_previous
+            dt = (t_next - t_previous) / (n + 1)
+            for i in range(1, n + 1):
+                up_timestamps.append(i * dt + t_previous)
+                up_values.append(self.at_interp(i * dt + t_previous))
+
+        # append last element of original sequence
+        up_timestamps.append(timestamps[-1])
+        up_values.append(self.at(timestamps[-1]))
+
+        return Trajectory(values=up_values, timestamps=up_timestamps)
 
 
 JointTrajectories = Mapping[PlayerName, Trajectory]
@@ -69,77 +135,62 @@ def commands_plan_from_trajectory(trajectory: Trajectory) -> DgSampledSequence[V
     return DgSampledSequence[VehicleCommands](timestamps, commands)
 
 
+TimedVehicleState = Tuple[Timestamp, VehicleState]
+
+
 class TrajectoryGraph(DiGraph):
     # https://networkx.org/documentation/stable/reference/algorithms/dag.html
-    pass
-    # todo missing sampling time to have proper trajectories
+    # pass
 
-    def add_node(self, state: VehicleState, **attr):
-        super(TrajectoryGraph, self).add_node(node_for_adding=state, **attr)
+    def add_node(self, timed_state: TimedVehicleState, **attr):
+        super(TrajectoryGraph, self).add_node(node_for_adding=timed_state, **attr)
 
-    def check_node(self, node: VehicleState):
+    def check_node(self, node: TimedVehicleState):
         if node not in self.nodes:
             raise ValueError(f"{node} not in graph!")
 
-    def add_edge(self, trajectory: Trajectory, **attr):
-        source, target = trajectory.at(trajectory.get_start()), trajectory.at(trajectory.get_end())
-        self.check_node(node=source)
-        attr["transition"] = trajectory
+    def add_edge(self, states: Trajectory, transition: Trajectory, **attr):
+        source, target = states.at(states.get_start()), states.at(states.get_end())
+        start_time, end_time = states.get_start(), states.get_end()
+        self.check_node(node=(start_time, source))
+        attr["transition"] = transition
         if target not in self.nodes:
-            self.add_node(state=target, gen=self.nodes[source]["gen"] + 1)
+            self.add_node(timed_state=(end_time, target), gen=self.nodes.get((start_time, source))["gen"] + 1)
 
-        super(TrajectoryGraph, self).add_edge(u_of_edge=source, v_of_edge=target, **attr)
-        #self.trajectories[(source, target)] = trajectory
+        super(TrajectoryGraph, self).add_edge(u_of_edge=(start_time, source), v_of_edge=(end_time, target), **attr)
+        return
+        # self.trajectories[(source, target)] = trajectory
 
-
-    def get_max_gen(self):
-        gens = [node ["gen"] for node in self.nodes]
-        return max(gens)
-
-    # todo
     def get_all_trajectories(self) -> Set[Trajectory]:
         assert is_directed_acyclic_graph(self)
-        ret = set()
 
-        max_gen = self.get_max_gen()
-        start_nodes = [node for node in self.nodes if node["gen"] == 0]
-        end_nodes = [node for node in self.nodes if node["gen"] == max_gen]
-        all_paths = []
-        for (start, end) in product(start_nodes, end_nodes):
-            all_paths.append(all_simple_paths(self, start, end))
-        return all_paths
+        trajectories = set()
 
+        roots = [node for node, degree in self.in_degree() if degree == 0]
+        assert len(roots) == 1
+        source = roots[0]
+        leaves = [node for node, degree in self.out_degree() if degree == 0]
 
+        for target in leaves:
+            trajectories.add(self.get_trajectory(source=source, target=target))
+        return trajectories
 
-
-        pass
-
-    def get_trajectory(self, source: VehicleState, target: VehicleState) -> Trajectory:
+    def get_trajectory(self, source: TimedVehicleState, target: TimedVehicleState) -> Trajectory:
         self.check_node(source)
         self.check_node(target)
         if not has_path(G=self, source=source, target=target):
             raise ValueError(f"No path exists between {source, target}!")
 
         nodes = shortest_path(G=self, source=source, target=target)
-        traj: List[Trajectory] = [] # todo how to fix this
+        traj: Trajectory = Trajectory(values=[], timestamps=[])
         for node1, node2 in zip(nodes[:-1], nodes[1:]):
+            a = self.get_edge_data(u=node1, v=node2)["transition"]
             traj += self.get_edge_data(u=node1, v=node2)["transition"]
-            #traj.append(self.get_trajectory_edge(source=node1, target=node2))
-        #return Trajectory(values=traj, lane=self.lane, goal=self.goal)
-        return traj[0]
-
+            # traj.append(self.get_trajectory_edge(source=node1, target=node2))
+        # return Trajectory(values=traj, lane=self.lane, goal=self.goal)
+        return traj
 
     def iterate_all_trajectories(self) -> Iterator[Trajectory]:
         all_traj = self.get_all_trajectories()
         # todo
         pass
-
-
-
-
-def get_all_trajectories(self, source: VehicleState) -> Set[Trajectory]:
-    if source not in self.nodes:
-        raise ValueError(f"Source node ({source}) not in graph!")
-
-    successors = [self.get_trajectory_edge(source=source, target=target) for target in self.successors(source)]
-    return frozenset(successors)
