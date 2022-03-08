@@ -18,40 +18,6 @@ __all__ = ["Trajectory", "JointTrajectories", "TrajectoryGraph", "commands_plan_
 class Trajectory(DgSampledSequence[VehicleState]):
     """Container for a trajectory as a sampled sequence"""
 
-    # def __init__(
-    #     self,
-    #     values: List[Union[VehicleState, "Trajectory"]],
-    #     lane: DgLanelet,
-    #     goal: Optional[Polygon] = None,
-    #     states: Optional[Tuple[VehicleState, VehicleState]] = None,
-    # ):
-    #     assert len(values) > 0
-    #     self.lane = lane
-    #     self.goal = goal
-    #     if all(isinstance(val, VehicleState) for val in values):
-    #         if states is not None:
-    #             values[0] = states[0]
-    #             values[-1] = states[-1]
-    #         self.trim_trajectory(states=values, goal=goal)
-    #         times: List[Timestamp] = [x.t for x in values]
-    #         self.states = DgSampledSequence(timestamps=times, values=values)
-    #         self.traj = []
-    #     else:
-    #         raise TypeError(f"Input is of wrong type - {type(values[0])}!")
-    #
-    # @staticmethod
-    # def trim_trajectory(states: List[VehicleState], goal: Optional[Polygon]) -> bool:
-    #      """Trims trajectory till goal region (if longer) and returns if trimming was performed or not"""
-    #      if goal is None:
-    #          return False
-    #      goal_idx = Trajectory.get_goal_reached_index(states=states, goal=goal)
-    #      if goal_idx is None:
-    #          return False
-    #      n_states = len(states)
-    #      for _ in range(goal_idx + 1, n_states):
-    #          states.pop()
-    #      return True
-
     @property
     def XT(self) -> Type[X]:
         return VehicleState
