@@ -24,23 +24,23 @@ clean:
 
 test: clean
 	mkdir -p  $(tr)
-	DISABLE_CONTRACTS=1 pytest $(coverage) $(extra) src  #-v --nologcapture $(xunitmp)
+	DISABLE_CONTRACTS=1 pytest $(coverage) $(extra) src
 
 test-parallel: clean
 	mkdir -p  $(tr)
 	DISABLE_CONTRACTS=1 pytest $(coverage) $(extra) $(parallel) src
 
-test-parallel-circle:
-	DISABLE_CONTRACTS=1 \
-	NODE_TOTAL=$(CIRCLE_NODE_TOTAL) \
-	NODE_INDEX=$(CIRCLE_NODE_INDEX) \
-	nosetests $(coverage) $(xunitmp) src -v  $(parallel)
+#test-parallel-circle:
+#	DISABLE_CONTRACTS=1 \
+#	NODE_TOTAL=$(CIRCLE_NODE_TOTAL) \
+#	NODE_INDEX=$(CIRCLE_NODE_INDEX) \
+#	nosetests $(coverage) $(xunitmp) src -v  $(parallel)
 
-#coverage-combine:
-#	coverage combine
-#
-#coverage-report:
-#	coverage html -d $(coverage_dir)
+coverage-combine:
+	coverage combine
+
+coverage-report:
+	coverage html -d $(coverage_dir)
 
 black:
 	black -l 120 --target-version py38 src
