@@ -150,10 +150,7 @@ class TrajectoryGraph(DiGraph):
         nodes = shortest_path(G=self, source=source, target=target)
         traj: Trajectory = Trajectory(values=[], timestamps=[])
         for node1, node2 in zip(nodes[:-1], nodes[1:]):
-            a = self.get_edge_data(u=node1, v=node2)["transition"]
             traj += self.get_edge_data(u=node1, v=node2)["transition"]
-            # traj.append(self.get_trajectory_edge(source=node1, target=node2))
-        # return Trajectory(values=traj, lane=self.lane, goal=self.goal)
         return traj
 
     def iterate_all_trajectories(self) -> Iterator[Trajectory]:

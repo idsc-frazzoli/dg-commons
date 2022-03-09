@@ -88,7 +88,7 @@ class DgLanelet:
 
     @classmethod
     def from_vertices(
-        cls, left_vertices: np.ndarray, right_vertices: np.ndarray, center_vertices: np.ndarray
+            cls, left_vertices: np.ndarray, right_vertices: np.ndarray, center_vertices: np.ndarray
     ) -> "DgLanelet":
         ctr_points = []
         for i, center in enumerate(center_vertices):
@@ -285,3 +285,7 @@ class DgLanelet:
             points_right.append(SE2_apply_T2(q, delta_right))
 
         return points_right + list(reversed(points_left))
+
+    @property
+    def get_control_points(self):
+        return self.control_points
