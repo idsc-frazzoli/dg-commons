@@ -9,14 +9,14 @@ xunit_output=$(tr)/nose-$(CIRCLE_NODE_INDEX)-xunit.xml
 
 
 test_packages=dg_commons_tests
-cover_packages=$(test_packages),dg_commons
+cover_packages=dg_commons
 
-parallel=--processes=8 --process-timeout=1000 --process-restartworker
-coverage=--cover-html --cover-html-dir=$(coverage_dir) --cover-tests --with-coverage --cover-package=$(cover_packages)
+parallel=-n 6
+coverage=--cov-config=.coveragerc --cov=$(cover_packages) --cov-report html
 
 xunitmp=--with-xunitmp --xunitmp-file=$(xunit_output)
-extra=--rednose --immediate
-
+# extra=--rednose --immediate
+#  $(coverage)
 ################################
 clean:
 	coverage erase
@@ -24,11 +24,11 @@ clean:
 
 test: clean
 	mkdir -p  $(tr)
-	DISABLE_CONTRACTS=1 nosetests $(extra) $(coverage) src  -v --nologcapture $(xunitmp)
+	DISABLE_CONTRACTS=1 pytest $(coverage) src  #-v --nologcapture $(xunitmp)
 
 test-parallel: clean
 	mkdir -p  $(tr)
-	DISABLE_CONTRACTS=1 nosetests $(extra) $(coverage) src  -v --nologcapture $(parallel)
+	DISABLE_CONTRACTS=1 pytest $(coverage) src $(parallel)
 
 test-parallel-circle:
 	DISABLE_CONTRACTS=1 \
