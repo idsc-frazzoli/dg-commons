@@ -11,7 +11,7 @@ xunit_output=$(tr)/nose-$(CIRCLE_NODE_INDEX)-xunit.xml
 test_packages=dg_commons_tests
 cover_packages=dg_commons
 
-parallel=-n auto
+parallel=--workers auto
 coverage=--cov-config=.coveragerc --cov=$(cover_packages) --cov-report html
 
 xunitmp=--with-xunitmp --xunitmp-file=$(xunit_output)
@@ -28,7 +28,7 @@ test: clean
 
 test-parallel: clean
 	mkdir -p  $(tr)
-	DISABLE_CONTRACTS=1 pytest $(coverage) $(parallel) src
+	DISABLE_CONTRACTS=1 pytest $(coverage) $(extra) $(parallel) src
 
 test-parallel-circle:
 	DISABLE_CONTRACTS=1 \
