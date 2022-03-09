@@ -11,11 +11,11 @@ xunit_output=$(tr)/nose-$(CIRCLE_NODE_INDEX)-xunit.xml
 test_packages=dg_commons_tests
 cover_packages=dg_commons
 
-parallel=-n 6
+parallel=-n auto
 coverage=--cov-config=.coveragerc --cov=$(cover_packages) --cov-report html
 
 xunitmp=--with-xunitmp --xunitmp-file=$(xunit_output)
-# extra=--rednose --immediate
+extra=--capture=tee-sys
 #  $(coverage)
 ################################
 clean:
@@ -24,11 +24,11 @@ clean:
 
 test: clean
 	mkdir -p  $(tr)
-	DISABLE_CONTRACTS=1 pytest $(coverage) src  #-v --nologcapture $(xunitmp)
+	DISABLE_CONTRACTS=1 pytest $(coverage) $(extra) src  #-v --nologcapture $(xunitmp)
 
 test-parallel: clean
 	mkdir -p  $(tr)
-	DISABLE_CONTRACTS=1 pytest $(coverage) src $(parallel)
+	DISABLE_CONTRACTS=1 pytest $(coverage) $(parallel) src
 
 test-parallel-circle:
 	DISABLE_CONTRACTS=1 \
@@ -36,11 +36,11 @@ test-parallel-circle:
 	NODE_INDEX=$(CIRCLE_NODE_INDEX) \
 	nosetests $(coverage) $(xunitmp) src -v  $(parallel)
 
-coverage-combine:
-	coverage combine
-
-coverage-report:
-	coverage html -d $(coverage_dir)
+#coverage-combine:
+#	coverage combine
+#
+#coverage-report:
+#	coverage html -d $(coverage_dir)
 
 black:
 	black -l 120 --target-version py38 src

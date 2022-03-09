@@ -5,9 +5,8 @@
 [![PyPI version](https://badge.fury.io/py/dg-commons.svg)](https://badge.fury.io/py/dg-commons)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-
-This package contains common tools that ease the development and quick prototyping of autonomous vehicles with a
-focus on multi-agent planning and decision-making.
+This package contains common tools that ease the development and quick prototyping of autonomous vehicles with a focus
+on multi-agent planning and decision-making.
 
 ## Highlights
 
@@ -35,34 +34,54 @@ focus on multi-agent planning and decision-making.
 </tr>
 </table>
 
-
 ### Simulator
-todo...
-This simulator builds on a clear separation between the agent and the corresponding model.
+
+todo... This simulator builds on a clear separation between the agent and the corresponding model.
 
 Philosophy: Every dynamic entity of the simulation has a model and a corresponding agent
 
 ### Collision resolution
+
 todo...
 
 ### Commonroad integration
+
 todo...
 
 ## Installation
 
 The package is distributed on PyPI. You can simply install it via
+
 ```shell
 pip install dg-commons
 ```
+
 to install also the developer tools use `pip install dg-commons["all"]`.
 
+## Pre-commit hook
+
+Install pre-commit with
+```shell
+pip install pre-commit
+pre-commit install
+```
+
+Run pre-commit with
+```shell
+pre-commit run --all-files
+```
+
+
 ## Contributors
+
 ...
 
 ## Publications
+
 The tools contained in this package have contributed to the following publications:
 
-- **Posetal Games: Efficiency, Existence, and Refinement of Equilibria in Games with Prioritized Metrics** - [RAL](https://ieeexplore.ieee.org/document/9650727)
-_A. Zanardi*, G. Zardini*, S. Srinivasan, S. Bolognani, A. Censi, F. Dörfler, E. Frazzoli_
+- **Posetal Games: Efficiency, Existence, and Refinement of Equilibria in Games with Prioritized Metrics**
+  - [RAL](https://ieeexplore.ieee.org/document/9650727)
+  _A. Zanardi*, G. Zardini*, S. Srinivasan, S. Bolognani, A. Censi, F. Dörfler, E. Frazzoli_
 
 - ...
