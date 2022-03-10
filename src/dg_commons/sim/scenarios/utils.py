@@ -18,6 +18,7 @@ __all__ = ["load_commonroad_scenario"]
 #
 # SCENARIOS_DIR = os.path.join(get_project_root_dir(), "scenarios")
 
+
 def load_commonroad_scenario(
     scenario_name: str, scenarios_dir: Optional[str] = None
 ) -> Tuple[Scenario, PlanningProblemSet]:

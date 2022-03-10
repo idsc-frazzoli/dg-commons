@@ -6,6 +6,14 @@ from abc import ABC
 from typing import Any
 
 
+def sig_fig_round(number, n_digits=5, rounding=12):
+    number = round(number, rounding)
+    return float(f"{number:.{n_digits}g}")
+
+
+v_sig_fig_round = np.vectorize(sig_fig_round)
+
+
 @dataclass
 class SemiDef:
     """
@@ -132,23 +140,23 @@ class BaseParams(ABC):
     @staticmethod
     def rounding(val: Any):
         if isinstance(val, tuple):
-            return (round(num, 4) for num in val)
+            return (sig_fig_round(num) for num in val)
         elif isinstance(val, list):
-            return [round(num, 4) for num in val]
+            return [sig_fig_round(num) for num in val]
         elif isinstance(val, bool):
             if val:
                 return 1
             else:
                 return 0
         elif isinstance(val, int) or isinstance(val, float):
-            return np.round(val, 4)
+            return sig_fig_round(val)
         elif isinstance(val, np.ndarray):
-            return np.round(val, 4)
+            return v_sig_fig_round(val)
         else:
             return val
 
     @staticmethod
-    def compare(val1: Any, val2: Any, tol=10e-6):
+    def compare(val1: Any, val2: Any, tol=10e-10):
         if not isinstance(val1, type(val2)):
             return False
 
