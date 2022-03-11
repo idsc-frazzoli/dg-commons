@@ -15,7 +15,7 @@ parallel=--workers auto
 coverage=--cov-config=.coveragerc --cov=$(cover_packages) --cov-report html
 
 xunitmp=--with-xunitmp --xunitmp-file=$(xunit_output)
-extra=--capture=tee-sys
+extra=--capture=tee-sys -v
 #  $(coverage)
 ################################
 clean:
