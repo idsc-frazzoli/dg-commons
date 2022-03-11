@@ -68,6 +68,8 @@ TVehicleState = TypeVar("TVehicleState", bound="VehicleState")
 
 @dataclass(unsafe_hash=True, eq=True, order=True)
 class VehicleState:
+    """State for a bicycle model like vehicle"""
+
     x: float
     """ CoG x location [m] """
     y: float
@@ -77,7 +79,7 @@ class VehicleState:
     vx: float
     """ CoG longitudinal velocity [m/s] """
     delta: float
-    """ Steering angle [rad] """
+    """ Steering angle of the front wheel [rad] """
     idx = frozendict({"x": 0, "y": 1, "theta": 2, "vx": 3, "delta": 4})
     """ Dictionary to get correct values from numpy arrays"""
 

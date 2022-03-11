@@ -14,6 +14,8 @@ __all__ = [
     "UndefinedAtTime",
 ]
 
+from dg_commons import DgCommonsConstants
+
 X = TypeVar("X")
 Y = TypeVar("Y")
 Timestamp = Union[D, float, int]
@@ -42,21 +44,22 @@ class DgSampledSequence(Generic[X]):
     _values: Tuple[X] = field(default_factory=tuple)
 
     def __post_init__(self, timestamps, values):
-        if len(timestamps) != len(values):
-            raise ZValueError("Length mismatch of Timestamps and values")
+        if DgCommonsConstants.checks:
+            if len(timestamps) != len(values):
+                raise ZValueError("Length mismatch of Timestamps and values")
 
-        for t in timestamps:
-            if not isinstance(t, get_args(Timestamp)):
-                raise ZValueError(f'I expected a real number as "Timestamp", got {type(t)}')
-        for i in range(len(timestamps) - 1):
-            dt = timestamps[i + 1] - timestamps[i]
-            if dt <= 0:
-                raise ZValueError(f"Invalid dt = {dt} at i = {i}; ts= {timestamps}")
-        ts_types = set([type(ts) for ts in timestamps])
-        if D in ts_types and any([int in ts_types, float in ts_types]):
-            raise ZValueError(
-                "Attempting to create SampledSequence with mixed Decimal and floats", timestamps=timestamps
-            )
+            for t in timestamps:
+                if not isinstance(t, get_args(Timestamp)):
+                    raise ZValueError(f'I expected a real number as "Timestamp", got {type(t)}')
+            for i in range(len(timestamps) - 1):
+                dt = timestamps[i + 1] - timestamps[i]
+                if dt <= 0:
+                    raise ZValueError(f"Invalid dt = {dt} at i = {i}; ts= {timestamps}")
+            ts_types = set([type(ts) for ts in timestamps])
+            if D in ts_types and any([int in ts_types, float in ts_types]):
+                raise ZValueError(
+                    "Attempting to create SampledSequence with mixed Decimal and floats", timestamps=timestamps
+                )
         self._timestamps = tuple(timestamps)
         self._values = tuple(values)
 
@@ -78,7 +81,7 @@ class DgSampledSequence(Generic[X]):
 
     @values.setter
     def values(self, v: Any) -> None:
-        raise RuntimeError("Cannot set timestamps of SampledSequence directly")
+        raise RuntimeError("Cannot set values of SampledSequence directly")
 
     def at(self, t: Timestamp) -> X:
         """Returns value at requested timestamp, raises UndefinedAtTime if not defined at t"""

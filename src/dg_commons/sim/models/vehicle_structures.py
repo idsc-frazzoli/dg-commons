@@ -144,6 +144,10 @@ class VehicleGeometry(ModelGeometry):
         return Polygon(self.outline)
 
     @cached_property
+    def outline_as_polygon_wkt(self) -> str:
+        return self.outline_as_polygon.wkt
+
+    @cached_property
     def wheel_shape(self):
         if self.vehicle_type == CAR:
             halfwidth, radius = 0.1, 0.3  # size of the wheels
