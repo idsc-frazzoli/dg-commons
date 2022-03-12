@@ -11,7 +11,7 @@ xunit_output=$(tr)/nose-$(CIRCLE_NODE_INDEX)-xunit.xml
 test_packages=dg_commons_tests
 cover_packages=dg_commons
 
-parallel=--workers auto
+parallel=--workers=auto --dist=no
 coverage=--cov-config=.coveragerc --cov=$(cover_packages) --cov-report html
 
 xunitmp=--with-xunitmp --xunitmp-file=$(xunit_output)
