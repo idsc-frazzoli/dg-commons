@@ -1,8 +1,14 @@
+import numpy as np
 from casadi import *
 from abc import ABC, abstractmethod
 from typing import Callable, List, Optional, Union
 
 """ closest_point_on_path methods are fully compatible with casadi """
+
+
+def get_model(A, y, lamb=0):
+    n_col = A.shape[1]
+    return np.linalg.lstsq(A.T.dot(A) + lamb * np.identity(n_col), A.T.dot(y))
 
 
 class CurveApproximationTechnique(ABC):
@@ -37,7 +43,7 @@ class CurveApproximationTechnique(ABC):
         pass
 
     @abstractmethod
-    def update_from_data(self, pos1, angle1, pos2, angle2, pos3, angle3) -> None:
+    def update_from_data(self, positions, angles) -> None:
         """ Function updating the parameters based on the provided data """
         pass
 
@@ -63,7 +69,9 @@ class LinearCurve(CurveApproximationTechnique):
 
         self.update_from_parameters(np.array([[m], [b], [angle]]))
 
-    def update_from_data(self, pos1, angle1, pos2, angle2, pos3, angle3) -> None:
+    def update_from_data(self, positions, angles) -> None:
+        pos1 = positions[0]
+        pos2 = positions[int(len(positions)/2)]
         if abs(pos1[0] - pos2[0]) == 0:
             return self.vertical_line_param(pos1, pos2)
 
@@ -92,35 +100,41 @@ class LinearCurve(CurveApproximationTechnique):
 
 class QuadraticCurve(CurveApproximationTechnique):
     """ Class for quadratic approximations """
+    linear = False
+    linear_model = LinearCurve()
 
     @property
     def n_params(self) -> int:
         return 3
 
-    def update_from_data(self, pos1, angle1, pos2, angle2, pos3, angle3) -> None:
-        # if abs(pos1[0] - pos2[0]) == 0 and abs(pos2[0] - pos3[0]): # TODO: fix
-        #     return vertical_line_param(pos1, pos2)
+    def update_from_data(self, positions, angles) -> None:
+        n_pos = len(positions)
 
-        pref = 'var3'
-        if pref == 'var1':
-            mat: np.ndarray = \
-                np.array([[pos1[0] ** 2, pos1[0], 1], [pos2[0] ** 2, pos2[0], 1], [pos3[0] ** 2, pos3[0], 1]])
-            b: np.ndarray = np.array([[pos1[1]], [pos2[1]], [pos3[1]]])
-        elif pref == 'var2':
-            mat: np.ndarray = np.array([[pos1[0] ** 2, pos1[0], 1], [pos3[0] ** 2, pos3[0], 1], [2 * pos1[0], 1, 0]])
-            b: np.ndarray = np.array([[pos1[1]], [pos2[1]], [tan(angle1)]])
-        elif pref == 'var3':
-            mat: np.ndarray = \
-                np.array([[pos1[0] ** 2, pos1[0], 1], [pos2[0] ** 2, pos2[0], 1], [pos3[0] ** 2, pos3[0], 1],
-                         [2 * pos1[0], 1, 0], [2 * pos2[0], 1, 0], [2 * pos3[0], 1, 0]])
-            b: np.ndarray = np.array([[pos1[1]], [pos2[1]], [pos3[1]], [tan(angle1)], [tan(angle2)], [tan(angle3)]])
+        mat = np.zeros((n_pos, 3))
+        b = np.zeros((n_pos, 1))
+        for i in range(n_pos):
+            pos = positions[i]
 
-        res: np.ndarray = np.linalg.lstsq(mat, b)[0]
-        a, b, c = res[0][0], res[1][0], res[2][0]
-        # if abs(2 * a * pos2[0]) / abs(2 * a * pos2[0] + b) < 5 * 10e-2:
-        #     return linear_param(pos1, angle1, pos2, angle2, pos3, angle3) # TODO: fix
+            mat[i, 0] = pos[0] ** 2
+            mat[i, 1] = pos[0]
+            mat[i, 2] = 1
 
-        self.update_from_parameters(a, b, c)
+            b[i, 0] = pos[1]
+
+        x_diff = abs(positions[-1][0] - positions[0][0])
+        y_diff = abs(positions[-1][1] - positions[0][1])
+        if x_diff/y_diff < 4*10e-2:
+            linear = LinearCurve()
+            linear.update_from_data(positions, angles)
+            linear_params = linear.parameters
+            args = np.array([[0], [0], [linear_params[0]], [linear_params[1]]])
+        else:
+            res: np.ndarray = get_model(mat, b, 0.001)[0]
+
+            a, b, c = res[0][0], res[1][0], res[2][0]
+            args = np.array([[a], [b], [c]])
+
+        self.update_from_parameters(args)
 
     def function(self, x_val: float) -> float:
         a, b, c = self.parameters[0], self.parameters[1], self.parameters[2]
@@ -151,8 +165,8 @@ class QuadraticCurve(CurveApproximationTechnique):
 
         return [x_sol, func(x_sol)]
 
-    def update_from_parameters(self, *args) -> None:
-        a, b, c = args[0], args[1], args[2]
+    def update_from_parameters(self, args) -> None:
+        a, b, c = args[0, 0], args[1, 0], args[2, 0]
         self.parameters: List[float] = [a, b, c]
 
 
@@ -171,24 +185,40 @@ class CubicCurve(CurveApproximationTechnique):
         y_val: float = a * x_val ** 3 + b * x_val ** 2 + c * x_val + d
         return y_val
 
-    def update_from_data(self, pos1, angle1, pos2, angle2, pos3, angle3) -> None:
+    def update_from_data(self, positions, angles) -> None:
         # if abs(pos1[0] - pos2[0]) == 0 and abs(pos2[0] - pos3[0]): # TODO: fix
         #     return vertical_line_param(pos1, pos2)
+        n_pos = len(positions)
 
-        mat: np.ndarray = np.array([[pos1[0] ** 3, pos1[0] ** 2, pos1[0], 1], [pos3[0] ** 3, pos3[0] ** 2, pos3[0], 1],
-                                    [3 * pos1[0] ** 2, 2 * pos1[0], 1, 0], [3 * pos3[0] ** 2, 2 * pos3[0], 1, 0]])
-        b: np.ndarray = np.array([[pos1[1]], [pos3[1]], [tan(angle1)], [tan(angle3)]])
-        res: np.ndarray = np.linalg.lstsq(mat, b)[0]
+        mat = np.zeros((n_pos, 4))
+        b = np.zeros((n_pos, 1))
+        for i in range(n_pos):
+            pos = positions[i]
 
-        a, b, c, d = res[0][0], res[1][0], res[2][0], res[3][0]
+            mat[i, 0] = pos[0] ** 3
+            mat[i, 1] = pos[0] ** 2
+            mat[i, 2] = pos[0]
+            mat[i, 3] = 1
 
-        # if abs(3 * a * pos2[0] ** 2) / abs(3 * a * pos2[0] ** 2 + 2 * b * pos2[0] + c) < 5 * 10e-2: # TODO: fix
-        #     return quadratic_param(pos1, angle1, pos2, angle2, pos3, angle3)
+            b[i, 0] = pos[1]
 
-        self.update_from_parameters(a, b, c, d)
+        x_diff = abs(positions[-1][0] - positions[0][0])
+        y_diff = abs(positions[-1][1] - positions[0][1])
+        if x_diff/y_diff < 4*10e-2:
+            linear = LinearCurve()
+            linear.update_from_data(positions, angles)
+            linear_params = linear.parameters
+            args = np.array([[0], [0], [linear_params[0]], [linear_params[1]]])
+        else:
+            res: np.ndarray = get_model(mat, b, 0.0001)[0]
 
-    def update_from_parameters(self, *args) -> None:
-        a, b, c, d = args[0], args[0], args[0], args[0]
+            a, b, c, d = res[0][0], res[1][0], res[2][0], res[3][0]
+            args = np.array([[a], [b], [c], [d]])
+
+        self.update_from_parameters(args)
+
+    def update_from_parameters(self, args) -> None:
+        a, b, c, d = args[0, 0], args[1, 0], args[2, 0], args[3, 0]
         self.parameters = [a, b, c, d]
 
 

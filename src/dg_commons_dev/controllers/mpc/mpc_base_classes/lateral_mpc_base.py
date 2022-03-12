@@ -12,7 +12,7 @@ from dg_commons_dev.utils import SemiDef
 from dataclasses import dataclass
 from casadi import *
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, List
 
 
 vehicle_params = VehicleParameters.default_car()
@@ -115,8 +115,9 @@ class LatMPCKinBase(MPCKinBase, LateralController):
         self.current_beta = self.control_path.find_along_lane_initial_guess(self.current_position, self.along_lane,
                                                                             len(self.path.control_points))
         """ Update current state of the vehicle """
-        pos1, angle1, pos2, angle2, pos3, angle3 = self.next_pos(self.current_beta)
-        self.path_approx.update_from_data(pos1, angle1, pos2, angle2, pos3, angle3)
+        positions, angles = self.next_pos(self.current_beta)
+        self.path_approx.update_from_data(positions, angles)
+        pos1 = positions[0]
         params = self.path_approx.parameters
         """ Generate current path approximation """
         self.path_parameters = params[:self.path_approx.n_params]
@@ -162,29 +163,27 @@ class LatMPCKinBase(MPCKinBase, LateralController):
         _, mterm = self.cost.cost_function(error, inp)
         return mterm
 
-    def next_pos(self, current_beta) -> Tuple[np.ndarray, float, np.ndarray, float, np.ndarray, float]:
+    def next_pos(self, current_beta) -> Tuple[List[np.ndarray], List[float]]:
         """
         @param current_beta: current parametrized location on path
         @return: Three positions and three angles ahead of the current position on the path
         """
-        along_lane = self.path.along_lane_from_beta(current_beta)
+        num_pos = 10
         delta_step = self.delta_step()
-        along_lane1 = along_lane + delta_step/2
-        along_lane2 = along_lane1 + delta_step/2
+        single_step = delta_step/num_pos
+        along_lane = self.path.along_lane_from_beta(current_beta)
 
-        beta1, beta2, beta3 = current_beta, self.control_path.beta_from_along_lane(along_lane1), \
-            self.control_path.beta_from_along_lane(along_lane2)
+        positions, angles = [], []
+        for i in range(num_pos):
+            along_i = along_lane + i * single_step
+            beta_i = self.control_path.beta_from_along_lane(along_i)
+            q_i = self.path.center_point(beta_i)
+            pos_i, angle_i = translation_angle_from_SE2(q_i)
+            positions.append(pos_i)
+            angles.append(angle_i)
 
-        q1 = self.path.center_point(beta1)
-        q2 = self.path.center_point(beta2)
-        q3 = self.path.center_point(beta3)
-
-        pos1, angle1 = translation_angle_from_SE2(q1)
-        pos2, angle2 = translation_angle_from_SE2(q2)
-        pos3, angle3 = translation_angle_from_SE2(q3)
-
-        self.target_position = pos3
-        return pos1, angle1, pos2, angle2, pos3, angle3
+        self.target_position = positions[-1]
+        return positions, angles
 
     def delta_step(self) -> float:
         """
