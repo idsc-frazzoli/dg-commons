@@ -13,10 +13,7 @@ cover_packages=dg_commons
 
 parallel=-n auto --dist=loadfile
 coverage=--cov-config=.coveragerc --cov=$(cover_packages) --cov-report html
-
-xunitmp=--with-xunitmp --xunitmp-file=$(xunit_output)
 extra=--capture=no -v
-#  $(coverage)
 
 ################################
 clean:
