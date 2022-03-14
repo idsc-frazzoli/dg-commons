@@ -180,10 +180,10 @@ def adjust_axes_limits(
         players_limits = approximate_bounding_box_players(obj_list=players_states)
         if players_limits is not None:
             ax.axis(
-                xmin=players_limits[0][0]-20.,
-                xmax=players_limits[0][1]+20.,
-                ymin=players_limits[1][0]-20.,
-                ymax=players_limits[1][1]+20.,
+                xmin=players_limits[0][0],
+                xmax=players_limits[0][1],
+                ymin=players_limits[1][0],
+                ymax=players_limits[1][1],
             )
         else:
             ax.autoscale()
