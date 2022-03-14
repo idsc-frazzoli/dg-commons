@@ -85,7 +85,8 @@ class Stanley(LateralController):
         path_approx = True
         if path_approx:
             pos1, angle1, pos2, angle2, pos3, angle3 = self.next_pos(self.current_beta)
-            self.path_approx.update_from_data(pos1, angle1, pos2, angle2, pos3, angle3)
+            positions, angles = [pos1, pos2, pos3], [angle1, angle2, angle3]
+            self.path_approx.update_from_data(positions, angles)
             res = self.path_approx.parameters
             closest_point_func = self.path_approx.closest_point_on_path
 
