@@ -152,6 +152,24 @@ class DgSampledSequence(Generic[X]):
                 timestamps.append(t)
         return DgSampledSequence[YT](timestamps, values)
 
+    def get_partial(self, t_start: Timestamp, t_end: Timestamp) -> "DgSampledSequence[X]":
+        assert t_start >= self.timestamps[0] and t_end <= self.timestamps[-1], \
+            "Requested timestamps are out of range"
+        assert t_start < t_end, "t_start is not smaller than t_end."
+        timestamps = [t for t in self.timestamps if t_end > t > t_start]
+        values = [self.at_interp(t_start)]
+        for t in timestamps:
+            values.append(self.at(t))
+        values.append(self.at_interp(t_end))
+        timestamps.insert(0, t_start)
+        timestamps.append(t_end)
+        return DgSampledSequence[X](values=values, timestamps=timestamps)
+
+    def shift_sequence(self, dt: Timestamp) -> "DgSampledSequence[X]":
+        timestamps = [t+dt for t in self.timestamps]
+        return DgSampledSequence[X](values=self.values, timestamps=timestamps)
+
+
     def __iter__(self):
         return zip(self._timestamps, self._values).__iter__()
 

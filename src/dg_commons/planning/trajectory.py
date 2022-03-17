@@ -54,16 +54,16 @@ class Trajectory(DgSampledSequence[VehicleState]):
     def __add__(self, other: Optional["Trajectory"]) -> "Trajectory":
         assert self.is_connectable(other)
         values = list(self.values)
-        timestamps=list(self.timestamps)
+        timestamps = list(self.timestamps)
         if self.is_empty():
             other_val = list(other.values)
             other_timestamps = (list(other.timestamps))
         else:
             other_val = list(other.values[1:])
             other_timestamps = (list(other.timestamps[1:]))
-        values.append(other_val)
-        timestamps.append(other_timestamps)
-        return Trajectory(values=values[0], timestamps=timestamps[0])
+        values = values + other_val
+        timestamps = timestamps + other_timestamps
+        return Trajectory(values=values, timestamps=timestamps)
 
     def upsample(self, n: int) -> "Trajectory":
         """
