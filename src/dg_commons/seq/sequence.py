@@ -1,4 +1,4 @@
-from bisect import bisect_right
+from bisect import bisect_right, bisect_left
 from dataclasses import dataclass, InitVar, field
 from decimal import Decimal as D
 from typing import Generic, TypeVar, List, Callable, Type, Iterator, Union, get_args, Any, Sequence, Tuple
@@ -152,24 +152,20 @@ class DgSampledSequence(Generic[X]):
                 timestamps.append(t)
         return DgSampledSequence[YT](timestamps, values)
 
-    def get_partial(self, t_start: Timestamp, t_end: Timestamp) -> "DgSampledSequence[X]":
-        # todo: iterate with i over len of timestamps when t in [_
-        assert t_start >= self.timestamps[0] and t_end <= self.timestamps[-1], \
-            "Requested timestamps are out of range"
-        assert t_start < t_end, "t_start is not smaller than t_end."
-        
-        timestamps = []
-        values = []
-        for i in range(len(self.timestamps)):
-            if t_start <= self.timestamps[i] <= t_end:
-                timestamps.append(self.timestamps[i])
-                values.append((self.values[i]))
-        return DgSampledSequence[X](values=values, timestamps=timestamps)
+    def get_subsequence(self, from_ts: Timestamp, to_ts: Timestamp) -> "DgSampledSequence[X]":
+        """
+        @:return: A new sequence with the values between t_start and t_end (extrema included)
+        :param from_ts:
+        :param to_ts:
+        """
+        assert from_ts <= to_ts, f"Required t_start <= t_end, got {from_ts},{to_ts}."
+        from_idx = bisect_left(self._timestamps, from_ts)
+        to_idx = bisect_right(self._timestamps, to_ts)
+        return DgSampledSequence[X](timestamps=self._timestamps[from_idx:to_idx], values=self._values[from_idx:to_idx])
 
     def shift_sequence(self, dt: Timestamp) -> "DgSampledSequence[X]":
-        timestamps = [t+dt for t in self.timestamps]
-        return DgSampledSequence[X](values=self.values, timestamps=timestamps)
-
+        timestamps = (t + dt for t in self.timestamps)
+        return DgSampledSequence[X](timestamps=timestamps, values=self.values)
 
     def __iter__(self):
         return zip(self._timestamps, self._values).__iter__()
