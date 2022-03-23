@@ -46,11 +46,19 @@ class PlayerObservations:
 class SimObservations:
     """The observations from the simulator passed to each agent"""
 
-    players: MutableMapping[PlayerName, PlayerObservations]
+    players: Mapping[PlayerName, PlayerObservations]
     time: SimTime
 
 
-@dataclass(unsafe_hash=True, frozen=True)
+@dataclass(frozen=True)
+class InitSimObservations:
+    """The observations passed to the simulator on episode init"""
+
+    player_name: PlayerName
+    seed: int
+
+
+@dataclass(frozen=True)
 class LogEntry:
     """A log entry for a player"""
 

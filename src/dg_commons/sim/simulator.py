@@ -4,7 +4,7 @@ from itertools import combinations
 from time import perf_counter
 from typing import Mapping, Optional, List, Dict
 
-from dg_commons import PlayerName, U
+from dg_commons import PlayerName, U, fd
 from dg_commons.planning import PlanningGoal
 from dg_commons.sim import SimTime, CollisionReport, logger
 from dg_commons.sim.agents.agent import Agent, TAgent
@@ -87,11 +87,13 @@ class Simulator:
     def pre_update(self, sim_context: SimContext):
         """Prior to stepping the simulation we compute the observations for each agent"""
         self.last_observations.time = sim_context.time
-        self.last_observations.players = {}
+        players_observations: Dict[PlayerName, PlayerObservations] = {}
         for player_name, model in sim_context.models.items():
             # todo not always necessary to update observations
             player_obs = PlayerObservations(state=model.get_state(), occupancy=model.get_footprint())
-            self.last_observations.players.update({player_name: player_obs})
+            players_observations.update({player_name: player_obs})
+        self.last_observations.players = fd(players_observations)
+
         logger.debug(f"Pre update function, sim time {sim_context.time}")
         logger.debug(f"Last observations:\n{self.last_observations}")
         return
