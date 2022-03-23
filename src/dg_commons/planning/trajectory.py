@@ -157,6 +157,36 @@ class TrajectoryGraph(DiGraph):
 
         return trajectories
 
+    def get_all_trajectories_new(self) -> Set[Trajectory]:
+        assert is_directed_acyclic_graph(self)
+
+        trajectories = set()
+
+        roots = [node for node, degree in self.in_degree() if degree == 0]
+        assert len(roots) == 1
+        source = roots[0]
+        leaves = [node for node, degree in self.out_degree() if degree == 0]
+
+        for target in leaves:
+            # trajectories.add(self.get_trajectory(source=source, target=target))
+            trajectories.add(self.get_trajectory_through_nodes(source=source, target=target))
+
+        return trajectories
+
+    def get_all_cmds_new(self) -> Set[Trajectory]:
+        assert is_directed_acyclic_graph(self)
+
+        commands = set()
+
+        roots = [node for node, degree in self.in_degree() if degree == 0]
+        assert len(roots) == 1
+        source = roots[0]
+        leaves = [node for node, degree in self.out_degree() if degree == 0]
+
+        for target in leaves:
+            commands.add(self.get_commands_through_nodes(source=source, target=target))
+        return commands
+
     def get_all_trajs_and_commands(self) -> Set[Tuple[Trajectory, List[VehicleCommands]]]:
         assert is_directed_acyclic_graph(self)
 
@@ -182,7 +212,6 @@ class TrajectoryGraph(DiGraph):
         self.check_node(target)
         if not has_path(G=self, source=source, target=target):
             raise ValueError(f"No path exists between {source, target}!")
-
         nodes = shortest_path(G=self, source=source, target=target)
         traj: Trajectory = Trajectory(values=[], timestamps=[])
         for node1, node2 in zip(nodes[:-1], nodes[1:]):
@@ -201,17 +230,47 @@ class TrajectoryGraph(DiGraph):
             traj = traj.merge_unsafe(self.get_edge_data(u=node1, v=node2)["transition"])
         return traj
 
-    def get_command(self, source: TimedVehicleState, target: TimedVehicleState) -> List[VehicleCommands]:
+    def get_trajectory_through_nodes(self, source: TimedVehicleState, target: TimedVehicleState):
         self.check_node(source)
         self.check_node(target)
         if not has_path(G=self, source=source, target=target):
             raise ValueError(f"No path exists between {source, target}!")
 
         nodes = shortest_path(G=self, source=source, target=target)
-        commands: Trajectory = Trajectory(values=[], timestamps=[])
+        states = []
+        timestamps = []
+        for node in nodes:
+            timestamps.append(node[0])
+            states.append(node[1])
+        # todo: fix that this is not actually a Trajectory
+        return Trajectory(values=states, timestamps=timestamps)
+
+    #todo: [LEON] used
+    def get_commands_through_nodes(self, source: TimedVehicleState, target: TimedVehicleState):
+        self.check_node(source)
+        self.check_node(target)
+        if not has_path(G=self, source=source, target=target):
+            raise ValueError(f"No path exists between {source, target}!")
+
+        nodes = shortest_path(G=self, source=source, target=target)
+        commands = []
+        timestamps = []
         for node1, node2 in zip(nodes[:-1], nodes[1:]):
-            commands = commands.merge_unsafe(self.get_edge_data(u=node1, v=node2)["commands"])
-        return commands
+            commands.append(self.get_edge_data(u=node1, v=node2)["commands"])
+            timestamps.append(node1[0])
+        return DgSampledSequence[VehicleCommands](values=commands, timestamps=timestamps)
+
+    # def get_command(self, source: TimedVehicleState, target: TimedVehicleState) -> List[VehicleCommands]:
+    #     self.check_node(source)
+    #     self.check_node(target)
+    #     if not has_path(G=self, source=source, target=target):
+    #         raise ValueError(f"No path exists between {source, target}!")
+    #
+    #     nodes = shortest_path(G=self, source=source, target=target)
+    #     commands: Trajectory = Trajectory(values=[], timestamps=[])
+    #     for node1, node2 in zip(nodes[:-1], nodes[1:]):
+    #         commands = commands.merge_unsafe(self.get_edge_data(u=node1, v=node2)["commands"])
+    #     return commands
 
     def iterate_all_trajectories(self) -> Iterator[Trajectory]:
         all_traj = self.get_all_trajectories()
