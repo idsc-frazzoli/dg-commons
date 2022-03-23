@@ -154,16 +154,20 @@ class DgSampledSequence(Generic[X]):
 
     def get_subsequence(self, from_ts: Timestamp, to_ts: Timestamp) -> "DgSampledSequence[X]":
         """
-        @:return: A new sequence with the values between t_start and t_end (extrema included)
         :param from_ts:
         :param to_ts:
+        :return: A new sequence with the values between t_start and t_end (extrema included)
         """
         assert from_ts <= to_ts, f"Required t_start <= t_end, got {from_ts},{to_ts}."
         from_idx = bisect_left(self._timestamps, from_ts)
         to_idx = bisect_right(self._timestamps, to_ts)
         return DgSampledSequence[X](timestamps=self._timestamps[from_idx:to_idx], values=self._values[from_idx:to_idx])
 
-    def shift_sequence(self, dt: Timestamp) -> "DgSampledSequence[X]":
+    def shift_timestamps(self, dt: Timestamp) -> "DgSampledSequence[X]":
+        """
+        :param dt:
+        :return: A new sequence with the timestamps shifted by dt
+        """
         timestamps = (t + dt for t in self.timestamps)
         return DgSampledSequence[X](timestamps=timestamps, values=self.values)
 
