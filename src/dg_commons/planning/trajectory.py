@@ -52,33 +52,36 @@ class Trajectory(DgSampledSequence[VehicleState]):
         return len(self.timestamps) == 0 and len(self.values) == 0
 
     def __add__(self, other: Optional["Trajectory"]) -> "Trajectory":
+        """Adding two trajectories is merging them. It is checked that speed and steering angle are consistent
+        between the last state of a trajectory and the first state of the other trajectory."""
         assert self.is_connectable(other)
         values = list(self.values)
         timestamps = list(self.timestamps)
         if self.is_empty():
             other_val = list(other.values)
-            other_timestamps = (list(other.timestamps))
+            other_timestamps = list(other.timestamps)
         else:
             other_val = list(other.values[1:])
-            other_timestamps = (list(other.timestamps[1:]))
+            other_timestamps = list(other.timestamps[1:])
         values = values + other_val
         timestamps = timestamps + other_timestamps
         return Trajectory(values=values, timestamps=timestamps)
 
-    def merge_unsafe(self, other: Optional["Trajectory"]) -> "Trajectory":
-        """ Only checks that timestamps are consistent."""
+    def merge_unsafe(self, other: Optional["Trajectory"], tol=1e-3) -> "Trajectory":
+        """Only checks that timestamps between the end and start of the trajectories to merge are consistent."""
         if not self.is_empty():
-            assert self.timestamps[-1] == other.timestamps[0], "Timestamps of the trajectories are not connectable"
-        values = list(self.values)
-        timestamps = list(self.timestamps)
+            assert (
+                abs(self.timestamps[-1] - other.timestamps[0]) <= tol
+            ), "End and start timestamps of the trajectories to merge are not consistent."
         if self.is_empty():
             other_val = list(other.values)
-            other_timestamps = (list(other.timestamps))
+            other_timestamps = list(other.timestamps)
         else:
             other_val = list(other.values[1:])
-            other_timestamps = (list(other.timestamps[1:]))
-        values = values + other_val
-        timestamps = timestamps + other_timestamps
+            other_timestamps = list(other.timestamps[1:])
+
+        values = list(self.values) + other_val
+        timestamps = list(self.timestamps) + other_timestamps
         return Trajectory(values=values, timestamps=timestamps)
 
     def upsample(self, n: int) -> "Trajectory":
@@ -187,25 +190,37 @@ class TrajectoryGraph(DiGraph):
             commands.add(self.get_commands_through_nodes(source=source, target=target))
         return commands
 
-    def get_all_trajs_and_commands(self) -> Set[Tuple[Trajectory, List[VehicleCommands]]]:
-        assert is_directed_acyclic_graph(self)
+    # return the vehicle commands needed to follow a certain trajectory
+    def commands_from_trajectory(self, trajectory: Trajectory) -> DgSampledSequence:
+        # works only for one trajectory graph for each player
 
-        trajs_and_commands = set()
+        values = trajectory.values
+        timestamps = trajectory.timestamps
 
-        roots = [node for node, degree in self.in_degree() if degree == 0]
-        assert len(roots) == 1
-        source = roots[0]
-        leaves = [node for node, degree in self.out_degree() if degree == 0]
+        source = (timestamps[0], values[0])
+        target = (timestamps[-1], values[-1])
+        commands = self.get_commands_through_nodes(source, target)
+        return commands
 
-        for target in leaves:
-            # trajs_and_commands.add(
-            #     (self.get_trajectory(source=source, target=target), self.get_command(source=source, target=target))
-            # )
-            trajs_and_commands.add(
-                (self.get_trajectory_unsafe(source=source, target=target),
-                 self.get_command(source=source, target=target))
-            )
-        return trajs_and_commands
+    # def get_all_trajs_and_commands(self) -> Set[Tuple[Trajectory, List[VehicleCommands]]]:
+    #     assert is_directed_acyclic_graph(self)
+    #
+    #     trajs_and_commands = set()
+    #
+    #     roots = [node for node, degree in self.in_degree() if degree == 0]
+    #     assert len(roots) == 1
+    #     source = roots[0]
+    #     leaves = [node for node, degree in self.out_degree() if degree == 0]
+    #
+    #     for target in leaves:
+    #         # trajs_and_commands.add(
+    #         #     (self.get_trajectory(source=source, target=target), self.get_command(source=source, target=target))
+    #         # )
+    #         trajs_and_commands.add(
+    #             (self.get_trajectory_unsafe(source=source, target=target),
+    #              self.get_command(source=source, target=target))
+    #         )
+    #     return trajs_and_commands
 
     def get_trajectory(self, source: TimedVehicleState, target: TimedVehicleState) -> Trajectory:
         self.check_node(source)
@@ -245,7 +260,7 @@ class TrajectoryGraph(DiGraph):
         # todo: fix that this is not actually a Trajectory
         return Trajectory(values=states, timestamps=timestamps)
 
-    #todo: [LEON] used
+    # todo: [LEON] used
     def get_commands_through_nodes(self, source: TimedVehicleState, target: TimedVehicleState):
         self.check_node(source)
         self.check_node(target)
