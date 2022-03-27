@@ -1,3 +1,4 @@
+from dataclasses import replace
 from decimal import Decimal as D
 
 import numpy as np
@@ -12,8 +13,8 @@ def test_npagent():
 
     agent = NPAgent(cmds)
     ts_list = [D(i) for i in np.linspace(0, 6, 20)]
-    sim_obs = SimObservations({}, D(0))
+    sim_obs = SimObservations({}, time=D(0))
     for ts in ts_list:
-        sim_obs.time = ts
+        sim_obs = replace(sim_obs, time=ts)
         cmds = agent.get_commands(sim_obs=sim_obs)
         print(f"At {ts:.2f} agent cmds: {cmds}")
