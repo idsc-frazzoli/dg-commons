@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from decimal import Decimal
 from itertools import combinations
 from time import perf_counter
@@ -12,6 +12,7 @@ from dg_commons.sim.collision_utils import CollisionException
 from dg_commons.sim.models.obstacles_dyn import DynObstacleModel
 from dg_commons.sim.scenarios.structures import DgScenario
 from dg_commons.sim.simulator_structures import *
+from dg_commons.sim.simulator_structures import InitSimObservations
 from dg_commons.time import time_function
 
 
@@ -64,7 +65,7 @@ class Simulator:
     """
 
     # fixme check if this is okay once you have multiple simulators running together
-    last_observations: Optional[SimObservations] = SimObservations(players={}, time=Decimal(0))
+    last_observations: SimObservations = SimObservations(players=fd({}), time=Decimal(0))
     last_get_commands_ts: SimTime = SimTime("-Infinity")
     last_commands: Dict[PlayerName, U] = {}
     simlogger: Dict[PlayerName, PlayerLogger] = {}
@@ -72,7 +73,9 @@ class Simulator:
     @time_function
     def run(self, sim_context: SimContext):
         logger.info("Beginning simulation.")
+
         for player_name, player in sim_context.players.items():
+            init_obs = InitSimObservations(my_name=player_name, seed=sim_context.seed)
             player.on_episode_init(player_name)
             self.simlogger[player_name] = PlayerLogger()
         while not sim_context.sim_terminated:
@@ -86,13 +89,14 @@ class Simulator:
 
     def pre_update(self, sim_context: SimContext):
         """Prior to stepping the simulation we compute the observations for each agent"""
-        self.last_observations.time = sim_context.time
         players_observations: Dict[PlayerName, PlayerObservations] = {}
         for player_name, model in sim_context.models.items():
             # todo not always necessary to update observations
             player_obs = PlayerObservations(state=model.get_state(), occupancy=model.get_footprint())
             players_observations.update({player_name: player_obs})
-        self.last_observations.players = fd(players_observations)
+        self.last_observations = replace(
+            self.last_observations, players=fd(players_observations), time=sim_context.time
+        )
 
         logger.debug(f"Pre update function, sim time {sim_context.time}")
         logger.debug(f"Last observations:\n{self.last_observations}")

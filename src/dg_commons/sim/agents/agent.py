@@ -3,7 +3,7 @@ from typing import Callable, Optional, Any, TypeVar
 
 from dg_commons import DgSampledSequence, U, PlayerName, X
 from dg_commons.sim import SimTime
-from dg_commons.sim.simulator_structures import SimObservations
+from dg_commons.sim.simulator_structures import SimObservations, InitSimObservations
 
 __all__ = ["TAgent", "Agent", "NPAgent", "PolicyAgent"]
 
@@ -14,7 +14,7 @@ class Agent(ABC):
     """This provides the abstract interface of an agent"""
 
     @abstractmethod
-    def on_episode_init(self, my_name: PlayerName):
+    def on_episode_init(self, init_sim_obs: InitSimObservations):
         """This method will get called once for each player at the beginning of the simulation"""
         pass
 
@@ -44,7 +44,7 @@ class NPAgent(Agent):
         assert isinstance(commands_plan, DgSampledSequence)
         self.commands_plan = commands_plan
 
-    def on_episode_init(self, my_name: PlayerName):
+    def on_episode_init(self, init_sim_obs: InitSimObservations):
         pass
 
     def get_commands(self, sim_obs: SimObservations) -> U:
@@ -61,8 +61,8 @@ class PolicyAgent(Agent):
         self.policy = policy
         self.my_name: Optional[PlayerName] = None
 
-    def on_episode_init(self, my_name: PlayerName):
-        self.my_name = my_name
+    def on_episode_init(self, init_sim_obs: InitSimObservations):
+        self.my_name = init_sim_obs.my_name
 
     def get_commands(self, sim_obs: SimObservations) -> U:
         my_state: X = sim_obs.players[self.my_name]

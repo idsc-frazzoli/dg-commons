@@ -9,7 +9,7 @@ from dg_commons.controllers.speed import SpeedBehavior, SpeedController
 from dg_commons.controllers.steer import SteerController
 from dg_commons.maps import DgLanelet
 from dg_commons.planning.trajectory import Trajectory
-from dg_commons.sim import SimObservations, DrawableTrajectoryType
+from dg_commons.sim import SimObservations, DrawableTrajectoryType, InitSimObservations
 from dg_commons.sim.agents.agent import Agent
 from dg_commons.sim.models.vehicle import VehicleCommands, VehicleState
 from dg_commons.sim.models.vehicle_ligths import LightsCmd, LightsValues
@@ -40,9 +40,9 @@ class LFAgent(Agent):
         self._my_obs: Optional[X] = None
         self.lights_test_seq = DgSampledSequence[LightsCmd](timestamps=[0, 2, 4, 6, 8], values=list(LightsValues))
 
-    def on_episode_init(self, my_name: PlayerName):
-        self.my_name = my_name
-        self.speed_behavior.my_name = my_name
+    def on_episode_init(self, init_sim_obs: InitSimObservations):
+        self.my_name = init_sim_obs.my_name
+        self.speed_behavior.my_name = init_sim_obs
         self.pure_pursuit.update_path(self.ref_lane)
 
     def get_commands(self, sim_obs: SimObservations) -> VehicleCommands:
