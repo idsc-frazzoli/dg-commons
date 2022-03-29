@@ -76,7 +76,7 @@ class Simulator:
 
         for player_name, player in sim_context.players.items():
             init_obs = InitSimObservations(my_name=player_name, seed=sim_context.seed)
-            player.on_episode_init(player_name)
+            player.on_episode_init(init_obs)
             self.simlogger[player_name] = PlayerLogger()
         while not sim_context.sim_terminated:
             self.pre_update(sim_context)

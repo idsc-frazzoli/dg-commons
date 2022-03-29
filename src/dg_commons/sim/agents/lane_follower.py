@@ -42,7 +42,7 @@ class LFAgent(Agent):
 
     def on_episode_init(self, init_sim_obs: InitSimObservations):
         self.my_name = init_sim_obs.my_name
-        self.speed_behavior.my_name = init_sim_obs
+        self.speed_behavior.my_name = init_sim_obs.my_name
         self.pure_pursuit.update_path(self.ref_lane)
 
     def get_commands(self, sim_obs: SimObservations) -> VehicleCommands:
