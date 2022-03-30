@@ -168,7 +168,7 @@ class DgSampledSequence(Generic[X]):
         :param dt:
         :return: A new sequence with the timestamps shifted by dt
         """
-        timestamps = (t + dt for t in self.timestamps)
+        timestamps = [t + dt for t in self.timestamps]
         return DgSampledSequence[X](timestamps=timestamps, values=self.values)
 
     def __iter__(self):

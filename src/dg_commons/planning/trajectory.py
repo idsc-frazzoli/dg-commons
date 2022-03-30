@@ -50,8 +50,8 @@ class Trajectory(DgSampledSequence[VehicleState]):
     def is_empty(self):
         return len(self.timestamps) == 0 and len(self.values) == 0
 
-    def __add__(self, other: Optional["Trajectory"]) -> "Trajectory":
-        """Adding two trajectories is merging them. It is checked that speed and steering angle are consistent
+    def merge(self, other: Optional["Trajectory"]) -> "Trajectory":
+        """It is checked that speed and steering angle are consistent
         between the last state of a trajectory and the first state of the other trajectory."""
         assert self.is_connectable(other)
         values = list(self.values)
@@ -65,6 +65,31 @@ class Trajectory(DgSampledSequence[VehicleState]):
         values = values + other_val
         timestamps = timestamps + other_timestamps
         return Trajectory(values=values, timestamps=timestamps)
+
+    def scalar_multiply(self, scalar: float) -> "Trajectory":
+        """
+        Multiply all values of a trajectory by a scalar. x, y, theta, vx and delta will each be
+        multiplied by the same scalar.
+        """
+        values = [value * scalar for value in self.values]
+        return Trajectory(values=values, timestamps=self.timestamps)
+
+    def __add__(self, other: "Trajectory") -> "Trajectory":
+        """
+        Sum two trajectories, value by value.
+        """
+        assert self.timestamps == other.timestamps, "The timestamps must be equal sum the values of two trajectories."
+        values = []
+        for i, _ in enumerate(self.timestamps):
+            values.append(self.values[i] + other.values[i])
+
+        return Trajectory(values=values, timestamps=self.timestamps)
+
+    def __sub__(self, other: "Trajectory") -> "Trajectory":
+        """
+        Subtract one trajectory from another one, value by value.
+        """
+        return self + other.scalar_multiply(scalar=-1.0)
 
     def merge_unsafe(self, other: Optional["Trajectory"], tol=1e-3) -> "Trajectory":
         """Only checks that timestamps between the end and start of the trajectories to merge are consistent."""
@@ -105,6 +130,21 @@ class Trajectory(DgSampledSequence[VehicleState]):
         up_values.append(self.at(timestamps[-1]))
 
         return Trajectory(values=up_values, timestamps=up_timestamps)
+
+    def squared_error(self, other: "Trajectory") -> float:
+        """
+        Compute the average mean squared error for x, y, theta, vx, delta between two trajectories.
+        Then compute the average across these 5 averages.
+        """
+        assert self.timestamps == other.timestamps, "The timestamps must be equal to compute squared error."
+        diff = self - other
+        x_squared = sum([value.x * value.x for value in diff.values]) / len(diff.values)
+        y_squared = sum([value.y * value.y for value in diff.values]) / len(diff.values)
+        theta_squared = sum([value.theta * value.theta for value in diff.values]) / len(diff.values)
+        vx_squared = sum([value.vx * value.vx for value in diff.values]) / len(diff.values)
+        delta_squared = sum([value.delta * value.delta for value in diff.values]) / len(diff.values)
+
+        return (x_squared + y_squared + theta_squared + vx_squared + delta_squared) / 5.0
 
 
 JointTrajectories = Mapping[PlayerName, Trajectory]
@@ -159,7 +199,7 @@ class TrajectoryGraph(DiGraph):
 
         for target in leaves:
             # trajectories.add(self.get_trajectory(source=source, target=target))
-            trajectories.add(self.get_transitions(source=source, target=target))
+            trajectories.add(self.get_transition(source=source, target=target))
 
         return trajectories
 
@@ -203,7 +243,7 @@ class TrajectoryGraph(DiGraph):
             timestamps.append(node1[0])
         return DgSampledSequence[VehicleCommands](values=commands, timestamps=timestamps)
 
-    def get_transitions(self, source: TimedVehicleState, target: TimedVehicleState) -> Trajectory:
+    def get_transition(self, source: TimedVehicleState, target: TimedVehicleState) -> Trajectory:
         """
         Compute the shortest path between source and target nodes and return as trajectory of vehicle states.
         Merging trajectories is done by only checking timestamps consistency, since the trajectories generated
