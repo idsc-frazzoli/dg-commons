@@ -50,7 +50,7 @@ class Trajectory(DgSampledSequence[VehicleState]):
     def is_empty(self):
         return len(self.timestamps) == 0 and len(self.values) == 0
 
-    def merge(self, other: Optional["Trajectory"]) -> "Trajectory":
+    def merge(self, other: "Trajectory") -> "Trajectory":
         """It is checked that speed and steering angle are consistent
         between the last state of a trajectory and the first state of the other trajectory."""
         assert self.is_connectable(other)
@@ -91,7 +91,7 @@ class Trajectory(DgSampledSequence[VehicleState]):
         """
         return self + other.scalar_multiply(scalar=-1.0)
 
-    def merge_unsafe(self, other: Optional["Trajectory"], tol=1e-3) -> "Trajectory":
+    def merge_unsafe(self, other: "Trajectory", tol=1e-3) -> "Trajectory":
         """Only checks that timestamps between the end and start of the trajectories to merge are consistent."""
         if not self.is_empty():
             assert (
