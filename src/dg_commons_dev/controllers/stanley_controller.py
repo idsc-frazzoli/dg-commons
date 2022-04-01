@@ -115,8 +115,7 @@ class Stanley(LateralController):
         """
 
         along_lane = self.path.along_lane_from_beta(current_beta)
-        k = 10
-        delta_step = self.speed * 0.1 * k
+        delta_step = self.speed * 0.6 + 3
         along_lane1 = along_lane + delta_step / 2
         along_lane2 = along_lane1 + delta_step / 2
 

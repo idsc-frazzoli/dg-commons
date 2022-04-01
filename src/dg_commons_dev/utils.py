@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass, fields, asdict
 from typing import List
 import numpy as np
@@ -8,7 +9,8 @@ from typing import Any
 
 def sig_fig_round(number, n_digits=5, rounding=12):
     number = round(number, rounding)
-    return float(f"{number:.{n_digits}g}")
+    return_val = float(f"{number:.{n_digits}g}")
+    return return_val
 
 
 v_sig_fig_round = np.vectorize(sig_fig_round)
@@ -89,16 +91,12 @@ class SemiDef:
         return str(np.round(np.array(self.eig), 4))
 
     def __lt__(self, other):
-        self.eig.sort()
-        other.eig.sort()
-
-        return all(self.eig[i] < other.eig[i] for i, _ in enumerate(self.eig))
+        mat = other.matrix - self.matrix
+        return np.all(np.linalg.eigvals(mat) > 0)
 
     def __le__(self, other):
-        self.eig.sort()
-        other.eig.sort()
-
-        return all(self.eig[i] <= other.eig[i] for i, _ in enumerate(self.eig))
+        mat = other.matrix - self.matrix
+        return np.all(np.linalg.eigvals(mat) >= 0)
 
 
 @dataclass
