@@ -143,19 +143,19 @@ class LQR(LateralController):
 
         return self.u
 
-    def next_pos(self, current_beta: float) -> Tuple[np.ndarray, float, np.ndarray, float, np.ndarray, float]:
+    def next_pos(self, current_beta) -> Tuple[np.ndarray, float, np.ndarray, float, np.ndarray, float]:
         """
         @param current_beta: current parametrized location on path
         @return: Three positions and three angles ahead of the current position on the path
         """
+
         along_lane = self.path.along_lane_from_beta(current_beta)
-        k = 2
-        delta_step = self.speed * 0.1 * k
+        delta_step = self.speed*0.6 + 10
         along_lane1 = along_lane + delta_step / 2
         along_lane2 = along_lane1 + delta_step / 2
 
         beta1, beta2, beta3 = current_beta, self.control_path.beta_from_along_lane(along_lane1), \
-            self.control_path.beta_from_along_lane(along_lane2)
+                              self.control_path.beta_from_along_lane(along_lane2)
 
         q1 = self.path.center_point(beta1)
         q2 = self.path.center_point(beta2)
@@ -164,5 +164,6 @@ class LQR(LateralController):
         pos1, angle1 = translation_angle_from_SE2(q1)
         pos2, angle2 = translation_angle_from_SE2(q2)
         pos3, angle3 = translation_angle_from_SE2(q3)
+
         self.target_position = pos3
         return pos1, angle1, pos2, angle2, pos3, angle3

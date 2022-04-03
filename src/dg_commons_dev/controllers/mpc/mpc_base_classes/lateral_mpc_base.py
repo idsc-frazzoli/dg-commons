@@ -23,7 +23,7 @@ class LatMPCKinBaseParam(MPCKinBAseParam):
     cost: CostFunctions = QuadraticCost
     """ Cost function """
     cost_params: CostParameters = QuadraticParams(
-        q=SemiDef(matrix=np.eye(2)),
+        q=SemiDef(matrix=np.eye(3)),
         r=SemiDef(matrix=np.eye(1))
     )
     """ Cost function parameters """
@@ -142,7 +142,7 @@ class LatMPCKinBase(MPCKinBase, LateralController):
         @param target_angle: target orientation
         @return: symbolic stage cost
         """
-        error = [target_x - self.state_x, target_y - self.state_y]
+        error = [target_x - self.state_x, target_y - self.state_y, self.delta]
         inp = [self.v_delta]
 
         lterm, _ = self.cost.cost_function(error, inp)
@@ -157,7 +157,7 @@ class LatMPCKinBase(MPCKinBase, LateralController):
         @param target_angle: target orientation
         @return: symbolic final cost
         """
-        error = [target_x - self.state_x, target_y - self.state_y]
+        error = [target_x - self.state_x, target_y - self.state_y, self.delta]
         inp = [self.v_delta]
 
         _, mterm = self.cost.cost_function(error, inp)
@@ -190,7 +190,8 @@ class LatMPCKinBase(MPCKinBase, LateralController):
         How far to look ahead
         @return: distance along path
         """
-        return self.current_speed*self.params.t_step*self.params.n_horizon
+        delta = 0.9*self.current_speed*self.params.t_step*self.params.n_horizon
+        return delta
 
     def set_bounds(self) -> None:
         """
