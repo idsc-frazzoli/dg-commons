@@ -174,7 +174,7 @@ class VehicleModelDyn(VehicleModel):
             Facc2_sat = Facc2 * math.sqrt(1 - (F2y / (F2_n * self.pacejka_rear.D)) ** 2)
 
             # Drag Force
-            F_drag = -0.5 * x0.vx * self.vg.a_drag * self.vg.c_drag * rho ** 2
+            F_drag = -0.5 * x0.vx * self.vg.a_drag * self.vg.c_drag * rho**2
             # longitudinal acceleration
             acc_x = (F1[0] + F_drag + Facc2_sat) / m + x0.dtheta * x0.vy
 

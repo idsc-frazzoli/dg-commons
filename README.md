@@ -14,7 +14,7 @@ on multi-agent planning and decision-making.
 <tr>
 <td>
 
-![simulation_gif]()
+![solutions-multilaneint5psets-solutions-solver2puresecuritymNEfact2noextra-joint-joint-0](https://user-images.githubusercontent.com/18750753/162696592-3ad8801d-21d8-4b5d-856f-fd799278a5bb.gif)
 
 [Multi-agent simulation](#multi-agent-simulation)
 
@@ -26,9 +26,8 @@ on multi-agent planning and decision-making.
 
 <td>
 
-![commonroad_gif]()
-
-[Commonroad integration](#commonroad-integration)
+![ezgif com-gif-maker (1)](https://user-images.githubusercontent.com/18750753/162698234-cdbee571-2a84-462e-95e8-d6f8b7cdad09.gif)
+[Probabilistic sensors](#probabilistic-sensors)
 
 
 </tr>
@@ -80,8 +79,6 @@ pre-commit run --all-files
 
 The tools contained in this package have contributed to the following publications:
 
-- **Posetal Games: Efficiency, Existence, and Refinement of Equilibria in Games with Prioritized Metrics**
-  - [RAL](https://ieeexplore.ieee.org/document/9650727)
-  _A. Zanardi*, G. Zardini*, S. Srinivasan, S. Bolognani, A. Censi, F. Dörfler, E. Frazzoli_
+- [**Posetal Games: Efficiency, Existence, and Refinement of Equilibria in Games with Prioritized Metrics**](https://ieeexplore.ieee.org/document/9650727) - _A. Zanardi*, G. Zardini*, S. Srinivasan, S. Bolognani, A. Censi, F. Dörfler, E. Frazzoli_
 
 - ...

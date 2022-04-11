@@ -1,9 +1,10 @@
 import math
 from itertools import chain
-from typing import Mapping, List, Union, Optional, Sequence
+from typing import Mapping, List, Union, Optional, Sequence, Iterable
 
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
+from matplotlib.artist import Artist
 from matplotlib.axes import Axes
 from toolz.sandbox import unzip
 from zuper_commons.types import ZValueError
@@ -64,7 +65,7 @@ def create_animation(
     plot_ligths: bool = True
 
     # self.f.set_size_inches(*fig_size)
-    def _get_list() -> List:
+    def _get_list() -> List[Artist]:
         # fixme this is supposed to be an iterable of artists
         return (
             list(chain.from_iterable(states.values()))
@@ -75,7 +76,7 @@ def create_animation(
             + list(texts.values())
         )
 
-    def init_plot():
+    def init_plot() -> Iterable[Artist]:
         ax.clear()
         with sim_viz.plot_arena(ax=ax):
             init_log_entry: Mapping[PlayerName, LogEntry] = sim_context.log.at_interp(time_begin)
@@ -111,7 +112,7 @@ def create_animation(
             )
         return _get_list()
 
-    def update_plot(frame: int = 0):
+    def update_plot(frame: int = 0) -> Iterable[Artist]:
         t: float = frame * dt / 1000.0
         logger.info(f"Plotting t = {t}\r")
         log_at_t: Mapping[PlayerName, LogEntry] = sim_context.log.at_interp(t)
@@ -178,13 +179,13 @@ def adjust_axes_limits(
         if plot_limits is None:
             raise ZValueError('Plotting with "auto" option requires players positions')
         players_limits = approximate_bounding_box_players(obj_list=players_states)
-        #todo instead of artificially add +5 -5, make bounding box around trajectories + vehicle
+        # todo instead of artificially add +5 -5, make bounding box around trajectories + vehicle
         if players_limits is not None:
             ax.axis(
-                xmin=players_limits[0][0]-5.,
-                xmax=players_limits[0][1]+5.,
-                ymin=players_limits[1][0]-5.,
-                ymax=players_limits[1][1]+5.,
+                xmin=players_limits[0][0] - 5.0,
+                xmax=players_limits[0][1] + 5.0,
+                ymin=players_limits[1][0] - 5.0,
+                ymax=players_limits[1][1] + 5.0,
             )
         else:
             ax.autoscale()
