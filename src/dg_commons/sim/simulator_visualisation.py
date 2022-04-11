@@ -18,7 +18,6 @@ from dg_commons import Color, transform_xy, apply_SE2_to_shapely_geo
 from dg_commons import PlayerName, X, U
 from dg_commons.maps.shapely_viz import ShapelyViz
 from dg_commons.planning.trajectory import Trajectory
-from dg_commons.sim.models import extract_pose_from_state
 from dg_commons.sim.models.obstacles_dyn import DynObstacleState, DynObstacleModel
 from dg_commons.sim.models.pedestrian import PedestrianState, PedestrianGeometry
 from dg_commons.sim.models.spacecraft import SpacecraftState
@@ -208,13 +207,14 @@ def plot_vehicle(
     lights_patches: Optional[List[Circle]] = None,
     plot_wheels: bool = False,
     plot_ligths: bool = False,
+    **style_kwargs,
 ) -> Tuple[List[Polygon], List[Circle]]:
     """"""
     vehicle_outline: Sequence[Tuple[float, float], ...] = vg.outline
     vehicle_color: Color = vg.color
     q = SE2_from_xytheta((state.x, state.y, state.theta))
     if vehicle_poly is None:
-        vehicle_box = ax.fill([], [], color=vehicle_color, alpha=alpha, zorder=ZOrders.MODEL)[0]
+        vehicle_box = ax.fill([], [], color=vehicle_color, alpha=alpha, zorder=ZOrders.MODEL, **style_kwargs)[0]
         vehicle_poly = [
             vehicle_box,
         ]
