@@ -88,7 +88,7 @@ class DgLanelet:
 
     @classmethod
     def from_vertices(
-            cls, left_vertices: np.ndarray, right_vertices: np.ndarray, center_vertices: np.ndarray
+        cls, left_vertices: np.ndarray, right_vertices: np.ndarray, center_vertices: np.ndarray
     ) -> "DgLanelet":
         ctr_points = []
         for i, center in enumerate(center_vertices):

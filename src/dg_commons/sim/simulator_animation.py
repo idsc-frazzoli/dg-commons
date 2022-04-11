@@ -178,13 +178,13 @@ def adjust_axes_limits(
         if plot_limits is None:
             raise ZValueError('Plotting with "auto" option requires players positions')
         players_limits = approximate_bounding_box_players(obj_list=players_states)
-        #todo instead of artificially add +5 -5, make bounding box around trajectories + vehicle
+        # todo instead of artificially add +5 -5, make bounding box around trajectories + vehicle
         if players_limits is not None:
             ax.axis(
-                xmin=players_limits[0][0]-5.,
-                xmax=players_limits[0][1]+5.,
-                ymin=players_limits[1][0]-5.,
-                ymax=players_limits[1][1]+5.,
+                xmin=players_limits[0][0] - 5.0,
+                xmax=players_limits[0][1] + 5.0,
+                ymin=players_limits[1][0] - 5.0,
+                ymax=players_limits[1][1] + 5.0,
             )
         else:
             ax.autoscale()

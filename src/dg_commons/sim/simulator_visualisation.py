@@ -40,7 +40,7 @@ class SimRendererABC(Generic[X, U], ABC):
 
     @abstractmethod
     def plot_player(
-            self, ax: Axes, player_name: PlayerName, state: X, lights_colors: LightsColors, alpha: float = 1.0, box=None
+        self, ax: Axes, player_name: PlayerName, state: X, lights_colors: LightsColors, alpha: float = 1.0, box=None
     ):
         """Draw the player at a certain state doing certain commands (if given)"""
         pass
@@ -79,16 +79,16 @@ class SimRenderer(SimRendererABC):
         yield
 
     def plot_player(
-            self,
-            ax: Axes,
-            player_name: PlayerName,
-            state: X,
-            lights_colors: Optional[LightsColors],
-            model_poly: Optional[List[Polygon]] = None,
-            lights_patches: Optional[List[Circle]] = None,
-            alpha: float = 0.6,
-            plot_wheels: bool = False,
-            plot_lights: bool = False,
+        self,
+        ax: Axes,
+        player_name: PlayerName,
+        state: X,
+        lights_colors: Optional[LightsColors],
+        model_poly: Optional[List[Polygon]] = None,
+        lights_patches: Optional[List[Circle]] = None,
+        alpha: float = 0.6,
+        plot_wheels: bool = False,
+        plot_lights: bool = False,
     ) -> Tuple[List[Polygon], List[Circle]]:
         """Draw the player the state."""
         # todo make it nicer with a map of plotting functions based on the state type
@@ -142,15 +142,15 @@ class SimRenderer(SimRendererABC):
             raise ZValueError(msg=f"Unknown state type, {type(state)}", state=state)
 
     def plot_trajectories(
-            self,
-            ax: Axes,
-            player_name: PlayerName,
-            trajectories: Sequence[Trajectory],
-            traj_lines: Optional[List[LineCollection]] = None,
-            traj_points: Optional[List[PathCollection]] = None,
-            colors: Optional[List[Color]] = None,
-            width: float = 1,
-            alpha: float = 1,
+        self,
+        ax: Axes,
+        player_name: PlayerName,
+        trajectories: Sequence[Trajectory],
+        traj_lines: Optional[List[LineCollection]] = None,
+        traj_points: Optional[List[PathCollection]] = None,
+        colors: Optional[List[Color]] = None,
+        width: float = 1,
+        alpha: float = 1,
     ) -> Tuple[List[LineCollection], List[PathCollection]]:
         mg = self.sim_context.models[player_name].get_geometry()
         assert colors is None or len(colors) == len(trajectories)
@@ -167,13 +167,13 @@ class SimRenderer(SimRendererABC):
 
 
 def plot_trajectories(
-        ax: Axes,
-        trajectories: Sequence[Trajectory],
-        traj_lines: Optional[List[LineCollection]] = None,
-        traj_points: Optional[List[PathCollection]] = None,
-        colors: Union[List[Color], Color] = None,
-        width: float = 1,
-        alpha: float = 1,
+    ax: Axes,
+    trajectories: Sequence[Trajectory],
+    traj_lines: Optional[List[LineCollection]] = None,
+    traj_points: Optional[List[PathCollection]] = None,
+    colors: Union[List[Color], Color] = None,
+    width: float = 1,
+    alpha: float = 1,
 ) -> Tuple[List[LineCollection], List[PathCollection]]:
     segments, mcolor = [], []
     for traj in trajectories:
@@ -198,16 +198,16 @@ def plot_trajectories(
 
 
 def plot_vehicle(
-        ax: Axes,
-        player_name: PlayerName,
-        state: VehicleState,
-        lights_colors: LightsColors,
-        vg: VehicleGeometry,
-        alpha: float,
-        vehicle_poly: Optional[List[Polygon]] = None,
-        lights_patches: Optional[List[Circle]] = None,
-        plot_wheels: bool = False,
-        plot_ligths: bool = False,
+    ax: Axes,
+    player_name: PlayerName,
+    state: VehicleState,
+    lights_colors: LightsColors,
+    vg: VehicleGeometry,
+    alpha: float,
+    vehicle_poly: Optional[List[Polygon]] = None,
+    lights_patches: Optional[List[Circle]] = None,
+    plot_wheels: bool = False,
+    plot_ligths: bool = False,
 ) -> Tuple[List[Polygon], List[Circle]]:
     """"""
     vehicle_outline: Sequence[Tuple[float, float], ...] = vg.outline
@@ -273,12 +273,12 @@ def plot_history(ax: Axes, state: VehicleState, vg: VehicleGeometry, traces: Opt
 
 
 def plot_pedestrian(
-        ax: Axes,
-        player_name: PlayerName,
-        state: PedestrianState,
-        pg: PedestrianGeometry,
-        alpha: float,
-        ped_poly: Optional[List[Polygon]],
+    ax: Axes,
+    player_name: PlayerName,
+    state: PedestrianState,
+    pg: PedestrianGeometry,
+    alpha: float,
+    ped_poly: Optional[List[Polygon]],
 ) -> List[Polygon]:
     q = SE2_from_xytheta((state.x, state.y, state.theta))
     if ped_poly is None:
@@ -297,12 +297,12 @@ def plot_pedestrian(
 
 
 def plot_spacecraft(
-        ax: Axes,
-        player_name: PlayerName,
-        state: SpacecraftState,
-        sg: SpacecraftGeometry,
-        alpha: float,
-        scraft_poly: Optional[List[Polygon]],
+    ax: Axes,
+    player_name: PlayerName,
+    state: SpacecraftState,
+    sg: SpacecraftGeometry,
+    alpha: float,
+    scraft_poly: Optional[List[Polygon]],
 ) -> List[Polygon]:
     q = SE2_from_xytheta((state.x, state.y, state.psi))
     if scraft_poly is None:
