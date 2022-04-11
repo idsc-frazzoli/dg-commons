@@ -53,3 +53,8 @@ def test_commands_sampler():
 
     traject = mpg.generate(x0)
     _viz(traject, "CommandsSampler")
+
+
+if __name__ == "__main__":
+    test_generate_motion_primitives()
+    test_commands_sampler()

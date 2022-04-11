@@ -11,12 +11,10 @@ xunit_output=$(tr)/nose-$(CIRCLE_NODE_INDEX)-xunit.xml
 test_packages=dg_commons_tests
 cover_packages=dg_commons
 
-parallel=--workers auto
+parallel=-n auto --dist=loadfile
 coverage=--cov-config=.coveragerc --cov=$(cover_packages) --cov-report html
+extra=--capture=no -v
 
-xunitmp=--with-xunitmp --xunitmp-file=$(xunit_output)
-extra=--capture=tee-sys
-#  $(coverage)
 ################################
 clean:
 	coverage erase

@@ -3,6 +3,9 @@ ARG PYTHON_VERSION_
 FROM python:${PYTHON_VERSION_}
 ARG PYTHON_VERSION_
 
+# upgrade pip
+RUN pip install --upgrade pip
+
 # Copy dependencies file
 COPY dependencies-apt.txt /tmp/
 
