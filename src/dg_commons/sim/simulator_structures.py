@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import MutableMapping, Generic, Any, Dict, Mapping, Tuple, Optional
+from typing import Generic, Any, Dict, Mapping, Tuple, Optional
 
 from geometry import SE2value, T2value
 from shapely.geometry import Polygon
@@ -14,6 +14,7 @@ from dg_commons.sim.models.model_structures import ModelGeometry, ModelType
 
 __all__ = [
     "SimObservations",
+    "InitSimObservations",
     "SimParameters",
     "SimModel",
     "SimLog",
@@ -36,21 +37,29 @@ class SimParameters:
     """The simulation time for which to continue after the first collision is detected [s]"""
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlayerObservations:
     state: X
     occupancy: Optional[Polygon]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SimObservations:
     """The observations from the simulator passed to each agent"""
 
-    players: MutableMapping[PlayerName, PlayerObservations]
+    players: Mapping[PlayerName, PlayerObservations]
     time: SimTime
 
 
-@dataclass(unsafe_hash=True, frozen=True)
+@dataclass(frozen=True)
+class InitSimObservations:
+    """The observations passed to the simulator on episode init"""
+
+    my_name: PlayerName
+    seed: int
+
+
+@dataclass(frozen=True)
 class LogEntry:
     """A log entry for a player"""
 

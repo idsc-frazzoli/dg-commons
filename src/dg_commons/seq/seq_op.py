@@ -15,6 +15,9 @@ def seq_integrate(sequence: DgSampledSequence[float]) -> DgSampledSequence[float
     if not sequence:
         msg = "Cannot integrate empty sequence."
         raise ValueError(msg)
+    # if sequence is made up by a single value and timestamp
+    if len(sequence.values) == 1:
+        return sequence
     total = 0.0
     timestamps = []
     values = []

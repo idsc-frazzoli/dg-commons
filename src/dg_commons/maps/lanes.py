@@ -301,3 +301,7 @@ class DgLanelet:
             points_right.append(SE2_apply_T2(q, delta_right))
 
         return points_right + list(reversed(points_left))
+
+    @property
+    def get_control_points(self):
+        return self.control_points

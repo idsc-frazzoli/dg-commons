@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from math import pi
-from typing import Optional, Tuple, MutableMapping, Dict
+from typing import Optional, Tuple, Dict, Mapping
 
 import numpy as np
 from geometry import SE2value
@@ -51,11 +51,11 @@ class SpeedBehavior:
     def __init__(self, my_name: Optional[PlayerName] = None):
         self.params: SpeedBehaviorParam = SpeedBehaviorParam()
         self.my_name: PlayerName = my_name
-        self.agents: Optional[MutableMapping[PlayerName, PlayerObservations]] = None
+        self.agents: Optional[Mapping[PlayerName, PlayerObservations]] = None
         self.speed_ref: float = 0
         """ The speed reference"""
 
-    def update_observations(self, agents: MutableMapping[PlayerName, PlayerObservations]):
+    def update_observations(self, agents: Mapping[PlayerName, PlayerObservations]):
         self.agents = agents
 
     def get_speed_ref(self, at: float) -> (float, bool):

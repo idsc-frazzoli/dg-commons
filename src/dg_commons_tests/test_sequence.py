@@ -45,6 +45,12 @@ def test_dg_sampledsequence():
         assert s.at_interp(D(-2)) == 1
         assert s.at_interp(3.5) == 3.5
         assert s.at_interp(D(3.5)) == 3.5
+        assert s.get_subsequence(0, 0.5).values == ()  # out before
+        assert s.get_subsequence(5.5, 8.5).values == ()  # out after
+        assert s.get_subsequence(2, 4).values == (2, 3, 4)  # end included
+        assert s.get_subsequence(2.5, 3.5).values == (3,)  # in between
+        assert s.get_subsequence(3, 10).values == (3, 4, 5)  # left included
+        assert s.get_subsequence(2.2, 5).values == (2, 3, 4, 5)  # extrema included
 
     def illegal_timestamps():
         ts = [D(0), 1]

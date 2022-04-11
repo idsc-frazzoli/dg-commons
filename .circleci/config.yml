@@ -67,16 +67,9 @@ jobs:
       - run:
           name: Run tests
           command: |
-            make test-parallel
+            make test
       - store_test_results:
           path: out/test-results
-      - run:
-          name: Coverage report
-          when: always
-          command: |
-            make coverage-combine
-            make coverage-report
-            coverage xml
       - store_artifacts:
           path: out/coverage
           destination: coverage
@@ -84,6 +77,7 @@ jobs:
           name: CodeCov
           when: always
           command: |
+            coverage xml
             codecov
 
 
