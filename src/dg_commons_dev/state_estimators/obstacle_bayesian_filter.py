@@ -5,12 +5,12 @@ import numpy as np
 from geometry import SE2_from_translation_angle, rot2d_from_angle
 from dg_commons.sim.models.vehicle import VehicleGeometry
 from dg_commons.sim.models.vehicle_utils import VehicleParameters
-from typing import Tuple, List
+from typing import Tuple, List, Union
 from dataclasses import dataclass
 from dg_commons_dev.utils import BaseParams
 from dg_commons_dev.state_estimators.estimator_types import Estimator
 from dg_commons_dev.state_estimators.utils import Poisson, PoissonParams, CircularGrid
-from dg_commons_dev.state_estimators.temp_curve import PCurve
+from dg_commons_dev.state_estimators.temp_curve import PCurve, SensingCurve, get_sensor_curves
 from dg_commons.geo import SE2_apply_T2
 from dg_commons import X
 import matplotlib.pyplot as plt
@@ -19,6 +19,17 @@ import time
 from scipy.ndimage import measurements
 from shapely.geometry import Point, Polygon, MultiPoint, LineString, shape
 from shapely.affinity import affine_transform
+from scipy.sparse import csr_matrix
+
+
+def polar(x, y) -> tuple:
+    """returns rho, theta (degrees)"""
+    rho = np.hypot(x, y)
+    theta = np.arctan2(y, x)
+    theta = 2 * math.pi + theta if theta < 0 else theta
+    if np.isclose(theta, 2 * math.pi):
+        theta = 0
+    return rho, theta
 
 
 @dataclass
@@ -26,21 +37,17 @@ class ObstacleBayesianParam(BaseParams):
     ratio_area_area_obs: float = 0.01
     """ Expected ratio total area to area occupied by obstacles"""
 
-    fp_distribution: PCurve = PCurve(0.05)
-    """ FN distribution """
-    fn_distribution: PCurve = PCurve(0.05)
-    """ FP distribution """
-    acc_distribution: PCurve = PCurve(0.05)
-    """ Acc distribution """
+    sensor: Union[str, Tuple[PCurve, PCurve, PCurve]] = 'Ace13gm_day_faster_rcnn1'
 
-    grid_radius: float = 10
-    """ Radius of circular grid considered """
-    n_points: int = 10
-    """ Number of points on a line """
-    n_lines: int = 10
-    """ Number of lines """
     distance_to_first_ring: float = 2
     """ Distance from center of lidar to first detection ring """
+
+    n_lines: int = 10
+    """ Number of lines """
+    max_n_points: int = 100
+    """ Maximum number of points. # points = min(max_n_points, points provided by sensor) """
+    max_radius: float = 40
+    """ Maximum radius size. Radius size = min(max_radius, max radius considered by sensor) """
 
     geometry_params: VehicleGeometry = VehicleGeometry.default_car()
     """ Vehicle Geometry """
@@ -48,6 +55,19 @@ class ObstacleBayesianParam(BaseParams):
     """ Vehicle Parameters """
     t_step: float = 0.1
     """ Time interval between two calls """
+
+    def __post_init__(self):
+        if isinstance(self.sensor, str):
+            self.fp_distribution, self.fn_distribution, self.acc_distribution = \
+                get_sensor_curves(self.sensor, self.distance_to_first_ring, self.max_radius, self.max_n_points)
+
+            self.grid_radius: float = self.acc_distribution.max_distance
+            self.n_points: int = self.acc_distribution.n_points
+        else:
+            self.fp_distribution, self.fn_distribution, self.acc_distribution = \
+                self.sensor[0], self.sensor[1], self.sensor[2]
+            self.grid_radius: float = self.max_radius
+            self.n_points: float = self.max_n_points
 
 
 class ObstacleBayesian(Estimator):
@@ -57,7 +77,6 @@ class ObstacleBayesian(Estimator):
     def __init__(self, params: ObstacleBayesianParam, generate_lidar_plot: bool = False):
         self.params: ObstacleBayesianParam = params
         self.generate_moving_dist: bool = generate_lidar_plot
-
         self.current_belief = CircularGrid(self.params.grid_radius, self.params.n_points,
                                            self.params.n_lines, self.params.distance_to_first_ring)
         self.shape = self.current_belief.values.shape
@@ -114,13 +133,14 @@ class ObstacleBayesian(Estimator):
         @param max_dependency_dist: dependency between detections that are more distant than this parameter is discarded
         """
         current_b = self.current_belief.as_numpy()
-
         mat = self.p_did_not_cause_any_given_d_only(detections, max_dependency_dist)
-        num = np.multiply(1-self.fn, current_b)
+        num = np.multiply(1 - self.fn, current_b)
         den = num + np.multiply(self.fp, 1-current_b)
+        den = np.where(den == 0, 10e-6, den)
         p_obs_given_causing = np.divide(num, den)
         num = np.multiply(self.fn, current_b)
         den = num + np.multiply(1-self.fp, 1 - current_b)
+        den = np.where(den == 0, 10e-6, den)
         p_obs_given_not_causing = np.divide(num, den)
 
         result = np.multiply(p_obs_given_causing, 1-mat) + np.multiply(p_obs_given_not_causing, mat)
@@ -139,19 +159,89 @@ class ObstacleBayesian(Estimator):
         @param max_dependency_dist: dependency between detections that are more distant than this parameter is discarded
         @return: array with the previously described probabilities at each grid point
         """
-        involvement = {}
-        candidates = []
-        independent: bool = max_dependency_dist == 0
+        # involvement = {}
+        # candidates = []
+        # independent: bool = max_dependency_dist == 0
         res = np.ones(self.shape)
-        for detection in detections:
-            in_accuracy: np.ndarray = np.where((self.pos_x - self.acc <= detection[0]) &
-                                               (detection[0] <= self.pos_x + self.acc) &
-                                               (self.pos_y - self.acc <= detection[1]) &
-                                               (detection[1] <= self.pos_y + self.acc),
-                                               self.p_detection_given_origin, 0)
 
+        minus_x, plus_x = self.pos_x - self.acc, self.pos_x + self.acc
+        minus_y, plus_y = self.pos_y - self.acc, self.pos_y + self.acc
+
+        thetas = self.current_belief.degrees
+
+        for detection in detections:
+            rho, theta = polar(detection[0], detection[1])
+            theta_idx = np.searchsorted(thetas, theta)
+
+            minus_x_prime = minus_x[theta_idx, :]
+            plus_x_prime = plus_x[theta_idx, :]
+            minus_y_prime = minus_y[theta_idx, :]
+            plus_y_prime = plus_y[theta_idx, :]
+            p_det_prime = self.p_detection_given_origin[theta_idx, :]
+
+            in_accuracy = np.where((minus_x_prime < detection[0]) &
+                                   (detection[0] < plus_x_prime) &
+                                   (minus_y_prime < detection[1]) &
+                                   (detection[1] < plus_y_prime),
+                                   p_det_prime, 0)
             sum_acc_prob: float = float(np.sum(in_accuracy))
             in_accuracy = in_accuracy / sum_acc_prob if sum_acc_prob != 0 else in_accuracy
+
+            res[theta_idx, :] = np.multiply(res[theta_idx, :], 1 - in_accuracy)
+
+        '''for detection in detections:
+            rho, theta = polar(detection[0], detection[1])
+            rho_idx = min(np.searchsorted(distances, rho), n_distances-1)
+            theta_idx = np.searchsorted(thetas, theta)
+            if theta_idx >= n_thetas - 1 and abs(theta - thetas[-1]) > abs(theta - 2*math.pi):
+                theta_idx = 0
+            s_factor = 1.5
+            acc = self.params.acc_distribution.evaluate_distribution_dist(distances[rho_idx]) * s_factor
+            delta_rho = math.ceil(acc / self.params.acc_distribution.step_size)
+            theta_step = thetas[1]
+            theta_req = math.asin(acc/distances[rho_idx])
+            delta_theta = math.ceil(theta_req / theta_step)
+            min_rho, max_rho = max(0, rho_idx - delta_rho), min(n_distances, rho_idx + delta_rho + 1)
+            min_theta, max_theta = max(0, theta_idx - delta_theta), min(n_thetas, theta_idx + delta_theta + 1)
+            idx_s_rho = [idx for idx in range(min_rho, max_rho)]
+            idx_s_theta = [idx for idx in range(min_theta, max_theta)]
+            delta_m = theta_idx - delta_theta
+            if delta_m < 0:
+                idx_s_theta += [- (idx + 1) for idx in range(abs(delta_m))]
+            delta_p = theta_idx + delta_theta - (n_thetas - 1)
+            if delta_p > 0:
+                idx_s_theta += [idx for idx in range(delta_p)]
+
+            idx_s_rho = np.array(idx_s_rho)
+            idx_s_theta = np.array(idx_s_theta)
+
+            minus_x_prime = minus_x[np.ix_(idx_s_theta, idx_s_rho)]
+            plus_x_prime = plus_x[np.ix_(idx_s_theta, idx_s_rho)]
+            minus_y_prime = minus_y[np.ix_(idx_s_theta, idx_s_rho)]
+            plus_y_prime = plus_y[np.ix_(idx_s_theta, idx_s_rho)]
+            p_det_prime = self.p_detection_given_origin[np.ix_(idx_s_theta, idx_s_rho)]
+
+            in_accuracy = np.where((minus_x_prime < detection[0]) &
+                                   (detection[0] < plus_x_prime) &
+                                   (minus_y_prime < detection[1]) &
+                                   (detection[1] < plus_y_prime),
+                                   p_det_prime, 0)
+            sum_acc_prob: float = float(np.sum(in_accuracy))
+            in_accuracy = in_accuracy / sum_acc_prob if sum_acc_prob != 0 else in_accuracy
+
+            res[np.ix_(idx_s_theta, idx_s_rho)] = \
+                np.multiply(res[np.ix_(idx_s_theta, idx_s_rho)], 1 - in_accuracy)'''
+
+        '''for detection in detections:
+            t1 = time.time()
+            in_accuracy = np.where((minus_x < detection[0]) &
+                                   (detection[0] < plus_x) &
+                                   (minus_y < detection[1]) &
+                                   (detection[1] < plus_y),
+                                   self.p_detection_given_origin, 0)
+            sum_acc_prob: float = float(np.sum(in_accuracy))
+            in_accuracy = in_accuracy / sum_acc_prob if sum_acc_prob != 0 else in_accuracy
+            t2 = time.time()
 
             if independent:
                 res = np.multiply(res, 1 - in_accuracy)
@@ -160,7 +250,12 @@ class ObstacleBayesian(Estimator):
                 candidates.append(list(zip(list(candidates_i[0]), list(candidates_i[1]))))
                 involvement[detection] = in_accuracy
 
+            t3 = time.time()
+            delta1 += t2 - t1
+            delta2 += t3 - t2
+
         if not independent:
+
             def helper_fct(nth: int, idx: Tuple[int, int]):
                 my_detection = detections[nth]
                 candidate_of_interest = []
@@ -207,9 +302,9 @@ class ObstacleBayesian(Estimator):
                     p_matrices[idx + (nth, )] = helper_fct(nth, idx)
             mat = np.prod(p_matrices, axis=2)
         else:
-            mat = res
+            mat = res'''
 
-        return mat
+        return res
 
     def get_shapely(self, threshold: float = 0.7, resampling_resolution: float = 0.2) -> List[Polygon]:
         """
