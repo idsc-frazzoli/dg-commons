@@ -6,20 +6,20 @@ import matplotlib.pyplot as plt
 import yaml
 import os
 
-
 path = os.path.dirname(os.path.abspath(__file__))
-sensing_curves_path = os.path.join(path, 'sensing_performance_curves.yaml')
-with open(sensing_curves_path, 'rb') as file:
-    DOCUMENTS = yaml.full_load(file)
+sensing_curves_path = os.path.join(path, 'sensing_data')
 
 
 def get_sensor_curves(sensor_name, min_distance=0, max_distance=40, max_n_points=200):
-    assert sensor_name in DOCUMENTS.keys()
-    fp = DOCUMENTS[sensor_name]["fp"]
-    fn = DOCUMENTS[sensor_name]["fn"]
-    acc = DOCUMENTS[sensor_name]["accuracy"]
-    ds = float(DOCUMENTS[sensor_name]["ds"])
-    radius = min(float(DOCUMENTS[sensor_name]["max_distance"]), max_distance)
+    path_to_file = os.path.join(sensing_curves_path, sensor_name) + ".yaml"
+    with open(path_to_file, 'r') as file:
+        sensing_data = yaml.full_load(file)
+
+    fp = sensing_data["fp"]
+    fn = sensing_data["fn"]
+    acc = sensing_data["accuracy"]
+    ds = float(sensing_data["ds"])
+    radius = min(float(sensing_data["max_distance"]), max_distance)
 
     fp_curve = SensingCurve(sensor_name, fp, radius, min_distance, ds, max_n_points)
     fn_curve = SensingCurve(sensor_name, fn, radius, min_distance, ds, max_n_points)
