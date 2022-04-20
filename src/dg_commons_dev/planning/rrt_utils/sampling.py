@@ -107,10 +107,8 @@ def uniform_sampling(boundaries: BaseBoundaries, goal_region, goal_sample_rate: 
     @return: A node with the sampled position (and sampled orientation if requested).
     """
     goal_node: Node = goal_region.goal_node
-
     if random.randint(0, 100) > goal_sample_rate:
         pose: Tuple[float, float] = boundaries.random_sampling()
-
         if goal_node.is_yaw_considered:
             angle = random.uniform(*limit_angles)
             pose += (angle, )

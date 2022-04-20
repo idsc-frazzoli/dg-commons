@@ -1,3 +1,5 @@
+import math
+
 from dg_commons_dev.behavior.behavior_types import Situation
 from dataclasses import dataclass
 from typing import Union, List, Tuple, MutableMapping, Optional
@@ -174,7 +176,6 @@ class Emergency(Situation[SituationObservations, EmergencyDescription]):
             if isinstance(obs.shape, LineString):
                 continue
 
-            other_vel: float = 0
             other_polygon: Polygon = obs.shape
 
             intersection: Polygon = my_polygon.intersection(other_polygon)
@@ -187,7 +188,7 @@ class Emergency(Situation[SituationObservations, EmergencyDescription]):
                 else:
                     my_entry_time, my_exit_time = entry_exit_t(intersection, my_state, my_occupancy,
                                                                self.safety_time_braking, my_vel, tol=0.01)
-                other_entry_time, other_exit_time = 0, 10e6
+                dist = intersection.distance(my_occupancy)
 
                 collision_score: float = 0
                 collision_max: float = 1  # if collision_score > collision_max then there is an emergency
@@ -207,40 +208,36 @@ class Emergency(Situation[SituationObservations, EmergencyDescription]):
                         return 0.0
 
                 def drac_score(drac: float):
-                    drac_max = self.acc_limits[1]
+                    drac_max = self.acc_limits[1] * 0.8
                     if drac_max < drac:
                         return 1.0
                     else:
                         return 0.0
 
-                pet: float = other_entry_time - my_exit_time if my_exit_time < other_exit_time else \
-                    my_entry_time - other_exit_time
                 self.emergency_situation.my_player = my_name
-                self.emergency_situation.pet = pet
+
+                pet: float = - math.inf
                 collision_score += pet_score(pet)
+                self.emergency_situation.pet = pet
 
-                pot1, pot2 = my_exit_time - other_entry_time > 0, other_exit_time - my_entry_time > 0
-                if pot1 or pot2:
-                    ttc = other_entry_time if my_entry_time < other_entry_time else my_entry_time
-                    self.emergency_situation.ttc = ttc
-                    collision_score += ttc_score(ttc)
-                    drac1: float = 2 * (other_vel - other_vel * other_entry_time / my_exit_time) / my_exit_time \
-                        if pot1 else 0.0
-                    drac2: float = 2 * (my_vel - my_vel * my_entry_time / other_exit_time) / other_exit_time \
-                        if pot2 else 0.0
-                    drac: float = max(drac1, drac2)
-                    collision_score += drac_score(drac)
-                    self.emergency_situation.drac = [drac1, drac2]
-                    if collision_max < collision_score:
-                        self.emergency_situation.is_emergency = True
-                        self.emergency_situation.other_player = other_name
+                ttc: float = my_entry_time
+                self.emergency_situation.ttc = ttc
+                collision_score += ttc_score(ttc)
 
-                        other_occupancy, _ = occupancy_prediction(agents[other_name].state, 0.1)
-                        my_occupancy, _ = occupancy_prediction(agents[my_name].state, 0.1)
-                        self.polygon_plotter.plot_polygon(my_occupancy,
-                                                          SituationPolygons.PolygonClass(collision=True))
-                        self.polygon_plotter.plot_polygon(other_occupancy,
-                                                          SituationPolygons.PolygonClass(collision=True))
+                drac = my_vel ** 2 / 2 / dist
+                collision_score += drac_score(drac)
+                self.emergency_situation.drac = [drac, drac]
+
+                if collision_max < collision_score:
+                    self.emergency_situation.is_emergency = True
+                    self.emergency_situation.other_player = other_name
+
+                    other_occupancy, _ = occupancy_prediction(agents[other_name].state, 0.1)
+                    my_occupancy, _ = occupancy_prediction(agents[my_name].state, 0.1)
+                    self.polygon_plotter.plot_polygon(my_occupancy,
+                                                      SituationPolygons.PolygonClass(collision=True))
+                    self.polygon_plotter.plot_polygon(other_occupancy,
+                                                      SituationPolygons.PolygonClass(collision=True))
 
         return self.polygon_plotter.next_frame()
         # This is for plotting purposes, can be ignored

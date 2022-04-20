@@ -12,6 +12,7 @@ from dg_commons_dev.planning.rrt_utils.sampling import BaseBoundaries
 from shapely.geometry.base import BaseGeometry
 from dg_commons_dev.planning.rrt_utils.goal_region import GoalRegion
 import math
+from dg_commons_dev.planning.rrt_utils.dubins_path_planning import dubins_path_planning
 
 
 @dataclass
@@ -64,6 +65,7 @@ class RRTDubins(RRT):
         @param params: RRT Dubin parameters
         """
         super().__init__(params)
+        self.n_iter = 0
 
     def planning(self, start: Node, goal: GoalRegion, obstacle_list: List[BaseGeometry],
                  sampling_bounds: BaseBoundaries, search_until_max_iter: bool = False,
@@ -97,21 +99,23 @@ class RRTDubins(RRT):
                                          self.path_resolution, self.curvature)
             new_node.cost = self.node_list[nearest_ind].cost + self.distance_meas(new_node, self.node_list[nearest_ind],
                                                                                   self.curvature)
-
             if self.check_collision(new_node, self.obstacle_list):
                 self.node_list.append(new_node)
                 self.update_nodes_to_end()
 
                 if (not search_until_max_iter) and self.can_reach_end:
                     self.search_best_goal_node()
+                    self.n_iter = i
                     return self.generate_final_course()
 
         print("reached max iteration")
 
         if self.can_reach_end:
             self.search_best_goal_node()
+            self.n_iter = i
             return self.generate_final_course()
         else:
+            self.n_iter = math.inf
             print("Cannot find path")
             print(self.end.goal_node.x, self.end.goal_node.y, self.end.goal_node.yaw)
             print(self.start.x, self.start.y, self.start.yaw)
@@ -132,6 +136,30 @@ class RRTDubins(RRT):
             self.plot_pseudo_results()
 
         return None
+
+    def generate_dubin_course(self) -> Tuple[List[str], List[float]]:
+        """
+        Generate list of dubin description of path
+        @return: The generated list
+        """
+        modes = []
+        lengths = []
+
+        to_node = self.end.goal_node
+        while to_node.parent:
+            from_node = to_node.parent
+            _, _, _, mode, course_lengths, _ = dubins_path_planning(from_node.x,
+                                                                    from_node.y,
+                                                                    from_node.yaw,
+                                                                    to_node.x,
+                                                                    to_node.y,
+                                                                    to_node.yaw,
+                                                                    self.curvature)
+            to_node = from_node
+            modes = mode + modes
+            lengths = course_lengths + lengths
+
+        return modes, lengths
 
 
 def main():

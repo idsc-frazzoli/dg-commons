@@ -1,7 +1,5 @@
 import time
-
 import matplotlib.pyplot as plt
-
 from dg_commons_dev.behavior.behavior_types import Situation
 from dataclasses import dataclass
 from typing import Optional, Union, List, Tuple, MutableMapping
