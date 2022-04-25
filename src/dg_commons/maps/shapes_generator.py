@@ -33,7 +33,8 @@ def create_random_starshaped_polygon(
     Random noise is added by varying the angular spacing between sequential points,
     and by varying the radial distance of each point from the centre.
 
-    :param ctr_x, ctr_y: - coordinates of the "centre" of the polygon
+    :param ctr_x: x-coordinate of the "centre" of the polygon
+    :param ctr_y: y-coordinate of the "centre" of the polygon
     :param avg_radius: - in px, the average radius of this polygon, this roughly controls how large the polygon is, really only useful for order of magnitude.
     :param irregularity: - [0,1] indicating how much variance there is in the angular spacing of vertices. [0,1] will map to [0, 2pi/numberOfVerts]
     :param spikiness: - [0,1] indicating how much variance there is in each vertex from the circle of radius aveRadius. [0,1] will map to [0, avg_radius]
