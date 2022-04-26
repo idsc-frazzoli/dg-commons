@@ -6,9 +6,12 @@ import numpy as np
 from commonroad_dc import pycrcc
 from commonroad_dc.pycrcc import CollisionObject
 from commonroad_dc.pycrcc import Shape as crShape
+from shapely.geometry import Polygon
+
 from dg_commons import PlayerName, SE2Transform
 from dg_commons.sim import SimObservations
 from dg_commons.sim.scenarios import DgScenario
+from dg_commons.time import time_function
 
 
 class VisibilityFilter(ABC):
@@ -25,6 +28,23 @@ class IdVisFilter(VisibilityFilter):
         return full_obs
 
 
+class Sensor(ABC):
+    """
+    Sensor class.
+    """
+
+    @abstractmethod
+    def sense(self, scenario: DgScenario, full_obs: SimObservations, pov: PlayerName) -> SimObservations:
+        """
+        Compute the observations of the scenario.
+        :param scenario: scenario to compute the observations of.
+        :param full_obs: observations of the scenario.
+        :param pov: player of view.
+        :return: the observations of the scenario.
+        """
+        pass
+
+
 class Lidar2D:
     pose: SE2Transform = SE2Transform([0, 0], 0)
     range: float = 20.0
@@ -34,7 +54,8 @@ class Lidar2D:
     def filter(self, scenario: DgScenario, full_obs: SimObservations, pov: PlayerName) -> SimObservations:
         pass
 
-    def view_vertices(self, obstacles: Iterable[crShape]):
+    @time_function
+    def fov_as_polygon(self, obstacles: Iterable[crShape]) -> Polygon:
         vertices = []
 
         has_omnidirectional_view = self.field_of_view > 2 * np.pi - self.angle_resolution
@@ -57,12 +78,12 @@ class Lidar2D:
                 vertices.append(ray_end)
             else:
                 closest_hit = ray_end
-                closest_hit_distance = self.range
+                closest_hit_distance = self.range**2
                 for ray_hit in ray_hits:
                     hit_in = ray_hit[0:2]
                     hit_out = ray_hit[2:]
-                    distance_to_hit_in = np.hypot(hit_in[0] - self.pose.p[0], hit_in[1] - self.pose.p[1])
-                    distance_to_hit_out = np.hypot(hit_out[0] - self.pose.p[0], hit_out[1] - self.pose.p[1])
+                    distance_to_hit_in = (hit_in[0] - self.pose.p[0]) ** 2 + (hit_in[1] - self.pose.p[1]) ** 2
+                    distance_to_hit_out = (hit_out[0] - self.pose.p[0]) ** 2 + (hit_out[1] - self.pose.p[1]) ** 2
                     if distance_to_hit_in < closest_hit_distance:
                         closest_hit_distance = distance_to_hit_in
                         closest_hit = hit_in
@@ -73,4 +94,4 @@ class Lidar2D:
 
         vertices.append(vertices[0])
 
-        return np.array(vertices)
+        return Polygon(vertices)
