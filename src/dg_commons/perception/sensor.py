@@ -6,7 +6,7 @@ from typing import Iterable
 import numpy as np
 from commonroad_dc import pycrcc
 from commonroad_dc.pycrcc import Shape as crShape
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, Point
 
 from dg_commons import SE2Transform
 from dg_commons.time import time_function
@@ -18,24 +18,41 @@ class Sensor(ABC):
     range: float = 20.0
     field_of_view: float = 2 * np.pi
 
-    @abstractmethod
-    def fov_as_polygon(self, obstacles: Iterable[crShape]) -> Polygon:
-        pass
-
-
-@dataclass
-class Lidar2D(Sensor):
     def __post_init__(self):
         self.angle_resolution = atan(1 / self.range)
         assert self.field_of_view <= 2 * np.pi
         assert self.range >= 0
 
+    @abstractmethod
+    def fov_as_polygon(self, obstacles: Iterable[crShape]) -> Polygon:
+        pass
+
+    def is_omnidirectional(self) -> bool:
+        return self.field_of_view > 2 * np.pi - self.angle_resolution
+
+
+@dataclass
+class FullRangeSensor(Sensor):
+    def fov_as_polygon(self, obstacles: Iterable[crShape]) -> Polygon:
+        """
+        Returns a polygon representing the field of view of the sensor.
+        :param obstacles:
+        :return:
+        """
+        x, y = self.pose.p
+        if self.is_omnidirectional():
+            return Point(x, y).buffer(self.range)
+        else:
+            raise NotImplementedError("Only omnidirectional sensors are supported for full range sensors.")
+
+
+@dataclass
+class VisRangeSensor(Sensor):
     @time_function
     def fov_as_polygon(self, obstacles: Iterable[crShape]) -> Polygon:
         vertices = []
 
-        has_omnidirectional_view = self.field_of_view > 2 * np.pi - self.angle_resolution
-        if not has_omnidirectional_view:
+        if not self.is_omnidirectional():
             vertices.append(self.pose.p)
 
         num_ray_angles = int(self.field_of_view / self.angle_resolution) + 1
