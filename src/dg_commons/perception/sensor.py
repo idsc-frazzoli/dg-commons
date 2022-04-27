@@ -1,58 +1,34 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from math import atan
 from typing import Iterable
 
 import numpy as np
 from commonroad_dc import pycrcc
-from commonroad_dc.pycrcc import CollisionObject
 from commonroad_dc.pycrcc import Shape as crShape
 from shapely.geometry import Polygon
 
-from dg_commons import PlayerName, SE2Transform
-from dg_commons.sim import SimObservations
-from dg_commons.sim.scenarios import DgScenario
+from dg_commons import SE2Transform
 from dg_commons.time import time_function
 
 
-class VisibilityFilter(ABC):
-    @abstractmethod
-    def filter(self, scenario: DgScenario, full_obs: SimObservations, pov: PlayerName) -> SimObservations:
-        pass
-
-
-class IdVisFilter(VisibilityFilter):
-    """Identity visibility filter"""
-
-    @abstractmethod
-    def filter(self, scenario: DgScenario, full_obs: SimObservations, pov: PlayerName) -> SimObservations:
-        return full_obs
-
-
+@dataclass
 class Sensor(ABC):
-    """
-    Sensor class.
-    """
-
-    @abstractmethod
-    def sense(self, scenario: DgScenario, full_obs: SimObservations, pov: PlayerName) -> SimObservations:
-        """
-        Compute the observations of the scenario.
-        :param scenario: scenario to compute the observations of.
-        :param full_obs: observations of the scenario.
-        :param pov: player of view.
-        :return: the observations of the scenario.
-        """
-        pass
-
-
-class Lidar2D:
     pose: SE2Transform = SE2Transform([0, 0], 0)
     range: float = 20.0
     field_of_view: float = 2 * np.pi
-    angle_resolution = atan(1 / range)
 
-    def filter(self, scenario: DgScenario, full_obs: SimObservations, pov: PlayerName) -> SimObservations:
+    @abstractmethod
+    def fov_as_polygon(self, obstacles: Iterable[crShape]) -> Polygon:
         pass
+
+
+@dataclass
+class Lidar2D(Sensor):
+    def __post_init__(self):
+        self.angle_resolution = atan(1 / self.range)
+        assert self.field_of_view <= 2 * np.pi
+        assert self.range >= 0
 
     @time_function
     def fov_as_polygon(self, obstacles: Iterable[crShape]) -> Polygon:

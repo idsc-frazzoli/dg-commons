@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass, field, replace
 from decimal import Decimal
 from itertools import combinations
@@ -5,6 +6,7 @@ from time import perf_counter
 from typing import Mapping, Optional, List, Dict
 
 from dg_commons import PlayerName, U, fd
+from dg_commons.perception.sensor import ObsFilter, IdObsFilter
 from dg_commons.planning import PlanningGoal
 from dg_commons.sim import SimTime, CollisionReport, logger
 from dg_commons.sim.agents.agent import Agent, TAgent
@@ -33,7 +35,8 @@ class SimContext:
     """The simulation parameters"""
     missions: Mapping[PlayerName, PlanningGoal] = field(default_factory=dict)
     """The ultimate goal of each player, it can be specified only for a subset of the players"""
-    sensors: Mapping[PlayerName, SimSensor] = field(default_factory=dict)
+    sensors: Mapping[PlayerName, ObsFilter] = field(default_factory=lambda: defaultdict(lambda: IdObsFilter()))
+    """The sensors for each player, if not specified the default is the identity filter returning full observations"""
     log: SimLog = field(default_factory=SimLog)
     "The loggers for observations, commands, and extra information"
     time: SimTime = SimTime(0)
@@ -109,14 +112,16 @@ class Simulator:
 
     def update(self, sim_context: SimContext):
         """The real step of the simulation"""
+        # fixme this can be parallelized later with ProcessPoolExecutor?
         t = sim_context.time
         update_commands: bool = (t - self.last_get_commands_ts) >= sim_context.param.dt_commands
-        # fixme this can be parallelized later with ProcessPoolExecutor?
         for player_name, model in sim_context.models.items():
             if update_commands:
+                p_observations = sim_context.sensors[player_name].sense(
+                    sim_context.dg_scenario, self.last_observations, player_name
+                )
                 tic = perf_counter()
-                # todo here based on visibility filter we can filter the last observations for each agent
-                actions = sim_context.players[player_name].get_commands(self.last_observations)
+                actions = sim_context.players[player_name].get_commands(p_observations)
                 toc = perf_counter()
                 self.last_commands[player_name] = actions
                 self.simlogger[player_name].actions.add(t=t, v=actions)
