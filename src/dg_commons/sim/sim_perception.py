@@ -48,7 +48,7 @@ class FovObsFilter(ObsFilter):
         :return:
         """
         # first update sensor pose
-        self.pose = SE2Transform.from_SE2(extract_pose_from_state(full_obs.players[pov].state))
+        self.sensor.pose = SE2Transform.from_SE2(extract_pose_from_state(full_obs.players[pov].state))
         # then filter
         if not self._static_obstacles:
             self._static_obstacles = [sPolygon2crPolygon(o.shape) for o in scenario.static_obstacles.values()]
