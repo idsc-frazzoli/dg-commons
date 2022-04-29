@@ -6,13 +6,13 @@ from time import perf_counter
 from typing import Mapping, Optional, List, Dict
 
 from dg_commons import PlayerName, U, fd
-from dg_commons.perception.sensor import ObsFilter, IdObsFilter
 from dg_commons.planning import PlanningGoal
 from dg_commons.sim import SimTime, CollisionReport, logger
 from dg_commons.sim.agents.agent import Agent, TAgent
 from dg_commons.sim.collision_utils import CollisionException
 from dg_commons.sim.models.obstacles_dyn import DynObstacleModel
 from dg_commons.sim.scenarios.structures import DgScenario
+from dg_commons.sim.sim_perception import ObsFilter, IdObsFilter
 from dg_commons.sim.simulator_structures import *
 from dg_commons.sim.simulator_structures import InitSimObservations
 from dg_commons.time import time_function
