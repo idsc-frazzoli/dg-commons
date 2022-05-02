@@ -47,8 +47,8 @@ todo...
 
 ### Commonroad integration
 
-Most of the tools natively integrate with the Commonroad scenarios. 
-Few scenarios used mainly for testing are available in the `scenarios` folder. 
+Most of the tools natively integrate with the Commonroad scenarios.
+Few scenarios used mainly for testing are available in the `scenarios` folder.
 For more scenarios consider cloning the [Commonroad scenarios repository](https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/tree/2020a_scenarios).
 
 
