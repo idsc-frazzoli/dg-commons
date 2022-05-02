@@ -25,7 +25,7 @@ def load_commonroad_scenario(
     # generate path of the file to be opened
     scenario_name = scenario_name if scenario_name.endswith(".xml") else scenario_name + ".xml"
     scenario_path = None
-    for root, dirs, files in os.walk(scenarios_dir):
+    for root, dirs, files in os.walk(scenarios_dir, followlinks=True):
         for name in files:
             if name == scenario_name:
                 scenario_path = os.path.abspath(os.path.join(root, name))
