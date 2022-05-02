@@ -146,6 +146,21 @@ class Trajectory(DgSampledSequence[VehicleState]):
 
         return (x_squared + y_squared + theta_squared + vx_squared + delta_squared) / 5.0
 
+    def pad_to_time(self, t_final: Timestamp, dt: Timestamp):
+        """
+        :param t_final: final time of new sequence
+        :param dt: interal at which to add a new state
+        :return: a new sequence extended with constant vehicle states, until t_final with interval dt.
+        """
+        old_timestamps = list(self.timestamps)
+        old_values = list(self.values)
+        assert t_final > old_timestamps[-1]
+        # new_timestamps = np.arange(old_timestamps[-1]+dt, t_final+dt, dt).tolist()
+        new_timestamps = list(np.arange(old_timestamps[-1] + dt, t_final + dt, dt))
+        new_values = [old_values[-1] for _, _ in enumerate(new_timestamps)]
+
+        return Trajectory(timestamps=old_timestamps + new_timestamps, values=old_values + new_values)
+
 
 JointTrajectories = Mapping[PlayerName, Trajectory]
 
