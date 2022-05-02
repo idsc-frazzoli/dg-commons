@@ -12,8 +12,8 @@ __all__ = ["load_commonroad_scenario"]
 def load_commonroad_scenario(
     scenario_name: str, scenarios_dir: Optional[str] = None
 ) -> Tuple[Scenario, PlanningProblemSet]:
-    """Loads a commonroad scenario.
-    If no directory is provided it looks for a scenarios folder at the src level of the project."""
+    """Loads a Commonroad scenario.
+    If no directory is provided it looks for a `scenarios` folder at the src level of the current project."""
     if scenarios_dir is None:
         dg_root_dir = __file__
         src_folder = "src"

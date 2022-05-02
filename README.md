@@ -4,6 +4,8 @@
 [![codecov](https://codecov.io/gh/idsc-frazzoli/dg-commons/branch/master/graph/badge.svg?token=jqhkIa4fzB)](https://codecov.io/gh/idsc-frazzoli/dg-commons)
 [![PyPI version](https://badge.fury.io/py/dg-commons.svg)](https://badge.fury.io/py/dg-commons)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+
 
 This package contains common tools that ease the development and quick prototyping of autonomous vehicles with a focus
 on multi-agent planning and decision-making.
@@ -45,7 +47,10 @@ todo...
 
 ### Commonroad integration
 
-todo...
+Most of the tools natively integrate with the Commonroad scenarios. 
+Few scenarios used mainly for testing are available in the `scenarios` folder. 
+For more scenarios consider cloning the [Commonroad scenarios repository](https://gitlab.lrz.de/tum-cps/commonroad-scenarios/-/tree/2020a_scenarios).
+
 
 ## Installation
 
@@ -57,7 +62,7 @@ pip install dg-commons
 
 to install also the developer tools use `pip install dg-commons["all"]`.
 
-## Pre-commit hook
+## Pre-commit hook (for developers)
 
 Install pre-commit with
 ```shell
