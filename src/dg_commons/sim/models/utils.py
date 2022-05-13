@@ -36,7 +36,7 @@ def extract_pose_from_state(state: X) -> SE2value:
             raise ZValueError(msg=msg, state=state, state_type=type(state))
 
 
-def extract_vel_from_state(state: X) -> SE2value:
+def extract_vel_from_state(state: X) -> float:
     try:
         vel = state.vx
         return vel

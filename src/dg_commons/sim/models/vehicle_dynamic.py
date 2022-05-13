@@ -147,8 +147,8 @@ class VehicleModelDyn(VehicleModel):
 
             # vertical forces
             load_transfer = self.vg.h_cog * acc
-            F1_n = -m * (G * self.vg.lr - load_transfer) / self.vg.length
-            F2_n = -m * (G * self.vg.lf + load_transfer) / self.vg.length
+            F1_n = -m * (G * self.vg.lr - load_transfer) / self.vg.wheelbase
+            F2_n = -m * (G * self.vg.lf + load_transfer) / self.vg.wheelbase
             # Rolling resistance
             F_rr_f = self.vg.c_rr_f * F1_n
             F_rr_r = self.vg.c_rr_r * F2_n

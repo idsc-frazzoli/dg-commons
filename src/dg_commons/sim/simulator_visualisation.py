@@ -280,7 +280,7 @@ def plot_pedestrian(
     alpha: float,
     ped_poly: Optional[List[Polygon]],
 ) -> List[Polygon]:
-    q = SE2_from_xytheta((state.x, state.y, state.theta))
+    q = SE2_from_xytheta((state.x, state.y, state.psi))
     if ped_poly is None:
         pedestrian_box = ax.fill([], [], color=pg.color, alpha=alpha, zorder=ZOrders.MODEL)[0]
         ped_poly = [

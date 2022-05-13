@@ -8,7 +8,7 @@ from commonroad.visualization.mp_renderer import MPRenderer
 
 # from commonroad_route_planner.route_planner import RoutePlanner
 from dg_commons.sim.scenarios import load_commonroad_scenario
-from dg_commons.sim.scenarios.agent_from_commonroad import model_agent_from_dynamic_obstacle
+from dg_commons.sim.scenarios.convert_from_commonroad import model_agent_from_dynamic_obstacle
 from dg_commons_tests import OUT_TESTS_DIR
 
 
