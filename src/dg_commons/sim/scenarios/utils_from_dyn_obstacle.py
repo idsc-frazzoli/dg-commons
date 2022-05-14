@@ -1,9 +1,8 @@
 from typing import List
 
-from commonroad.scenario.lanelet import LaneletNetwork, Lanelet
+from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.trajectory import State
-from geometry import T2value
 from zuper_commons.types import ZException
 
 from dg_commons import SE2Transform

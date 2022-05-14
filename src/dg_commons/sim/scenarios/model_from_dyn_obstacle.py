@@ -16,7 +16,7 @@ from dg_commons.sim.scenarios.utils_from_dyn_obstacle import NotSupportedConvers
 def infer_model_from_cr_dyn_obstacle(dyn_obs: DynamicObstacle, color: Color) -> SimModel:
     """Recover a simulation model form a Commonroad dynamic obstacle"""
     if dyn_obs.obstacle_type in [ObstacleType.CAR, ObstacleType.BICYCLE, ObstacleType.TRUCK, ObstacleType.BUS]:
-        axle_length_ratio = 0.8  # the distance between wheels is less than the car body
+        axle_length_ratio = 0.7  # the distance between wheels is less than the car body
         axle_width_ratio = 0.95  # the distance between wheels is less than the car body
 
         assert isinstance(dyn_obs.obstacle_shape, crRectangle)
@@ -60,10 +60,10 @@ def infer_model_from_cr_dyn_obstacle(dyn_obs: DynamicObstacle, color: Color) -> 
         x0 = PedestrianState(
             x=dyn_obs.initial_state.position[0],
             y=dyn_obs.initial_state.position[1],
-            theta=dyn_obs.initial_state.orientation,
+            psi=dyn_obs.initial_state.orientation,
             vx=dyn_obs.initial_state.velocity,
             vy=0,
-            dtheta=0,
+            dpsi=0,
         )
         model = PedestrianModel.default(x0)
     else:
