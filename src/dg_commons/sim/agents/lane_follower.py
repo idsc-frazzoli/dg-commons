@@ -22,7 +22,7 @@ class LFAgent(Agent):
 
     def __init__(
         self,
-        lane: Optional[DgLanelet] = None,
+        lane: DgLanelet,
         speed_controller: Optional[SpeedController] = None,
         speed_behavior: Optional[SpeedBehavior] = None,
         pure_pursuit: Optional[PurePursuit] = None,
