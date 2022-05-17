@@ -10,5 +10,5 @@ shapely>=1.8.0
 zuper-commons-z6>=6
 PyGeometry-z6>=2.1.4
 
-commonroad-io==2021.4
-commonroad-drivability-checker==2021.4
+commonroad-io==2022.1
+commonroad-drivability-checker==2022.1
