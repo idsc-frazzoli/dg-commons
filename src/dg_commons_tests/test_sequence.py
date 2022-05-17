@@ -69,10 +69,6 @@ def test_hashability():
     assert isinstance(seq, Hashable)
     test_hash = TestHash()
     assert isinstance(test_hash, Hashable)
-    # assert isinstance(seq, Hashable)
-
-    # d = {seq:1}
-    # print(d[seq])
 
 
 def test_seq_performance():

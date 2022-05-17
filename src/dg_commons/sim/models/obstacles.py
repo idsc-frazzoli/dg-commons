@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from math import inf
 from typing import Sequence, Tuple
 
+from commonroad.scenario.obstacle import ObstacleType
 from shapely.geometry.base import BaseGeometry
 
 from dg_commons import Color
@@ -37,6 +38,7 @@ class StaticObstacle:
     """ Shapely geometry """
     geometry: ObstacleGeometry = ObstacleGeometry.default_static()
     """ Geometry of the obstacle """
+    obstacle_type: ObstacleType = ObstacleType.UNKNOWN
 
 
 @dataclass(frozen=True, unsafe_hash=True)

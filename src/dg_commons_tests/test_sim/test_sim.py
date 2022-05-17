@@ -69,7 +69,7 @@ def get_simple_scenario() -> SimContext:
     )
     players = {P1: NPAgent(moving_vehicle), P2: NPAgent(static_vehicle), P3: NPAgent(spacecraft_dynamic)}
     return SimContext(
-        dg_scenario=DgScenario(scenario),
+        dg_scenario=DgScenario(scenario=scenario, use_road_boundaries=True),
         models=models,
         players=players,
         param=SimParameters(dt=D("0.01"), dt_commands=D("0.1"), sim_time_after_collision=D(1), max_sim_time=D(6)),

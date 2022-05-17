@@ -12,6 +12,8 @@ from geometry import (
 )
 from shapely.affinity import affine_transform
 from shapely.geometry.base import BaseGeometry
+from commonroad_dc.pycrcc import Polygon as CommonRoadPolygon
+from shapely.geometry import Polygon
 
 """
 Some of these structures and operations are are taken from `duckietown-world` with minor modifications
@@ -91,3 +93,11 @@ def transform_xy(q: np.ndarray, points: Sequence[Tuple[float, float]]) -> Tuple[
     x = points[0, :]
     y = points[1, :]
     return tuple(zip(x, y))
+
+
+def sPolygon2crPolygon(shapely_polygon: Polygon) -> CommonRoadPolygon:
+    """Convert a shapely polygon to a commonroad polygon"""
+    vertices = np.array(list(zip(*shapely_polygon.exterior.xy)))
+    # magic numbers inferred from here
+    # https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker/-/blob/master/cpp/collision/include/collision/plugins/triangulation/triangulate.h
+    return CommonRoadPolygon(vertices, 0.125, 2)
