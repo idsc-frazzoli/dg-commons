@@ -12,6 +12,8 @@ from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 from dg_commons.sim.models.vehicle_utils import VehicleParameters
 from dg_commons.sim.scenarios.utils_from_dyn_obstacle import NotSupportedConversion
 
+__all__ = ["infer_model_from_cr_dyn_obstacle"]
+
 
 def infer_model_from_cr_dyn_obstacle(dyn_obs: DynamicObstacle, color: Color) -> SimModel:
     """Recover a simulation model form a Commonroad dynamic obstacle"""

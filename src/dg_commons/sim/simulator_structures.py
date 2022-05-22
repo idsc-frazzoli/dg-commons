@@ -118,7 +118,7 @@ class PlayerLogger(Generic[X, U]):
 
 
 class SimLog(Dict[PlayerName, PlayerLog]):
-    """The logger for a simulation. For each players it records sampled sequences of states, commands and extra
+    """The logger for a simulation. For each player it records sampled sequences of states, commands and extra
     arguments than an agent might want to log."""
 
     def __setitem__(self, key, value):
