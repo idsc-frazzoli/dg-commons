@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from random import randint
-from typing import Optional, Dict, Mapping
+from typing import Optional, Mapping
 
 from commonroad.scenario.scenario import Scenario
 from shapely.strtree import STRtree
@@ -14,10 +14,10 @@ __all__ = ["DgScenario"]
 
 @dataclass
 class DgScenario:
-    """Mainly a thin wrapper around commonroad scenarios. Yet it can work also as an empty world."""
+    """Mainly a thin wrapper around CommonRoad scenarios. Yet it can work also as an empty world."""
 
     scenario: Optional[Scenario] = None
-    """A commonroad scenario"""
+    """A CommonRoad scenario"""
     static_obstacles: Mapping[int, StaticObstacle] = field(default_factory=lambda: fd({}))
     """A mapping of indexed static obstacles"""
     use_road_boundaries: bool = False
