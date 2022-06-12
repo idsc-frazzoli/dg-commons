@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass, field, replace
 from decimal import Decimal
 from itertools import combinations
@@ -11,6 +12,7 @@ from dg_commons.sim.agents.agent import Agent, TAgent
 from dg_commons.sim.collision_utils import CollisionException
 from dg_commons.sim.models.obstacles_dyn import DynObstacleModel
 from dg_commons.sim.scenarios.structures import DgScenario
+from dg_commons.sim.sim_perception import ObsFilter, IdObsFilter
 from dg_commons.sim.simulator_structures import *
 from dg_commons.sim.simulator_structures import InitSimObservations
 from dg_commons.time import time_function
@@ -20,7 +22,7 @@ from dg_commons.time import time_function
 class SimContext:
     """
     The simulation context that keeps track of everything,
-    handle with care as it is passed around by reference and it is a mutable object.
+    handle with care as it is passed around by reference, it is a mutable object.
     """
 
     dg_scenario: DgScenario
@@ -33,14 +35,20 @@ class SimContext:
     """The simulation parameters"""
     missions: Mapping[PlayerName, PlanningGoal] = field(default_factory=dict)
     """The ultimate goal of each player, it can be specified only for a subset of the players"""
+    sensors: Mapping[PlayerName, ObsFilter] = field(default_factory=lambda: defaultdict(lambda: IdObsFilter()))
+    """The sensors for each player, if not specified the default is the identity filter returning full observations"""
     log: SimLog = field(default_factory=SimLog)
     "The loggers for observations, commands, and extra information"
     time: SimTime = SimTime(0)
     "The clock for the simulator, keeps track of the current instant"
     seed: int = 0
+    "The seed for reproducible randomness"
     sim_terminated: bool = False
+    "Whether the simulation has terminated"
     collision_reports: List[CollisionReport] = field(default_factory=list)
+    "The log of collision reports"
     first_collision_ts: SimTime = SimTime("Infinity")
+    "The first collision time"
     description: str = ""
     "A string description for the specific simulation context"
 
@@ -104,13 +112,16 @@ class Simulator:
 
     def update(self, sim_context: SimContext):
         """The real step of the simulation"""
+        # fixme this can be parallelized later with ProcessPoolExecutor?
         t = sim_context.time
         update_commands: bool = (t - self.last_get_commands_ts) >= sim_context.param.dt_commands
-        # fixme this can be parallelized later with ProcessPoolExecutor?
         for player_name, model in sim_context.models.items():
             if update_commands:
+                p_observations = sim_context.sensors[player_name].sense(
+                    sim_context.dg_scenario, self.last_observations, player_name
+                )
                 tic = perf_counter()
-                actions = sim_context.players[player_name].get_commands(self.last_observations)
+                actions = sim_context.players[player_name].get_commands(p_observations)
                 toc = perf_counter()
                 self.last_commands[player_name] = actions
                 self.simlogger[player_name].actions.add(t=t, v=actions)
@@ -141,7 +152,7 @@ class Simulator:
     @staticmethod
     def _maybe_terminate_simulation(sim_context: SimContext):
         """Evaluates if the simulation needs to terminate based on the expiration of times.
-        The simulation is considered terminated iff:
+        The simulation is considered terminated if:
         - the maximum time has expired
         - the minimum time after the first collision has expired
         - all missions have been fulfilled

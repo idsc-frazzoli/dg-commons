@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+title: Driving Games common tools
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - email: azanardi@ethz.ch
+    affiliation: ETH Zurich
+    orcid: 'https://orcid.org/0000-0002-1341-6529'
+    given-names: Alessandro
+    family-names: Zanardi

@@ -4,4 +4,4 @@
 *jpg filter=lfs diff=lfs merge=lfs -text
 *html filter=lfs diff=lfs merge=lfs -text
 *css filter=lfs diff=lfs merge=lfs -text
-example0.tar.gz filter=lfs diff=lfs merge=lfs -text
+*.tar.gz filter=lfs diff=lfs merge=lfs -text
