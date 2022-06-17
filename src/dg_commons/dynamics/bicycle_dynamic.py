@@ -84,7 +84,7 @@ class BicycleDynamics:
         """Get rate of change of states for given control inputs"""
 
         dx = x0.vx
-        dtheta = dx * math.tan(x0.delta) / self.vg.length
+        dtheta = dx * math.tan(x0.delta) / self.vg.wheelbase
         dy = dtheta * self.vg.lr
         costh = math.cos(x0.theta)
         sinth = math.sin(x0.theta)

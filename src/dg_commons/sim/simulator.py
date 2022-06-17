@@ -162,6 +162,7 @@ class Simulator:
             if sim_context.missions
             else False
         )
+        # todo remove players that fullfill the mission?!
         termination_condition: bool = (
             sim_context.time > sim_context.param.max_sim_time
             or sim_context.time > sim_context.first_collision_ts + sim_context.param.sim_time_after_collision

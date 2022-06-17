@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
 from random import randint
-from typing import Optional, Dict
+from typing import Optional, Mapping
 
 from commonroad.scenario.scenario import Scenario
 from shapely.strtree import STRtree
 
-from dg_commons import logger
+from dg_commons import logger, fd
 from dg_commons.maps.road_bounds import build_road_boundary_obstacle
 from dg_commons.sim.models.obstacles import StaticObstacle
 
@@ -14,11 +14,11 @@ __all__ = ["DgScenario"]
 
 @dataclass
 class DgScenario:
-    """Mainly a thin wrapper around commonroad scenarios. Yet it can work also as an empty world."""
+    """Mainly a thin wrapper around CommonRoad scenarios. Yet it can work also as an empty world."""
 
     scenario: Optional[Scenario] = None
-    """A commonroad scenario"""
-    static_obstacles: Dict[int, StaticObstacle] = field(default_factory=dict)
+    """A CommonRoad scenario"""
+    static_obstacles: Mapping[int, StaticObstacle] = field(default_factory=lambda: fd({}))
     """A mapping of indexed static obstacles"""
     use_road_boundaries: bool = False
     """If True the external boundaries of the road are forced to be obstacles """

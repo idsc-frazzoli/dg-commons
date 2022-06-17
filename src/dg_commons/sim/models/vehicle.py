@@ -198,7 +198,7 @@ class VehicleModel(SimModel[TVehicleState, VehicleCommands]):
     def dynamics(self, x0: VehicleState, u: VehicleCommands) -> VehicleState:
         """Kinematic bicycle model, returns state derivative for given control inputs"""
         vx = x0.vx
-        dtheta = vx * math.tan(x0.delta) / self.vg.length
+        dtheta = vx * math.tan(x0.delta) / self.vg.wheelbase
         vy = dtheta * self.vg.lr
         costh = math.cos(x0.theta)
         sinth = math.sin(x0.theta)
@@ -242,7 +242,7 @@ class VehicleModel(SimModel[TVehicleState, VehicleCommands]):
     def get_velocity(self, in_model_frame: bool) -> (T2value, float):
         """Returns velocity at COG"""
         vx = self._state.vx
-        dtheta = vx * math.tan(self._state.delta) / self.vg.length
+        dtheta = vx * math.tan(self._state.delta) / self.vg.wheelbase
         vy = dtheta * self.vg.lr
         v_l = np.array([vx, vy])
         if in_model_frame:

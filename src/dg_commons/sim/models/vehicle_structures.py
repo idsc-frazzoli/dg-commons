@@ -30,9 +30,9 @@ class VehicleGeometry(ModelGeometry):
     w_half: float
     """ Half width of vehicle (between center of wheels) [m] """
     lf: float
-    """ Front length of vehicle - dist from CoG to front axle [m] """
+    """ Front length of wheelbase - dist from CoG to front axle [m] """
     lr: float
-    """ Rear length of vehicle - dist from CoG to back axle [m] """
+    """ Rear length of wheelbase - dist from CoG to back axle [m] """
     c_drag: float
     """ Drag coefficient """
     a_drag: float
@@ -49,12 +49,14 @@ class VehicleGeometry(ModelGeometry):
     def default_car(
         cls,
         color: Color = "royalblue",
-        m=1500.0,
-        Iz=1300,
-        w_half=0.9,
-        lf=1.7,
-        lr=1.7,
+        m=1300.0,
+        Iz=1600,
+        w_half=0.8,
+        lf=1.2,
+        lr=1.2,
     ) -> "VehicleGeometry":
+        """Numbers roughly gotten from:
+        https://gitlab.lrz.de/tum-cps/commonroad-vehicle-models/blob/master/vehicleModels_commonRoad.pdf"""
         return VehicleGeometry(
             vehicle_type=CAR,
             m=m,
@@ -107,12 +109,16 @@ class VehicleGeometry(ModelGeometry):
         )
 
     @cached_property
-    def width(self):
+    def width(self) -> float:
         return self.w_half * 2
 
     @cached_property
-    def length(self):
-        """Length between the two axles, it does not consider bumpers etc..."""
+    def length(self) -> float:
+        return self.wheelbase + sum(self.bumpers_length)
+
+    @cached_property
+    def wheelbase(self) -> float:
+        """Length between the two wheel axles, it does not consider bumpers etc..."""
         return self.lf + self.lr
 
     @cached_property
@@ -137,7 +143,7 @@ class VehicleGeometry(ModelGeometry):
             frontbumper = self.lf / 2
         else:  # self.vehicle_type == MOTORCYCLE or self.vehicle_type == BICYCLE
             frontbumper = radius
-        return frontbumper, radius
+        return frontbumper, radius * 2
 
     @cached_property
     def outline_as_polygon(self) -> Polygon:
