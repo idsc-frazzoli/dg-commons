@@ -152,6 +152,7 @@ class Trajectory(DgSampledSequence[VehicleState]):
         :param dt: interal at which to add a new state
         :return: a new sequence extended with constant vehicle states, until t_final with interval dt.
         """
+        # todo this method is from Leon, seems unnecessary
         old_timestamps = list(self.timestamps)
         old_values = list(self.values)
         assert t_final > old_timestamps[-1]
