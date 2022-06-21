@@ -7,10 +7,15 @@ from commonroad.planning.planning_problem import PlanningProblemSet
 from commonroad.scenario.lanelet import LaneletNetwork, Lanelet
 from commonroad.scenario.scenario import Scenario
 from geometry import T2value
+from zuper_commons.types import ZException
 
 from dg_commons.maps import DgLanelet
 
-__all__ = ["load_commonroad_scenario", "dglane_from_position"]
+__all__ = ["load_commonroad_scenario", "dglane_from_position", "NotSupportedConversion"]
+
+
+class NotSupportedConversion(ZException):
+    pass
 
 
 def load_commonroad_scenario(

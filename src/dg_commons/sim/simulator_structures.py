@@ -25,7 +25,7 @@ __all__ = [
 ]
 
 
-@dataclass(frozen=True, unsafe_hash=True)
+@dataclass(frozen=True)
 class SimParameters:
     dt: SimTime = SimTime("0.05")
     """Simulation step [s]"""

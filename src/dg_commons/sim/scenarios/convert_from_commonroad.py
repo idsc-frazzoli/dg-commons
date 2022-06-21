@@ -6,7 +6,7 @@ from dg_commons.sim.agents.agent import Agent
 from dg_commons.sim.agents.lane_follower import LFAgent
 from dg_commons.sim.models.vehicle_dynamic import VehicleModelDyn
 from dg_commons.sim.scenarios.model_from_dyn_obstacle import infer_model_from_cr_dyn_obstacle
-from dg_commons.sim.scenarios.utils_from_dyn_obstacle import infer_lane_from_dyn_obs
+from dg_commons.sim.scenarios.utils_dyn_obstacle import infer_lane_from_dyn_obs
 
 
 def model_agent_from_dynamic_obstacle(

@@ -1,16 +1,14 @@
 from typing import List
 
+import numpy as np
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.trajectory import State
-from zuper_commons.types import ZException
 
 from dg_commons import SE2Transform
 from dg_commons.maps.lanes import DgLanelet, LaneCtrPoint
 
-
-class NotSupportedConversion(ZException):
-    pass
+__all__ = ["infer_lane_from_dyn_obs"]
 
 
 def infer_lane_from_dyn_obs(dyn_obs: DynamicObstacle, network: LaneletNetwork) -> DgLanelet:
@@ -41,3 +39,15 @@ def _dglane_from_trajectory(states: List[State], width: float = 3) -> DgLanelet:
         q = SE2Transform(p=state.position, theta=state.orientation)
         control_points.append(LaneCtrPoint(q=q, r=width / 2))
     return DgLanelet(control_points=control_points)
+
+
+def is_dyn_obstacle_static(dyn_obs: DynamicObstacle, tol: float = 0.2) -> bool:
+    """
+    Checks if a dynamic obstacle is actually static (e.g., a parked car)
+    :param dyn_obs: the dynamic obstacle
+    :param tol: distance tolerance to consider an obstacle static
+    :return:
+    """
+    init_position = dyn_obs.initial_state.position
+    end_position = dyn_obs.prediction.trajectory.state_list[-1].position
+    return np.linalg.norm(init_position - end_position) < tol

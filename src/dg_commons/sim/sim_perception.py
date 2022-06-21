@@ -66,4 +66,4 @@ class FovObsFilter(ObsFilter):
         return replace(full_obs, players=fd(new_players))
 
 
-# todo in can be implemented a more efficient version of this filter
+# todo it can be implemented a more efficient version of this filter

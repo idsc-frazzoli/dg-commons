@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import Type, Mapping, TypeVar
 
 import numpy as np
+from dg_commons import apply_SE2_to_shapely_geo
 from frozendict import frozendict
 from geometry import SE2value, SE2_from_xytheta, SO2_from_angle, SO2value, T2value
 from scipy.integrate import solve_ivp
@@ -213,10 +214,7 @@ class VehicleModel(SimModel[TVehicleState, VehicleCommands]):
         """Returns current footprint of the vehicle (mainly for collision checking)"""
         footprint = self.vg.outline_as_polygon
         transform = self.get_pose()
-        matrix_coeff = transform[0, :2].tolist() + transform[1, :2].tolist() + transform[:2, 2].tolist()
-        footprint = affine_transform(footprint, matrix_coeff)
-        assert footprint.is_valid
-        return footprint
+        return apply_SE2_to_shapely_geo(footprint, transform)
 
     def get_mesh(self) -> Mapping[ImpactLocation, Polygon]:
         footprint = self.get_footprint()

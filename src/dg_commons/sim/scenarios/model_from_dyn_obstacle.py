@@ -10,7 +10,7 @@ from dg_commons.sim.models.pedestrian import PedestrianModel, PedestrianState
 from dg_commons.sim.models.vehicle_dynamic import VehicleModelDyn, VehicleStateDyn
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 from dg_commons.sim.models.vehicle_utils import VehicleParameters
-from dg_commons.sim.scenarios.utils_from_dyn_obstacle import NotSupportedConversion
+from dg_commons.sim.scenarios import NotSupportedConversion
 
 __all__ = ["infer_model_from_cr_dyn_obstacle"]
 
