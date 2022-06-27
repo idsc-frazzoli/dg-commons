@@ -48,7 +48,6 @@ class FullRangeSensor(Sensor):
 
 @dataclass
 class VisRangeSensor(Sensor):
-    @time_function
     def fov_as_polygon(self, obstacles: Iterable[crShape]) -> Polygon:
         vertices = []
 
@@ -64,7 +63,6 @@ class VisRangeSensor(Sensor):
 
         for angle in ray_angles:
             ray_end = [self.pose.p[0] + self.range * np.cos(angle), self.pose.p[1] + self.range * np.sin(angle)]
-
             ray_hits = cc.raytrace(self.pose.p[0], self.pose.p[1], ray_end[0], ray_end[1], False)
 
             if not ray_hits:
@@ -86,5 +84,4 @@ class VisRangeSensor(Sensor):
                 vertices.append(closest_hit)
 
         vertices.append(vertices[0])
-
         return Polygon(vertices)

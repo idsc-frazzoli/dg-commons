@@ -33,7 +33,7 @@ def test_visibility_filter():
     pov_x, pov_y = lidar_fov.centroid.xy
 
     obs = [sPolygon2crPolygon(o) for o in [obs1, obs2, obs3]]
-    lidar2d = VisRangeSensor(field_of_view=pi / 1.4)
+    lidar2d = VisRangeSensor(field_of_view=2 * pi)
     lidar2d.pose = sensor_pose
     sensor_view: Polygon = lidar2d.fov_as_polygon(obs)
     vis.add_shape(sensor_view, color="gray", alpha=0.5)

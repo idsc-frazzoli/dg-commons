@@ -63,7 +63,5 @@ class FovObsFilter(ObsFilter):
                 continue
             if fov_poly.intersects(p_obs.occupancy):
                 new_players[p] = p_obs
+
         return replace(full_obs, players=fd(new_players))
-
-
-# todo it can be implemented a more efficient version of this filter

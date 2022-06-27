@@ -1,10 +1,11 @@
 from typing import Optional, Dict
 
 from commonroad.prediction.prediction import TrajectoryPrediction
+from geometry import SE2_from_xytheta
 
 from dg_commons.sim.models.obstacles import StaticObstacle
 
-from dg_commons import PlayerName
+from dg_commons import PlayerName, apply_SE2_to_shapely_geo
 from dg_commons.sim import logger, SimLog, SimParameters
 from dg_commons.sim.scenarios import load_commonroad_scenario, NotSupportedConversion
 from dg_commons.sim.scenarios.convert_from_commonroad import model_agent_from_dynamic_obstacle
@@ -42,7 +43,13 @@ def get_scenario_commonroad_replica(
             static_obstacles.update(
                 {
                     dyn_obs.obstacle_id: StaticObstacle(
-                        obstacle_type=dyn_obs.obstacle_type, shape=dyn_obs.obstacle_shape.shapely_object
+                        obstacle_type=dyn_obs.obstacle_type,
+                        shape=apply_SE2_to_shapely_geo(
+                            shapely_geometry=dyn_obs.obstacle_shape.shapely_object,
+                            se2_value=SE2_from_xytheta(
+                                [*dyn_obs.initial_state.position, dyn_obs.initial_state.orientation]
+                            ),
+                        ),
                     )
                 }
             )
