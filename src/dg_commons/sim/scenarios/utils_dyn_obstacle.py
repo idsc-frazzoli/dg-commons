@@ -8,7 +8,7 @@ from commonroad.scenario.trajectory import State
 from dg_commons import SE2Transform
 from dg_commons.maps.lanes import DgLanelet, LaneCtrPoint
 
-__all__ = ["infer_lane_from_dyn_obs"]
+__all__ = ["infer_lane_from_dyn_obs", "is_dyn_obstacle_static"]
 
 
 def infer_lane_from_dyn_obs(dyn_obs: DynamicObstacle, network: LaneletNetwork) -> DgLanelet:

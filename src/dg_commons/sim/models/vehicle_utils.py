@@ -1,4 +1,3 @@
-import math
 from dataclasses import dataclass
 
 from dg_commons.sim import logger

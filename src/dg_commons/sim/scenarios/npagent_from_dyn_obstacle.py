@@ -12,6 +12,8 @@ from scipy.optimize import minimize
 
 from dg_commons import X, U
 
+__all__ = ["reconstruct_input_transition"]
+
 
 def position_orientation_objective(
     u: np.array,
