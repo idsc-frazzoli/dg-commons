@@ -86,8 +86,8 @@ class BicycleDynamics:
         dx = x0.vx
         dtheta = dx * math.tan(x0.delta) / self.vg.wheelbase
         dy = dtheta * self.vg.lr
-        costh = math.cos(x0.theta)
-        sinth = math.sin(x0.theta)
+        costh = math.cos(x0.psi)
+        sinth = math.sin(x0.psi)
         xdot = dx * costh - dy * sinth
         ydot = dx * sinth + dy * costh
         x_rate = VehicleState(x=xdot, y=ydot, theta=dtheta, vx=u.acc, delta=u.ddelta)

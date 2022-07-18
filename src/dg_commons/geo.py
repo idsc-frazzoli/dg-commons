@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Sequence, Tuple
 
 import numpy as np
@@ -18,6 +19,13 @@ from shapely.geometry import Polygon
 """
 Some of these structures and operations are are taken from `duckietown-world` with minor modifications
 """
+
+
+@dataclass
+class PoseState:
+    x: float
+    y: float
+    psi: float
 
 
 def norm_between_SE2value(p0: SE2value, p1: SE2value, ord=None) -> float:
@@ -74,6 +82,11 @@ class SE2Transform:
         """From a matrix"""
         translation, angle = translation_angle_from_SE2(q)
         return SE2Transform(translation, angle)
+
+    @classmethod
+    def from_PoseState(cls, x: PoseState) -> "SE2Transform":
+        """From a PoseState object"""
+        return SE2Transform([x.x, x.y], x.psi)
 
     def as_SE2(self) -> SE2value:
         M = SE2_from_translation_angle(self.p, self.theta)

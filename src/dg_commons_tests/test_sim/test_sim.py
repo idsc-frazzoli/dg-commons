@@ -28,8 +28,8 @@ def get_simple_scenario() -> SimContext:
     scenario, planning_problem_set = load_commonroad_scenario(scenario_name)
     # road_boundary_obstacle, road_boundary_sg_rectangles = boundary.create_road_boundary_obstacle(scenario)
 
-    x0_p1 = VehicleStateDyn(x=0, y=0, theta=deg2rad(60), vx=5, delta=0)
-    x0_p2 = VehicleStateDyn(x=24, y=6, theta=deg2rad(150), vx=6, delta=0)
+    x0_p1 = VehicleStateDyn(x=0, y=0, psi=deg2rad(60), vx=5, delta=0)
+    x0_p2 = VehicleStateDyn(x=24, y=6, psi=deg2rad(150), vx=6, delta=0)
     x0_p3 = SpacecraftState(x=10, y=5, psi=deg2rad(0), vx=0, vy=0, dpsi=0)
     models = {
         P1: VehicleModelDyn.default_car(x0_p1),

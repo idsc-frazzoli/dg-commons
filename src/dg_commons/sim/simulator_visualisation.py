@@ -212,7 +212,7 @@ def plot_vehicle(
     """"""
     vehicle_outline: Sequence[Tuple[float, float], ...] = vg.outline
     vehicle_color: Color = vg.color
-    q = SE2_from_xytheta((state.x, state.y, state.theta))
+    q = SE2_from_xytheta((state.x, state.y, state.psi))
     if vehicle_poly is None:
         vehicle_box = ax.fill([], [], color=vehicle_color, alpha=alpha, zorder=ZOrders.MODEL, **style_kwargs)[0]
         vehicle_poly = [

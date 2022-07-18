@@ -36,6 +36,11 @@ class SpeedController(PID):
         params = SpeedControllerParam() if params is None else params
         super(SpeedController, self).__init__(params)
 
+    @classmethod
+    def from_vehicle_params(cls, model_param: ModelParameters) -> "SpeedController":
+        params = SpeedControllerParam(setpoint_minmax=model_param.vx_limits, output_minmax=model_param.acc_limits)
+        return SpeedController(params)
+
 
 @dataclass
 class SpeedBehaviorParam:

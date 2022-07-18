@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import Type, Mapping, TypeVar
 
 import numpy as np
-from dg_commons import apply_SE2_to_shapely_geo
+from dg_commons import apply_SE2_to_shapely_geo, PoseState
 from frozendict import frozendict
 from geometry import SE2value, SE2_from_xytheta, SO2_from_angle, SO2value, T2value
 from scipy.integrate import solve_ivp
@@ -67,20 +67,20 @@ TVehicleState = TypeVar("TVehicleState", bound="VehicleState")
 
 
 @dataclass(unsafe_hash=True, eq=True, order=True)
-class VehicleState:
+class VehicleState(PoseState):
     """State for a bicycle model like vehicle"""
 
     x: float
     """ CoG x location [m] """
     y: float
     """ CoG y location [m] """
-    theta: float
+    psi: float
     """ CoG heading [rad] """
     vx: float
     """ CoG longitudinal velocity [m/s] """
     delta: float
     """ Steering angle of the front wheel [rad] """
-    idx = frozendict({"x": 0, "y": 1, "theta": 2, "vx": 3, "delta": 4})
+    idx = frozendict({"x": 0, "y": 1, "psi": 2, "vx": 3, "delta": 4})
     """ Dictionary to get correct values from numpy arrays"""
 
     @classmethod
@@ -93,7 +93,7 @@ class VehicleState:
                 self,
                 x=self.x + other.x,
                 y=self.y + other.y,
-                theta=self.theta + other.theta,
+                psi=self.psi + other.psi,
                 vx=self.vx + other.vx,
                 delta=self.delta + other.delta,
             )
@@ -110,7 +110,7 @@ class VehicleState:
             self,
             x=self.x * val,
             y=self.y * val,
-            theta=self.theta * val,
+            psi=self.psi * val,
             vx=self.vx * val,
             delta=self.delta * val,
         )
@@ -124,7 +124,7 @@ class VehicleState:
         return str({k: round(float(v), 2) for k, v in self.__dict__.items() if not k.startswith("idx")})
 
     def as_ndarray(self) -> np.ndarray:
-        return np.array([self.x, self.y, self.theta, self.vx, self.delta])
+        return np.array([self.x, self.y, self.psi, self.vx, self.delta])
 
     @classmethod
     def from_array(cls, z: np.ndarray):
@@ -132,7 +132,7 @@ class VehicleState:
         return VehicleState(
             x=z[cls.idx["x"]],
             y=z[cls.idx["y"]],
-            theta=z[cls.idx["theta"]],
+            psi=z[cls.idx["psi"]],
             vx=z[cls.idx["vx"]],
             delta=z[cls.idx["delta"]],
         )
@@ -200,14 +200,14 @@ class VehicleModel(SimModel[TVehicleState, VehicleCommands]):
         vx = x0.vx
         dtheta = vx * math.tan(x0.delta) / self.vg.wheelbase
         vy = dtheta * self.vg.lr
-        costh = math.cos(x0.theta)
-        sinth = math.sin(x0.theta)
+        costh = math.cos(x0.psi)
+        sinth = math.sin(x0.psi)
         xdot = vx * costh - vy * sinth
         ydot = vx * sinth + vy * costh
 
         ddelta = steering_constraint(x0.delta, u.ddelta, self.vp)
         acc = apply_full_acceleration_limits(x0.vx, u.acc, self.vp)
-        return VehicleState(x=xdot, y=ydot, theta=dtheta, vx=acc, delta=ddelta)
+        return VehicleState(x=xdot, y=ydot, psi=dtheta, vx=acc, delta=ddelta)
 
     def get_footprint(self) -> Polygon:
         """Returns current footprint of the vehicle (mainly for collision checking)"""
@@ -231,7 +231,7 @@ class VehicleModel(SimModel[TVehicleState, VehicleCommands]):
         return impact_locations
 
     def get_pose(self) -> SE2value:
-        return SE2_from_xytheta([self._state.x, self._state.y, self._state.theta])
+        return SE2_from_xytheta([self._state.x, self._state.y, self._state.psi])
 
     def get_geometry(self) -> VehicleGeometry:
         return self.vg
@@ -244,13 +244,13 @@ class VehicleModel(SimModel[TVehicleState, VehicleCommands]):
         v_l = np.array([vx, vy])
         if in_model_frame:
             return v_l, dtheta
-        rot: SO2value = SO2_from_angle(self._state.theta)
+        rot: SO2value = SO2_from_angle(self._state.psi)
         v_g = rot @ v_l
         return v_g, dtheta
 
     def set_velocity(self, vel: T2value, omega: float, in_model_frame: bool):
         if not in_model_frame:
-            rot: SO2value = SO2_from_angle(-self._state.theta)
+            rot: SO2value = SO2_from_angle(-self._state.psi)
             vel = rot @ vel
         self._state.vx = vel[0]
         logger.warn(

@@ -11,6 +11,7 @@ from shapely import affinity
 from shapely.affinity import affine_transform
 from shapely.geometry import Point, Polygon
 
+from dg_commons import PoseState
 from dg_commons.sim import SimModel, SimTime, ImpactLocation, IMPACT_EVERYWHERE
 from dg_commons.sim.models.model_structures import ModelGeometry, PEDESTRIAN, ModelType
 from dg_commons.sim.models.model_utils import apply_full_acceleration_limits
@@ -76,7 +77,7 @@ class PedestrianCommands:
 
 
 @dataclass(unsafe_hash=True, eq=True, order=True)
-class PedestrianState:
+class PedestrianState(PoseState):
     x: float
     """ x-position of pedestrian [m] """
     y: float
