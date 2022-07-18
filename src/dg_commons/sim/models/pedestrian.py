@@ -13,6 +13,7 @@ from shapely.geometry import Point, Polygon
 
 from dg_commons import PoseState
 from dg_commons.sim import SimModel, SimTime, ImpactLocation, IMPACT_EVERYWHERE
+from dg_commons.sim.models import ModelParameters
 from dg_commons.sim.models.model_structures import ModelGeometry, PEDESTRIAN, ModelType
 from dg_commons.sim.models.model_utils import apply_full_acceleration_limits
 from dg_commons.sim.models.pedestrian_utils import PedestrianParameters, rotation_constraint
@@ -257,6 +258,10 @@ class PedestrianModel(SimModel[SE2value, float]):
     @property
     def model_type(self) -> ModelType:
         return PEDESTRIAN
+
+    @property
+    def model_params(self) -> ModelParameters:
+        return self.pp
 
     def get_extra_collision_friction_acc(self):
         magic_mu = 2.0

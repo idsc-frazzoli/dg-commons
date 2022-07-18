@@ -31,3 +31,11 @@ class SteerController(PID):
     def __init__(self, params: Optional[PIDParam] = None):
         params = SteerControllerParam() if params is None else params
         super(SteerController, self).__init__(params)
+
+    @classmethod
+    def from_vehicle_params(cls, vehicle_param: VehicleParameters) -> "SteerController":
+        params = SteerControllerParam(
+            setpoint_minmax=(-vehicle_param.delta_max, vehicle_param.delta_max),
+            output_minmax=(-vehicle_param.ddelta_max, vehicle_param.ddelta_max),
+        )
+        return SteerController(params)

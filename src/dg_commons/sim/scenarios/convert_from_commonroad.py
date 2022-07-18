@@ -2,6 +2,9 @@ from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import DynamicObstacle
 
 from dg_commons import Color
+from dg_commons.controllers.speed import SpeedController
+from dg_commons.controllers.steer import SteerController
+from dg_commons.sim import SimModel
 from dg_commons.sim.agents.agent import Agent
 from dg_commons.sim.agents.lane_follower import LFAgent
 from dg_commons.sim.models.vehicle_dynamic import VehicleModelDyn
@@ -23,8 +26,12 @@ def model_agent_from_dynamic_obstacle(
     :return:
     """
 
-    model = infer_model_from_cr_dyn_obstacle(dyn_obs, color)
+    model: SimModel = infer_model_from_cr_dyn_obstacle(dyn_obs, color)
     # Agent
     dglane = infer_lane_from_dyn_obs(dyn_obs=dyn_obs, network=lanelet_network)
-    agent = LFAgent(dglane)
+    speed_controller = SpeedController.from_vehicle_params(model.model_params)
+    steer_controller = SteerController.from_vehicle_params(model.model_params)
+    agent = LFAgent(
+        dglane,
+    )
     return model, agent

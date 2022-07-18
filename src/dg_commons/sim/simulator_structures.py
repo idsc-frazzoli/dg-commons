@@ -10,7 +10,7 @@ from zuper_commons.types import ZValueError
 from dg_commons import DgSampledSequence, PlayerName, X, U
 from dg_commons.seq.sequence import DgSampledSequenceBuilder, Timestamp, UndefinedAtTime
 from dg_commons.sim import SimTime, ImpactLocation
-from dg_commons.sim.models.model_structures import ModelGeometry, ModelType
+from dg_commons.sim.models.model_structures import ModelGeometry, ModelType, ModelParameters
 
 __all__ = [
     "SimObservations",
@@ -188,6 +188,11 @@ class SimModel(ABC, Generic[X, U]):
     @property
     @abstractmethod
     def model_type(self) -> ModelType:
+        pass
+
+    @property
+    @abstractmethod
+    def model_params(self) -> ModelParameters:
         pass
 
     def get_state(self) -> X:
