@@ -28,7 +28,7 @@ def infer_model_from_cr_dyn_obstacle(dyn_obs: DynamicObstacle, color: Color) -> 
         x0 = VehicleStateDyn(
             x=dyn_obs.initial_state.position[0],
             y=dyn_obs.initial_state.position[1],
-            theta=dyn_obs.initial_state.orientation,
+            psi=dyn_obs.initial_state.orientation,
             vx=dyn_obs.initial_state.velocity,
             delta=delta,
         )

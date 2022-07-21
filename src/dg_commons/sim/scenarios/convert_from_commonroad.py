@@ -31,7 +31,5 @@ def model_agent_from_dynamic_obstacle(
     dglane = infer_lane_from_dyn_obs(dyn_obs=dyn_obs, network=lanelet_network)
     speed_controller = SpeedController.from_vehicle_params(model.model_params)
     steer_controller = SteerController.from_vehicle_params(model.model_params)
-    agent = LFAgent(
-        dglane,
-    )
+    agent = LFAgent(dglane, speed_controller=speed_controller, steer_controller=steer_controller)
     return model, agent
