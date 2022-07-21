@@ -30,19 +30,17 @@ class Trajectory(DgSampledSequence[VehicleState]):
             pose = extract_pose_from_state(x)
             new_pose = np.dot(t.as_SE2(), pose)
             xytheta = xytheta_from_SE2(new_pose)
-            return replace(x, x=xytheta[0], y=xytheta[1], theta=xytheta[2])
+            return replace(x, x=xytheta[0], y=xytheta[1], psi=xytheta[2])
 
         f = partial(_applySE2, t=transform)
         return self.transform_values(f=f, YT=VehicleState)
 
-    def is_connectable(self, other: "Trajectory", tol=1e-3) -> bool:
+    def is_connectable(self, other: "Trajectory", tol: float = 1e-3) -> bool:
         """
         Any primitive whose initial state's velocity and steering angle are equal to those of the current primitive is
         deemed connectable.
-
-        :param other: the motion primitive to which the connectivity is examined
         """
-        if self.is_empty():
+        if self.is_empty() or other.is_empty():
             return True
         diff = self.at(self.get_end()) - other.at(other.get_start())
         return abs(diff.vx) < tol and abs(diff.delta) < tol
@@ -66,30 +64,30 @@ class Trajectory(DgSampledSequence[VehicleState]):
         timestamps = timestamps + other_timestamps
         return Trajectory(values=values, timestamps=timestamps)
 
-    def scalar_multiply(self, scalar: float) -> "Trajectory":
-        """
-        Multiply all values of a trajectory by a scalar. x, y, theta, vx and delta will each be
-        multiplied by the same scalar.
-        """
-        values = [value * scalar for value in self.values]
-        return Trajectory(values=values, timestamps=self.timestamps)
-
-    def __add__(self, other: "Trajectory") -> "Trajectory":
-        """
-        Sum two trajectories, value by value.
-        """
-        assert self.timestamps == other.timestamps, "The timestamps must be equal sum the values of two trajectories."
-        values = []
-        for i, _ in enumerate(self.timestamps):
-            values.append(self.values[i] + other.values[i])
-
-        return Trajectory(values=values, timestamps=self.timestamps)
-
-    def __sub__(self, other: "Trajectory") -> "Trajectory":
-        """
-        Subtract one trajectory from another one, value by value.
-        """
-        return self + other.scalar_multiply(scalar=-1.0)
+    # def scalar_multiply(self, scalar: float) -> "Trajectory":
+    #     """
+    #     Multiply all values of a trajectory by a scalar. x, y, theta, vx and delta will each be
+    #     multiplied by the same scalar.
+    #     """
+    #     values = [value * scalar for value in self.values]
+    #     return Trajectory(values=values, timestamps=self.timestamps)
+    #
+    # def __add__(self, other: "Trajectory") -> "Trajectory":
+    #     """
+    #     Sum two trajectories, value by value.
+    #     """
+    #     assert self.timestamps == other.timestamps, "The timestamps must be equal sum the values of two trajectories."
+    #     values = []
+    #     for i, _ in enumerate(self.timestamps):
+    #         values.append(self.values[i] + other.values[i])
+    #
+    #     return Trajectory(values=values, timestamps=self.timestamps)
+    #
+    # def __sub__(self, other: "Trajectory") -> "Trajectory":
+    #     """
+    #     Subtract one trajectory from another one, value by value.
+    #     """
+    #     return self + other.scalar_multiply(scalar=-1.0)
 
     def merge_unsafe(self, other: "Trajectory", tol=1e-3) -> "Trajectory":
         """Only checks that timestamps between the end and start of the trajectories to merge are consistent."""
@@ -111,6 +109,7 @@ class Trajectory(DgSampledSequence[VehicleState]):
     def upsample(self, n: int) -> "Trajectory":
         """
         Add n points between each subsequent point in the original trajectory by interpolation
+        # todo this method can be moved to be a method of the generic DGSampledSequence
         """
         timestamps = list(self.timestamps)
         up_values: List[VehicleState] = []
@@ -119,11 +118,11 @@ class Trajectory(DgSampledSequence[VehicleState]):
         for t_previous, t_next in zip(timestamps, timestamps[1:]):
             up_timestamps.append(t_previous)
             up_values.append(self.at(t_previous))
-            assert t_next > t_previous
             dt = (t_next - t_previous) / (n + 1)
             for i in range(1, n + 1):
-                up_timestamps.append(i * dt + t_previous)
-                up_values.append(self.at_interp(i * dt + t_previous))
+                ts = i * dt + t_previous
+                up_timestamps.append(ts)
+                up_values.append(self.at_interp(ts))
 
         # append last element of original sequence
         up_timestamps.append(timestamps[-1])
@@ -131,20 +130,20 @@ class Trajectory(DgSampledSequence[VehicleState]):
 
         return Trajectory(values=up_values, timestamps=up_timestamps)
 
-    def squared_error(self, other: "Trajectory") -> float:
-        """
-        Compute the average mean squared error for x, y, theta, vx, delta between two trajectories.
-        Then compute the average across these 5 averages.
-        """
-        assert self.timestamps == other.timestamps, "The timestamps must be equal to compute squared error."
-        diff = self - other
-        x_squared = sum([value.x * value.x for value in diff.values]) / len(diff.values)
-        y_squared = sum([value.y * value.y for value in diff.values]) / len(diff.values)
-        theta_squared = sum([value.psi * value.psi for value in diff.values]) / len(diff.values)
-        vx_squared = sum([value.vx * value.vx for value in diff.values]) / len(diff.values)
-        delta_squared = sum([value.delta * value.delta for value in diff.values]) / len(diff.values)
-
-        return (x_squared + y_squared + theta_squared + vx_squared + delta_squared) / 5.0
+    # def squared_error(self, other: "Trajectory") -> float:
+    #     """
+    #     Compute the average mean squared error for x, y, theta, vx, delta between two trajectories.
+    #     Then compute the average across these 5 averages.
+    #     """
+    #     assert self.timestamps == other.timestamps, "The timestamps must be equal to compute squared error."
+    #     diff = self - other
+    #     x_squared = sum([value.x * value.x for value in diff.values]) / len(diff.values)
+    #     y_squared = sum([value.y * value.y for value in diff.values]) / len(diff.values)
+    #     theta_squared = sum([value.psi * value.psi for value in diff.values]) / len(diff.values)
+    #     vx_squared = sum([value.vx * value.vx for value in diff.values]) / len(diff.values)
+    #     delta_squared = sum([value.delta * value.delta for value in diff.values]) / len(diff.values)
+    #
+    #     return (x_squared + y_squared + theta_squared + vx_squared + delta_squared) / 5.0
 
 
 JointTrajectories = Mapping[PlayerName, Trajectory]
