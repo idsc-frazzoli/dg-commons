@@ -84,7 +84,7 @@ class MotionPrimitivesGenerator(TrajGenerator):
                 if not is_valid:
                     continue
 
-                init_state = VehicleState(x=0, y=0, theta=0, vx=v_start, delta=sa_start) if x0 is None else x0
+                init_state = VehicleState(x=0, y=0, psi=0, vx=v_start, delta=sa_start) if x0 is None else x0
                 timestamps = [
                     Decimal(0),
                 ]

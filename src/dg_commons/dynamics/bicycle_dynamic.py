@@ -90,7 +90,7 @@ class BicycleDynamics:
         sinth = math.sin(x0.psi)
         xdot = dx * costh - dy * sinth
         ydot = dx * sinth + dy * costh
-        x_rate = VehicleState(x=xdot, y=ydot, theta=dtheta, vx=u.acc, delta=u.ddelta)
+        x_rate = VehicleState(x=xdot, y=ydot, psi=dtheta, vx=u.acc, delta=u.ddelta)
         return x_rate
 
     def get_shared_resources(self, x: X) -> FrozenSet[SR]:
