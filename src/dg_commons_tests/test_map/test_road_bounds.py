@@ -2,7 +2,6 @@ from commonroad.visualization.mp_renderer import MPRenderer
 from matplotlib import pyplot as plt
 from shapely.affinity import affine_transform
 from shapely.geometry import Polygon
-from shapely.strtree import STRtree
 
 from dg_commons.maps.road_bounds import build_road_boundary_obstacle
 from dg_commons.sim.models.obstacles import StaticObstacle
