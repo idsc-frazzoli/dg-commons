@@ -21,6 +21,10 @@ def test_trajectory():
 
 def test_upsample():
     t = Trajectory(ts, [x0_p1, x0_p2, x0_p3])
-    t_up = t.upsample(2)
-    print(t_up)
-    assert t_up == t
+    t_sample = t.upsample(0)
+    assert t == t_sample
+
+    n: int = 2
+    t_up = t.upsample(n)
+    expected_l = (len(t.timestamps) - 1) * n + len(t.timestamps)
+    assert expected_l == len(t_up.timestamps)
