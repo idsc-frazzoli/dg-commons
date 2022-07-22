@@ -26,7 +26,7 @@ DObs1 = PlayerName("DObs1")
 
 
 def get_simple_scenario() -> SimContext:
-    x0_p1 = VehicleStateDyn(x=7, y=4, theta=deg2rad(60), vx=2, delta=0)
+    x0_p1 = VehicleStateDyn(x=7, y=4, psi=deg2rad(60), vx=2, delta=0)
 
     dobs_shape = Polygon([[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]])
     x0_dobs1: DynObstacleState = DynObstacleState(x=7, y=11, psi=deg2rad(0), vx=3, vy=-1, dpsi=1)

@@ -100,7 +100,9 @@ def create_animation(
                     except:
                         logger.warn(f"Cannot plot extra", extra=plog.extra)
             adjust_axes_limits(
-                ax=ax, plot_limits=plot_limits, players_states=[player.state for player in init_log_entry.values()]
+                ax=ax,
+                plot_limits=plot_limits,
+                players_states={p: log_entry.state for p, log_entry in init_log_entry.items()},
             )
             texts["time"] = ax.text(
                 0.02,
@@ -142,7 +144,7 @@ def create_animation(
                 except:
                     logger.warn(f"Cannot plot extra", extra=log_at_t[pname].extra)
         adjust_axes_limits(
-            ax=ax, plot_limits=plot_limits, players_states=[player.state for player in log_at_t.values()]
+            ax=ax, plot_limits=plot_limits, players_states={p: log_entry.state for p, log_entry in log_at_t.items()}
         )
         texts["time"].set_text(f"t = {t:.1f}s")
         texts["time"].set_transform(ax.transAxes)
@@ -171,14 +173,16 @@ def create_animation(
 
 
 def adjust_axes_limits(
-    ax: Axes, plot_limits: Union[str, Sequence[Sequence[float]]], players_states: Optional[Sequence[X]] = None
+    ax: Axes,
+    plot_limits: Union[str, PlayerName, Sequence[Sequence[float]]],
+    players_states: Optional[Mapping[PlayerName, X]] = None,
 ):
     if plot_limits is None:
         ax.autoscale()
     elif plot_limits == "auto":
         if plot_limits is None:
             raise ZValueError('Plotting with "auto" option requires players positions')
-        players_limits = approximate_bounding_box_players(obj_list=players_states)
+        players_limits = approximate_bounding_box_players(obj_list=list(players_states.values()))
         # todo instead of artificially add +5 -5, make bounding box around trajectories + vehicle
         if players_limits is not None:
             ax.axis(
@@ -189,6 +193,14 @@ def adjust_axes_limits(
             )
         else:
             ax.autoscale()
+    elif isinstance(plot_limits, str):
+        try:
+            state = players_states[plot_limits]
+            slack = 30
+            ax.axis(xmin=state.x - slack, xmax=state.x + slack, ymin=state.y - slack, ymax=state.y + slack)
+        except AssertionError:
+            ax.autoscale()
+
     else:
         # plotlimits are expected to be seq of seq of floats
         ax.set_xlim(plot_limits[0][0], plot_limits[0][1])

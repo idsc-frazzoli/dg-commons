@@ -9,8 +9,10 @@ from scipy.integrate import solve_ivp
 from shapely.geometry import Polygon
 
 from dg_commons import U, apply_SE2_to_shapely_geo
-from dg_commons.sim import SimModel, ImpactLocation, SimTime, IMPACT_EVERYWHERE
-from dg_commons.sim.models import ModelType, DYNAMIC_OBSTACLE
+from dg_commons.sim.sim_types import ImpactLocation, SimTime
+from dg_commons.sim.simulator_structures import SimModel
+from dg_commons.sim.collision_structures import IMPACT_EVERYWHERE
+from dg_commons.sim.models import ModelType, DYNAMIC_OBSTACLE, ModelGeometry, ModelParameters
 from dg_commons.sim.models.model_utils import apply_full_acceleration_limits, apply_rot_speed_constraint
 from dg_commons.sim.models.obstacles import ObstacleGeometry, DynObstacleParameters
 
@@ -234,6 +236,10 @@ class DynObstacleModel(SimModel[DynObstacleState, DynObstacleCommands]):
     @property
     def model_type(self) -> ModelType:
         return DYNAMIC_OBSTACLE
+
+    @property
+    def model_params(self) -> ModelParameters:
+        return self.op
 
     def get_extra_collision_friction_acc(self) -> Tuple[float, float, float]:
         raise NotImplementedError()

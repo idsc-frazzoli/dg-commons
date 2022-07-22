@@ -19,9 +19,9 @@ from dg_commons.sim.models.vehicle_utils import steering_constraint, VehiclePara
 class VehicleStateDyn(VehicleState):
     vy: float = 0
     """ CoG longitudinal velocity [m/s] """
-    dtheta: float = 0
+    dpsi: float = 0
     """ yaw rate """
-    idx = frozendict({"x": 0, "y": 1, "theta": 2, "vx": 3, "vy": 4, "dtheta": 5, "delta": 6})
+    idx = frozendict({"x": 0, "y": 1, "psi": 2, "vx": 3, "vy": 4, "dpsi": 5, "delta": 6})
     """ Dictionary to get correct values from numpy arrays"""
 
     def __add__(self, other: "VehicleStateDyn") -> "VehicleStateDyn":
@@ -30,10 +30,10 @@ class VehicleStateDyn(VehicleState):
                 self,
                 x=self.x + other.x,
                 y=self.y + other.y,
-                theta=self.theta + other.theta,
+                psi=self.psi + other.psi,
                 vx=self.vx + other.vx,
                 vy=self.vy + other.vy,
-                dtheta=self.dtheta + other.dtheta,
+                dpsi=self.dpsi + other.dpsi,
                 delta=self.delta + other.delta,
             )
         else:
@@ -44,15 +44,15 @@ class VehicleStateDyn(VehicleState):
             self,
             x=self.x * val,
             y=self.y * val,
-            theta=self.theta * val,
+            psi=self.psi * val,
             vx=self.vx * val,
             vy=self.vy * val,
-            dtheta=self.dtheta * val,
+            dpsi=self.dpsi * val,
             delta=self.delta * val,
         )
 
     def as_ndarray(self) -> np.ndarray:
-        return np.array([self.x, self.y, self.theta, self.vx, self.vy, self.dtheta, self.delta])
+        return np.array([self.x, self.y, self.psi, self.vx, self.vy, self.dpsi, self.delta])
 
     @classmethod
     def from_array(cls, z: np.ndarray):
@@ -60,15 +60,15 @@ class VehicleStateDyn(VehicleState):
         return VehicleStateDyn(
             x=z[cls.idx["x"]],
             y=z[cls.idx["y"]],
-            theta=z[cls.idx["theta"]],
+            psi=z[cls.idx["psi"]],
             vx=z[cls.idx["vx"]],
             vy=z[cls.idx["vy"]],
-            dtheta=z[cls.idx["dtheta"]],
+            dpsi=z[cls.idx["dpsi"]],
             delta=z[cls.idx["delta"]],
         )
 
     def to_vehicle_state(self) -> VehicleState:
-        return VehicleState(x=self.x, y=self.y, theta=self.theta, vx=self.vx, delta=self.delta)
+        return VehicleState(x=self.x, y=self.y, psi=self.psi, vx=self.vx, delta=self.delta)
 
 
 class VehicleModelDyn(VehicleModel):
@@ -134,10 +134,10 @@ class VehicleModelDyn(VehicleModel):
             return VehicleStateDyn(
                 x=dx_kin.x,
                 y=dx_kin.y,
-                theta=dx_kin.theta,
+                psi=dx_kin.psi,
                 vx=dx_kin.vx + frictionx,
                 vy=frictiony,
-                dtheta=frictiontheta,
+                dpsi=frictiontheta,
                 delta=dx_kin.delta,
             )
         else:
@@ -147,8 +147,8 @@ class VehicleModelDyn(VehicleModel):
 
             # vertical forces
             load_transfer = self.vg.h_cog * acc
-            F1_n = -m * (G * self.vg.lr - load_transfer) / self.vg.length
-            F2_n = -m * (G * self.vg.lf + load_transfer) / self.vg.length
+            F1_n = -m * (G * self.vg.lr - load_transfer) / self.vg.wheelbase
+            F2_n = -m * (G * self.vg.lf + load_transfer) / self.vg.wheelbase
             # Rolling resistance
             F_rr_f = self.vg.c_rr_f * F1_n
             F_rr_r = self.vg.c_rr_r * F2_n
@@ -158,13 +158,13 @@ class VehicleModelDyn(VehicleModel):
 
             # front wheel forces (assumes no longitudinal force, rear traction)
             rot_delta = SO2_from_angle(-x0.delta)
-            vel_1_tyre = rot_delta @ np.array([x0.vx, x0.vy + self.vg.lf * x0.dtheta])
+            vel_1_tyre = rot_delta @ np.array([x0.vx, x0.vy + self.vg.lf * x0.dpsi])
             slip_angle_1 = math.atan(vel_1_tyre[1] / vel_1_tyre[0])
             F1y_tyre = self.pacejka_front.evaluate(slip_angle_1) * F1_n
             Facc1_sat = Facc1 * math.sqrt(1 - (F1y_tyre / (F1_n * self.pacejka_front.D)) ** 2)
             F1 = rot_delta.T @ np.array([Facc1_sat, F1y_tyre])
 
-            vel_2 = np.array([x0.vx, x0.vy - self.vg.lr * x0.dtheta])
+            vel_2 = np.array([x0.vx, x0.vy - self.vg.lr * x0.dpsi])
             slip_angle_2 = math.atan(vel_2[1] / vel_2[0])
             # Back wheel forces (implicit assumption motor on the back)
             F2y = self.pacejka_rear.evaluate(slip_angle_2) * F2_n
@@ -176,26 +176,26 @@ class VehicleModelDyn(VehicleModel):
             # Drag Force
             F_drag = -0.5 * x0.vx * self.vg.a_drag * self.vg.c_drag * rho**2
             # longitudinal acceleration
-            acc_x = (F1[0] + F_drag + Facc2_sat) / m + x0.dtheta * x0.vy
+            acc_x = (F1[0] + F_drag + Facc2_sat) / m + x0.dpsi * x0.vy
 
             # kinematic model
-            costh = math.cos(x0.theta)
-            sinth = math.sin(x0.theta)
+            costh = math.cos(x0.psi)
+            sinth = math.sin(x0.psi)
             xdot = x0.vx * costh - x0.vy * sinth
             ydot = x0.vx * sinth + x0.vy * costh
 
             # lateral acceleration
-            acc_y = (F1[1] + F2y) / m - x0.dtheta * x0.vx
+            acc_y = (F1[1] + F2y) / m - x0.dpsi * x0.vx
             # yaw acceleration
             ddtheta = (F1[1] * self.vg.lf - F2y * self.vg.lr) / self.vg.Iz
 
             return VehicleStateDyn(
                 x=xdot,
                 y=ydot,
-                theta=x0.dtheta,
+                psi=x0.dpsi,
                 vx=acc_x + frictionx,
                 vy=acc_y + frictiony,
-                dtheta=ddtheta + frictiontheta,
+                dpsi=ddtheta + frictiontheta,
                 delta=ddelta,
             )
 
@@ -203,14 +203,14 @@ class VehicleModelDyn(VehicleModel):
         self._state: VehicleStateDyn
         v_l = np.array([self._state.vx, self._state.vy])
         if in_model_frame:
-            return v_l, self._state.dtheta
-        rot: SO2value = SO2_from_angle(self._state.theta)
+            return v_l, self._state.dpsi
+        rot: SO2value = SO2_from_angle(self._state.psi)
         v_g = rot @ v_l
-        return v_g, self._state.dtheta
+        return v_g, self._state.dpsi
 
     def set_velocity(self, vel: T2value, omega: float, in_model_frame: bool):
         if not in_model_frame:
-            rot: SO2value = SO2_from_angle(-self._state.theta)
+            rot: SO2value = SO2_from_angle(-self._state.psi)
             vel = rot @ vel
 
         self._state.vx = vel[0]
@@ -235,7 +235,7 @@ class VehicleModelDyn(VehicleModel):
         if self.has_collided:  # and self.model_type in TwoWheelsTypes:
             frictionx = -magic_mu * self._state.vx
             frictiony = -magic_mu * self._state.vy
-            frictiontheta = -magic_mu * self._state.dtheta
+            frictiontheta = -magic_mu * self._state.dpsi
             return frictionx, frictiony, frictiontheta
         else:
             return 0, 0, 0

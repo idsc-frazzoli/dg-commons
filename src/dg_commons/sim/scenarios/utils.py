@@ -4,15 +4,24 @@ from typing import Tuple, Optional
 
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.planning.planning_problem import PlanningProblemSet
+from commonroad.scenario.lanelet import LaneletNetwork, Lanelet
 from commonroad.scenario.scenario import Scenario
+from geometry import T2value
+from zuper_commons.types import ZException
 
-__all__ = ["load_commonroad_scenario"]
+from dg_commons.maps import DgLanelet
+
+__all__ = ["load_commonroad_scenario", "dglane_from_position", "NotSupportedConversion"]
+
+
+class NotSupportedConversion(ZException):
+    pass
 
 
 def load_commonroad_scenario(
     scenario_name: str, scenarios_dir: Optional[str] = None
 ) -> Tuple[Scenario, PlanningProblemSet]:
-    """Loads a Commonroad scenario.
+    """Loads a CommonRoad scenario.
     If no directory is provided it looks for a `scenarios` folder at the src level of the current project."""
     if scenarios_dir is None:
         dg_root_dir = __file__
@@ -37,3 +46,20 @@ def load_commonroad_scenario(
         )
     # read in the scenario and planning problem set
     return CommonRoadFileReader(scenario_path).open(lanelet_assignment=True)
+
+
+def dglane_from_position(
+    p: T2value, network: LaneletNetwork, init_lane_selection: int = 0, succ_lane_selection: int = 0
+) -> DgLanelet:
+    """Gets the merged lane from init lane select to the successive lane from the current position"""
+    lane_id = network.find_lanelet_by_position(
+        [
+            p,
+        ]
+    )
+    assert len(lane_id[0]) > 0, p
+    lane = network.find_lanelet_by_id(lane_id[0][init_lane_selection])
+    merged_lane = Lanelet.all_lanelets_by_merging_successors_from_lanelet(lanelet=lane, network=network)[0][
+        succ_lane_selection
+    ]
+    return DgLanelet.from_commonroad_lanelet(merged_lane)

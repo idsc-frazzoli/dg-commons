@@ -49,7 +49,7 @@ def test_commands_sampler():
     vehicle = BicycleDynamics(vg=vg, vp=vp)
     mpg = CommandsSampler(param=params, vehicle_dynamics=vehicle.successor_ivp, vehicle_param=vp)
 
-    x0 = VehicleState(x=0, y=0, theta=0, vx=5, delta=0)
+    x0 = VehicleState(x=0, y=0, psi=0, vx=5, delta=0)
 
     traject = mpg.generate(x0)
     _viz(traject, "CommandsSampler")

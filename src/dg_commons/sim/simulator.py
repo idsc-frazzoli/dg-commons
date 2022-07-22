@@ -3,7 +3,7 @@ from dataclasses import dataclass, field, replace
 from decimal import Decimal
 from itertools import combinations
 from time import perf_counter
-from typing import Mapping, Optional, List, Dict
+from typing import Mapping, Optional, List, Dict, MutableMapping
 
 from dg_commons import PlayerName, U, fd
 from dg_commons.planning import PlanningGoal
@@ -27,9 +27,9 @@ class SimContext:
 
     dg_scenario: DgScenario
     """A driving games scenario"""
-    models: Mapping[PlayerName, SimModel]
+    models: MutableMapping[PlayerName, SimModel]
     """The simulation models for each player"""
-    players: Mapping[PlayerName, TAgent]
+    players: MutableMapping[PlayerName, TAgent]
     """The players in the simulation (Agents mapping observations to commands)"""
     param: SimParameters
     """The simulation parameters"""
@@ -162,6 +162,7 @@ class Simulator:
             if sim_context.missions
             else False
         )
+        # todo remove players that fulfill the mission?!
         termination_condition: bool = (
             sim_context.time > sim_context.param.max_sim_time
             or sim_context.time > sim_context.first_collision_ts + sim_context.param.sim_time_after_collision

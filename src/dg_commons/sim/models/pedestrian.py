@@ -11,7 +11,9 @@ from shapely import affinity
 from shapely.affinity import affine_transform
 from shapely.geometry import Point, Polygon
 
+from dg_commons import PoseState
 from dg_commons.sim import SimModel, SimTime, ImpactLocation, IMPACT_EVERYWHERE
+from dg_commons.sim.models import ModelParameters
 from dg_commons.sim.models.model_structures import ModelGeometry, PEDESTRIAN, ModelType
 from dg_commons.sim.models.model_utils import apply_full_acceleration_limits
 from dg_commons.sim.models.pedestrian_utils import PedestrianParameters, rotation_constraint
@@ -38,9 +40,9 @@ class PedestrianGeometry(ModelGeometry):
 class PedestrianCommands:
     acc: float
     """ Acceleration [m/s^2] """
-    dtheta: float
+    dpsi: float
     """ rotational acceleration of the pedestrian"""
-    idx = frozendict({"acc": 0, "dtheta": 1})
+    idx = frozendict({"acc": 0, "dpsi": 1})
     """ Dictionary to get correct values from numpy arrays"""
 
     @classmethod
@@ -49,7 +51,7 @@ class PedestrianCommands:
 
     def __add__(self, other: "PedestrianCommands") -> "PedestrianCommands":
         if type(other) == type(self):
-            return replace(self, acc=self.acc + other.acc, dtheta=self.dtheta + other.dtheta)
+            return replace(self, acc=self.acc + other.acc, dpsi=self.dpsi + other.dpsi)
         else:
             raise NotImplementedError
 
@@ -59,7 +61,7 @@ class PedestrianCommands:
         return self + (other * -1.0)
 
     def __mul__(self, val: float) -> "PedestrianCommands":
-        return replace(self, acc=self.acc * val, dtheta=self.dtheta * val)
+        return replace(self, acc=self.acc * val, dpsi=self.dpsi * val)
 
     __rmul__ = __mul__
 
@@ -67,29 +69,29 @@ class PedestrianCommands:
         return self * (1 / val)
 
     def as_ndarray(self) -> np.ndarray:
-        return np.array([self.acc, self.dtheta])
+        return np.array([self.acc, self.dpsi])
 
     @classmethod
     def from_array(cls, z: np.ndarray):
         assert cls.get_n_commands() == z.size == z.shape[0], f"z vector {z} cannot initialize VehicleInputs."
-        return PedestrianCommands(acc=z[cls.idx["acc"]], dtheta=z[cls.idx["dtheta"]])
+        return PedestrianCommands(acc=z[cls.idx["acc"]], dpsi=z[cls.idx["dpsi"]])
 
 
 @dataclass(unsafe_hash=True, eq=True, order=True)
-class PedestrianState:
+class PedestrianState(PoseState):
     x: float
     """ x-position of pedestrian [m] """
     y: float
     """ y-position of pedestrian [m] """
-    theta: float
+    psi: float
     """ orientation [rad] """
     vx: float
     """ longitudinal speed [m/s] """
     vy: float = 0
     """ lateral speed [m/s] """
-    dtheta: float = 0
+    dpsi: float = 0
     """ rot speed [rad/s] """
-    idx = frozendict({"x": 0, "y": 1, "theta": 2, "vx": 3, "vy": 4, "dtheta": 5})
+    idx = frozendict({"x": 0, "y": 1, "psi": 2, "vx": 3, "vy": 4, "dpsi": 5})
     """ Dictionary to get correct values from numpy arrays"""
 
     @classmethod
@@ -102,10 +104,10 @@ class PedestrianState:
                 self,
                 x=self.x + other.x,
                 y=self.y + other.y,
-                theta=self.theta + other.theta,
+                psi=self.psi + other.psi,
                 vx=self.vx + other.vx,
                 vy=self.vy + other.vy,
-                dtheta=self.dtheta + other.dtheta,
+                dpsi=self.dpsi + other.dpsi,
             )
         else:
             raise NotImplementedError
@@ -120,10 +122,10 @@ class PedestrianState:
             self,
             x=self.x * val,
             y=self.y * val,
-            theta=self.theta * val,
+            psi=self.psi * val,
             vx=self.vx * val,
             vy=self.vy * val,
-            dtheta=self.dtheta * val,
+            dpsi=self.dpsi * val,
         )
 
     __rmul__ = __mul__
@@ -135,7 +137,7 @@ class PedestrianState:
         return str({k: round(float(v), 2) for k, v in self.__dict__.items() if not k.startswith("idx")})
 
     def as_ndarray(self) -> np.ndarray:
-        return np.array([self.x, self.y, self.theta, self.vx, self.vy, self.dtheta])
+        return np.array([self.x, self.y, self.psi, self.vx, self.vy, self.dpsi])
 
     @classmethod
     def from_array(cls, z: np.ndarray):
@@ -143,10 +145,10 @@ class PedestrianState:
         return PedestrianState(
             x=z[cls.idx["x"]],
             y=z[cls.idx["y"]],
-            theta=z[cls.idx["theta"]],
+            psi=z[cls.idx["psi"]],
             vx=z[cls.idx["vx"]],
             vy=z[cls.idx["vy"]],
-            dtheta=z[cls.idx["dtheta"]],
+            dpsi=z[cls.idx["dpsi"]],
         )
 
 
@@ -176,11 +178,11 @@ class PedestrianModel(SimModel[SE2value, float]):
             n_states = self.XT.get_n_states()
             state = self.XT.from_array(y[0:n_states])
             if self.has_collided:
-                actions = PedestrianCommands(acc=0, dtheta=0)
+                actions = PedestrianCommands(acc=0, dpsi=0)
             else:
                 actions = PedestrianCommands(
                     acc=y[PedestrianCommands.idx["acc"] + n_states],
-                    dtheta=y[PedestrianCommands.idx["dtheta"] + n_states],
+                    dpsi=y[PedestrianCommands.idx["dpsi"] + n_states],
                 )
             return state, actions
 
@@ -203,18 +205,18 @@ class PedestrianModel(SimModel[SE2value, float]):
 
     def dynamics(self, x0: PedestrianState, u: PedestrianCommands) -> PedestrianState:
         """Simple double integrator with friction after collision to simulate a "bag of potato" effect"""
-        dtheta = rotation_constraint(rot_velocity=u.dtheta, pp=self.pp)
+        dpsi = rotation_constraint(rot_velocity=u.dpsi, pp=self.pp)
         acc = apply_full_acceleration_limits(speed=x0.vx, acceleration=u.acc, p=self.pp)
 
-        costheta, sintheta = cos(x0.theta), sin(x0.theta)
-        frictionx, frictiony, frictiontheta = self.get_extra_collision_friction_acc()
+        cospsi, sinpsi = cos(x0.psi), sin(x0.psi)
+        frictionx, frictiony, frictionpsi = self.get_extra_collision_friction_acc()
         return PedestrianState(
-            x=x0.vx * costheta - x0.vy * sintheta,
-            y=x0.vx * sintheta + x0.vy * costheta,
-            theta=dtheta,
+            x=x0.vx * cospsi - x0.vy * sinpsi,
+            y=x0.vx * sinpsi + x0.vy * cospsi,
+            psi=dpsi,
             vx=acc + frictionx,
             vy=frictiony,
-            dtheta=frictiontheta,
+            dpsi=frictionpsi,
         )
 
     def get_footprint(self) -> Polygon:
@@ -229,7 +231,7 @@ class PedestrianModel(SimModel[SE2value, float]):
         return {IMPACT_EVERYWHERE: self.get_footprint()}
 
     def get_pose(self) -> SE2value:
-        return SE2_from_xytheta(xytheta=(self._state.x, self._state.y, self._state.theta))
+        return SE2_from_xytheta(xytheta=(self._state.x, self._state.y, self._state.psi))
 
     def get_velocity(self, in_model_frame: bool) -> (T2value, float):
         """Returns velocity at COG"""
@@ -237,14 +239,14 @@ class PedestrianModel(SimModel[SE2value, float]):
         vy = self._state.vy
         v_l = np.array([vx, vy])
         if in_model_frame:
-            return v_l, self._state.dtheta
-        rot: SO2value = SO2_from_angle(self._state.theta)
+            return v_l, self._state.dpsi
+        rot: SO2value = SO2_from_angle(self._state.psi)
         v_g = rot @ v_l
-        return v_g, self._state.dtheta
+        return v_g, self._state.dpsi
 
     def set_velocity(self, vel: T2value, omega: float, in_model_frame: bool):
         if not in_model_frame:
-            rot: SO2value = SO2_from_angle(-self._state.theta)
+            rot: SO2value = SO2_from_angle(-self._state.psi)
             vel = rot @ vel
         self._state.vx = vel[0]
         self._state.vy = vel[1]
@@ -257,12 +259,16 @@ class PedestrianModel(SimModel[SE2value, float]):
     def model_type(self) -> ModelType:
         return PEDESTRIAN
 
+    @property
+    def model_params(self) -> ModelParameters:
+        return self.pp
+
     def get_extra_collision_friction_acc(self):
         magic_mu = 2.0
         if self.has_collided:
             frictionx = -magic_mu * self._state.vx
             frictiony = -magic_mu * self._state.vy
-            frictiontheta = -magic_mu * self._state.dtheta
-            return frictionx, frictiony, frictiontheta
+            frictionpsi = -magic_mu * self._state.dpsi
+            return frictionx, frictiony, frictionpsi
         else:
             return 0, 0, 0

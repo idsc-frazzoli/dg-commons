@@ -11,7 +11,7 @@ from shapely.affinity import affine_transform
 from shapely.geometry import Polygon
 
 from dg_commons.sim import ImpactLocation, IMPACT_EVERYWHERE
-from dg_commons.sim.models import ModelType
+from dg_commons.sim.models import ModelType, ModelParameters
 from dg_commons.sim.models.model_utils import apply_acceleration_limits, apply_rot_speed_constraint
 from dg_commons.sim.models.spacecraft_structures import SpacecraftGeometry, SpacecraftParameters
 from dg_commons.sim.simulator_structures import SimModel
@@ -250,6 +250,10 @@ class SpacecraftModel(SimModel[SpacecraftState, SpacecraftCommands]):
     @property
     def model_type(self) -> ModelType:
         return self.sg.model_type
+
+    @property
+    def model_params(self) -> ModelParameters:
+        return self.sp
 
     def get_extra_collision_friction_acc(self):
         # this model is not dynamic

@@ -10,7 +10,7 @@ from zuper_commons.types import ZValueError
 from dg_commons import DgSampledSequence, PlayerName, X, U
 from dg_commons.seq.sequence import DgSampledSequenceBuilder, Timestamp, UndefinedAtTime
 from dg_commons.sim import SimTime, ImpactLocation
-from dg_commons.sim.models.model_structures import ModelGeometry, ModelType
+from dg_commons.sim.models.model_structures import ModelGeometry, ModelType, ModelParameters
 
 __all__ = [
     "SimObservations",
@@ -25,7 +25,7 @@ __all__ = [
 ]
 
 
-@dataclass(frozen=True, unsafe_hash=True)
+@dataclass(frozen=True)
 class SimParameters:
     dt: SimTime = SimTime("0.05")
     """Simulation step [s]"""
@@ -118,7 +118,7 @@ class PlayerLogger(Generic[X, U]):
 
 
 class SimLog(Dict[PlayerName, PlayerLog]):
-    """The logger for a simulation. For each players it records sampled sequences of states, commands and extra
+    """The logger for a simulation. For each player it records sampled sequences of states, commands and extra
     arguments than an agent might want to log."""
 
     def __setitem__(self, key, value):
@@ -188,6 +188,11 @@ class SimModel(ABC, Generic[X, U]):
     @property
     @abstractmethod
     def model_type(self) -> ModelType:
+        pass
+
+    @property
+    @abstractmethod
+    def model_params(self) -> ModelParameters:
         pass
 
     def get_state(self) -> X:

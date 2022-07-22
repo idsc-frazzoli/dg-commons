@@ -7,7 +7,7 @@ from geometry import SE2value
 
 from dg_commons import PlayerName, relative_pose, SE2Transform, valmap
 from dg_commons.controllers.pid import PIDParam, PID
-from dg_commons.sim.models import extract_pose_from_state, kmh2ms, extract_vel_from_state
+from dg_commons.sim.models import extract_pose_from_state, kmh2ms, extract_vel_from_state, ModelParameters
 from dg_commons.sim.simulator_structures import PlayerObservations
 
 __all__ = ["SpeedControllerParam", "SpeedController", "SpeedBehavior"]
@@ -24,6 +24,10 @@ class SpeedControllerParam(PIDParam):
     setpoint_minmax: Tuple[float, float] = (-kmh2ms(10), kmh2ms(150))
     output_minmax: Tuple[float, float] = (-8, 5)  # acc minmax
 
+    @classmethod
+    def from_vehicle_params(cls, model_param: ModelParameters) -> "SpeedControllerParam":
+        return SpeedControllerParam(setpoint_minmax=model_param.vx_limits, output_minmax=model_param.acc_limits)
+
 
 class SpeedController(PID):
     """Low-level controller for reference tracking of speed"""
@@ -31,6 +35,11 @@ class SpeedController(PID):
     def __init__(self, params: Optional[PIDParam] = None):
         params = SpeedControllerParam() if params is None else params
         super(SpeedController, self).__init__(params)
+
+    @classmethod
+    def from_vehicle_params(cls, model_param: ModelParameters) -> "SpeedController":
+        params = SpeedControllerParam(setpoint_minmax=model_param.vx_limits, output_minmax=model_param.acc_limits)
+        return SpeedController(params)
 
 
 @dataclass
