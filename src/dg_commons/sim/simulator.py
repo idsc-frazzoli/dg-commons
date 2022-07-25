@@ -121,10 +121,10 @@ class Simulator:
                     sim_context.dg_scenario, self.last_observations, player_name
                 )
                 tic = perf_counter()
-                actions = sim_context.players[player_name].get_commands(p_observations)
+                cmds = sim_context.players[player_name].get_commands(p_observations)
                 toc = perf_counter()
-                self.last_commands[player_name] = actions
-                self.simlogger[player_name].actions.add(t=t, v=actions)
+                self.last_commands[player_name] = cmds
+                self.simlogger[player_name].commands.add(t=t, v=cmds)
                 self.simlogger[player_name].info.add(t=t, v=toc - tic)
                 extra = sim_context.players[player_name].on_get_extra()
                 if extra is not None:

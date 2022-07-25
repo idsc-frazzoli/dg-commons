@@ -37,26 +37,27 @@ def get_scenario_commonroad_replica(
     static_obstacles: Dict[int, StaticObstacle] = {}
 
     for i, dyn_obs in enumerate(scenario.dynamic_obstacles):
-        # todo try to see if it can be considered a static obstacle (e.g. parked cars)
         assert isinstance(dyn_obs.prediction, TrajectoryPrediction), "Only trajectory predictions are supported"
+        # try to see if it can be considered a static obstacle (e.g. parked cars)
         if is_dyn_obstacle_static(dyn_obs):
+            shape = apply_SE2_to_shapely_geo(
+                shapely_geometry=dyn_obs.obstacle_shape.shapely_object,
+                se2_value=SE2_from_xytheta([*dyn_obs.initial_state.position, dyn_obs.initial_state.orientation]),
+            )
             static_obstacles.update(
                 {
                     dyn_obs.obstacle_id: StaticObstacle(
                         obstacle_type=dyn_obs.obstacle_type,
-                        shape=apply_SE2_to_shapely_geo(
-                            shapely_geometry=dyn_obs.obstacle_shape.shapely_object,
-                            se2_value=SE2_from_xytheta(
-                                [*dyn_obs.initial_state.position, dyn_obs.initial_state.orientation]
-                            ),
-                        ),
+                        shape=shape,
                     )
                 }
             )
+        # if not we convert it to be a standard agent
         else:
             try:
                 p_name = PlayerName(f"P{i}")
                 if p_name == ego_player:
+                    # todo this part is not elegant, make separate function that given a sim context can modify it
                     p_name = PlayerName("Ego")
                     model, agent = model_agent_from_dynamic_obstacle(
                         dyn_obs, scenario.lanelet_network, color="firebrick"

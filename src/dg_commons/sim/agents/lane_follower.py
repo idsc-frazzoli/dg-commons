@@ -47,7 +47,7 @@ class LFAgent(Agent):
 
     def get_commands(self, sim_obs: SimObservations) -> VehicleCommands:
         self._my_obs = sim_obs.players[self.my_name].state
-        my_pose: SE2value = SE2_from_xytheta([self._my_obs.x, self._my_obs.y, self._my_obs.theta])
+        my_pose: SE2value = SE2_from_xytheta([self._my_obs.x, self._my_obs.y, self._my_obs.psi])
 
         # update observations
         self.speed_behavior.update_observations(sim_obs.players)
@@ -87,8 +87,8 @@ class LFAgent(Agent):
         traj = Trajectory(
             timestamps=[0, 1],
             values=[
-                VehicleState(x=rear_axle[0], y=rear_axle[1], theta=0, vx=0, delta=0),
-                VehicleState(x=pgoal[0], y=pgoal[1], theta=0, vx=1, delta=0),
+                VehicleState(x=rear_axle[0], y=rear_axle[1], psi=0, vx=0, delta=0),
+                VehicleState(x=pgoal[0], y=pgoal[1], psi=0, vx=1, delta=0),
             ],
         )
         traj_s = [

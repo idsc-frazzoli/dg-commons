@@ -78,7 +78,7 @@ class PlayerLog:
     """A log for a player"""
 
     states: DgSampledSequence[X]
-    actions: DgSampledSequence[U]
+    commands: DgSampledSequence[U]
     extra: DgSampledSequence[Any]
     info: DgSampledSequence[float]
 
@@ -91,7 +91,7 @@ class PlayerLog:
 
         return LogEntry(
             state=self.states.at_interp(t),
-            commands=self.actions.at_or_previous(t),
+            commands=self.commands.at_or_previous(t),
             extra=extra,
             info=self.info.at_or_previous(t),
         )
@@ -102,7 +102,7 @@ class PlayerLogger(Generic[X, U]):
     """The logger of a player that builds the log"""
 
     states: DgSampledSequenceBuilder[X] = field(default_factory=DgSampledSequenceBuilder[X])
-    actions: DgSampledSequenceBuilder[U] = field(default_factory=DgSampledSequenceBuilder[U])
+    commands: DgSampledSequenceBuilder[U] = field(default_factory=DgSampledSequenceBuilder[U])
     extra: DgSampledSequenceBuilder[Any] = field(default_factory=DgSampledSequenceBuilder[Any])
     info: DgSampledSequenceBuilder[float] = field(default_factory=DgSampledSequenceBuilder[float])
 
@@ -111,7 +111,7 @@ class PlayerLogger(Generic[X, U]):
     ) -> PlayerLog:
         return PlayerLog(
             states=self.states.as_sequence(),
-            actions=self.actions.as_sequence(),
+            commands=self.commands.as_sequence(),
             extra=self.extra.as_sequence(),
             info=self.info.as_sequence(),
         )
