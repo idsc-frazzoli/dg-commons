@@ -38,6 +38,7 @@ class FovObsFilter(ObsFilter):
     def __init__(self, sensor: Sensor):
         self.sensor: Sensor = sensor
         self._static_obstacles: List[crPolygon] = []
+        self._tmp_debug: int = 0
 
     def sense(self, scenario: DgScenario, full_obs: SimObservations, pov: PlayerName) -> SimObservations:
         """
@@ -53,14 +54,17 @@ class FovObsFilter(ObsFilter):
         if not self._static_obstacles:
             self._static_obstacles = [sPolygon2crPolygon(o.shape) for o in scenario.static_obstacles.values()]
 
-        all_obstacles = self._static_obstacles + [
-            sPolygon2crPolygon(p_obs.occupancy) for p, p_obs in full_obs.players.items() if p != pov
-        ]
+        self._tmp_debug += 1
+        dynamic_obstacles = [sPolygon2crPolygon(p_obs.occupancy) for p, p_obs in full_obs.players.items() if p != pov]
+
+        all_obstacles = self._static_obstacles + dynamic_obstacles
+
         fov_poly = self.sensor.fov_as_polygon(all_obstacles)
         new_players: Dict[PlayerName, PlayerObservations] = {pov: full_obs.players[pov]}
         for p, p_obs in full_obs.players.items():
             if p == pov:
                 continue
+
             if fov_poly.intersects(p_obs.occupancy):
                 new_players[p] = p_obs
 

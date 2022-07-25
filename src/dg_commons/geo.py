@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Sequence, Tuple
 
 import numpy as np
+from commonroad_dc.collision.collision_detection.pycrcc_collision_dispatch import create_collision_object
 from geometry import (
     SE2value,
     translation_from_SE2,
@@ -109,8 +110,17 @@ def transform_xy(q: np.ndarray, points: Sequence[Tuple[float, float]]) -> Tuple[
 
 
 def sPolygon2crPolygon(shapely_polygon: Polygon) -> CommonRoadPolygon:
-    """Convert a shapely polygon to a commonroad polygon"""
+    """Convert a shapely polygon to a CommonRoad polygon
+    Interface available at
+        https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker/-/blob/master/cpp/collision/src/narrowphase/polygon.cc
+    Numbers for triangulation taken from
+        https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker/-/blob/master/cpp/collision/include/collision/plugins/triangulation/triangulate.h
+    Careful in triangulating with duplicate vertices which might give segfault in triangle library, see:
+        https://github.com/drufat/triangle/issues/2#issuecomment-583812662 and comment here:
+        https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker/-/blob/master/commonroad_dc/collision/collision_detection/scenario.py
+    """
     vertices = np.array(list(zip(*shapely_polygon.exterior.xy)))
-    # magic numbers inferred from here
-    # https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker/-/blob/master/cpp/collision/include/collision/plugins/triangulation/triangulate.h
-    return CommonRoadPolygon(vertices, 0.125, 2)
+    if all(np.equal(vertices[0], vertices[-1])):
+        vertices = vertices[:-1]
+    cr_poly = CommonRoadPolygon(vertices, 0.125, 5)
+    return cr_poly
