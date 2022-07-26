@@ -9,7 +9,7 @@ from zuper_commons.types import ZValueError
 
 from dg_commons import DgSampledSequence, PlayerName, X, U
 from dg_commons.seq.sequence import DgSampledSequenceBuilder, Timestamp, UndefinedAtTime
-from dg_commons.sim import SimTime, ImpactLocation
+from dg_commons.sim import SimTime, ImpactLocation, logger
 from dg_commons.sim.models.model_structures import ModelGeometry, ModelType, ModelParameters
 
 __all__ = [
@@ -197,6 +197,10 @@ class SimModel(ABC, Generic[X, U]):
 
     def get_state(self) -> X:
         return deepcopy(self._state)
+
+    def set_state(self, new_state: X):
+        logger.warn("Setting a new state to simulation model, this is a dangerous operation")
+        self._state = new_state
 
     @abstractmethod
     def get_extra_collision_friction_acc(

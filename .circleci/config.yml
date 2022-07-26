@@ -11,7 +11,7 @@ executors:
       - image: alezana/dg_base:<< parameters.tag >>
     parameters:
       tag:
-        default: "3.8"
+        default: "3.9"
         description: The `cimg/python` Docker image version tag.
         type: string
 
@@ -23,7 +23,7 @@ jobs:
       tag: << parameters.version >>
     parameters:
       version:
-        default: "3.8"
+        default: "3.9"
         description: |
           A full version tag must be specified. Example: "3.8"
         type: string
@@ -83,6 +83,6 @@ workflows:
       - install_docs_tests:
           name: "DGcommonsCI:3.9"
           version: "3.9"
-      - install_docs_tests:
-          name: "DGcommonsCI:3.10"
-          version: "3.10"
+#      - install_docs_tests:
+#          name: "DGcommonsCI:3.10"
+#          version: "3.10"

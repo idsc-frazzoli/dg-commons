@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
+from bisect import bisect_left
 from dataclasses import replace
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from dg_commons import PlayerName, SE2Transform, sPolygon2crPolygon, fd
 from dg_commons.perception.sensor import Sensor
-from dg_commons.sim import SimObservations, PlayerObservations
+from dg_commons.sim import SimObservations, PlayerObservations, SimTime
 from dg_commons.sim.models import extract_pose_from_state
 from dg_commons.sim.scenarios import DgScenario
 from commonroad_dc.pycrcc import Polygon as crPolygon
@@ -69,3 +70,22 @@ class FovObsFilter(ObsFilter):
                 new_players[p] = p_obs
 
         return replace(full_obs, players=fd(new_players))
+
+
+class DelayedObsFilter(ObsFilter):
+    def __init__(self, obs_filter: ObsFilter, latency: SimTime):
+        assert issubclass(type(obs_filter), ObsFilter)
+        self.obs_filter = obs_filter
+        self.latency = latency
+        self.obs_history: List[Tuple[SimTime, SimObservations]] = []
+
+    def sense(self, scenario: DgScenario, full_obs: SimObservations, pov: PlayerName) -> SimObservations:
+        obs = self.obs_filter.sense(scenario, full_obs, pov)
+        shifted_t = obs.time + self.latency
+        self.obs_history.append((shifted_t, replace(obs, time=shifted_t)))
+        history_ts = self._get_obs_history_timestamps()
+        idx = bisect_left(history_ts, obs.time)
+        return self.obs_history[idx][1]
+
+    def _get_obs_history_timestamps(self) -> List[SimTime]:
+        return [_[0] for _ in self.obs_history]
