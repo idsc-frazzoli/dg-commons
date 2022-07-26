@@ -73,6 +73,8 @@ class FovObsFilter(ObsFilter):
 
 
 class DelayedObsFilter(ObsFilter):
+    """Wrapper for the observations that introduces delay/latency"""
+
     def __init__(self, obs_filter: ObsFilter, latency: SimTime):
         assert issubclass(type(obs_filter), ObsFilter)
         self.obs_filter = obs_filter
