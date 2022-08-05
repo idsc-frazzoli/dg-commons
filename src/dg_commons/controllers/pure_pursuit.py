@@ -12,6 +12,10 @@ from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 
 __all__ = ["PurePursuit", "PurePursuitParam"]
 
+from dg_commons.sim.models.vehicle_structures import VehicleGeometry
+
+from dg_commons.sim.models.vehicle_utils import VehicleParameters
+
 
 @dataclass
 class PurePursuitParam:
