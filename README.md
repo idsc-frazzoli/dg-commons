@@ -86,4 +86,5 @@ The tools contained in this package have contributed to the following publicatio
 
 - [**Posetal Games: Efficiency, Existence, and Refinement of Equilibria in Games with Prioritized Metrics**](https://ieeexplore.ieee.org/document/9650727) - _A. Zanardi*, G. Zardini*, S. Srinivasan, S. Bolognani, A. Censi, F. Dörfler, E. Frazzoli_
 
+- [**Factorization of Dynamic Games over Spatio-Temporal Resources**](https://www.research-collection.ethz.ch/handle/20.500.11850/560629) - _A. Zanardi, S. Bolognani, A. Censi, F. Dörfler, E. Frazzoli_
 - ...
