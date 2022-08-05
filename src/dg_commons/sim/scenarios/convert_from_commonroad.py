@@ -29,5 +29,5 @@ def model_agent_from_dynamic_obstacle(
     model: SimModel = infer_model_from_cr_dyn_obstacle(dyn_obs, color)
     # Agent
     dglane = infer_lane_from_dyn_obs(dyn_obs=dyn_obs, network=lanelet_network)
-    agent = LFAgent(dglane, model_params=model.model_params, model_geo=model.model_geo)
+    agent = LFAgent(dglane, model_params=model.model_params, model_geo=model.model_geometry)
     return model, agent
