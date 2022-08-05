@@ -252,7 +252,7 @@ class PedestrianModel(SimModel[SE2value, float]):
         self._state.vy = vel[1]
         self._state.vx = omega
 
-    def get_geometry(self) -> PedestrianGeometry:
+    def model_geometry(self) -> PedestrianGeometry:
         return self.pg
 
     @property

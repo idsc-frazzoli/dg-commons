@@ -92,7 +92,7 @@ class SimRenderer(SimRendererABC):
         """Draw the player the state."""
         # todo make it nicer with a map of plotting functions based on the state type
 
-        mg = self.sim_context.models[player_name].get_geometry()
+        mg = self.sim_context.models[player_name].model_geometry
         if issubclass(type(state), VehicleState):
             return plot_vehicle(
                 ax=ax,
@@ -130,7 +130,7 @@ class SimRenderer(SimRendererABC):
             # todo merge with shapely viz
             dyn_obs_model: DynObstacleModel = self.sim_context.models[player_name]
             shape = dyn_obs_model.shape
-            geo = self.sim_context.models[player_name].get_geometry()
+            geo = self.sim_context.models[player_name].model_geometry
             if model_poly is None:
                 model_poly = ax.fill([], [], color=geo.color, alpha=alpha, zorder=ZOrders.MODEL)
             q = SE2_from_xytheta((state.x, state.y, state.psi))
@@ -151,7 +151,7 @@ class SimRenderer(SimRendererABC):
         width: float = 1,
         alpha: float = 1,
     ) -> Tuple[List[LineCollection], List[PathCollection]]:
-        mg = self.sim_context.models[player_name].get_geometry()
+        mg = self.sim_context.models[player_name].model_geometry
         assert colors is None or len(colors) == len(trajectories)
         colors = mg.color if colors is None else colors
         return plot_trajectories(

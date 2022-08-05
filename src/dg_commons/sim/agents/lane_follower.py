@@ -11,8 +11,10 @@ from dg_commons.maps import DgLanelet
 from dg_commons.planning.trajectory import Trajectory
 from dg_commons.sim import SimObservations, DrawableTrajectoryType, InitSimObservations
 from dg_commons.sim.agents.agent import Agent
+from dg_commons.sim.models import ModelParameters, ModelGeometry
 from dg_commons.sim.models.vehicle import VehicleCommands, VehicleState
 from dg_commons.sim.models.vehicle_ligths import LightsCmd, LightsValues
+from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 
 
 class LFAgent(Agent):
@@ -23,17 +25,17 @@ class LFAgent(Agent):
     def __init__(
         self,
         lane: DgLanelet,
-        speed_controller: Optional[SpeedController] = None,
+        model_params: ModelParameters,
+        model_geo: VehicleGeometry,
         speed_behavior: Optional[SpeedBehavior] = None,
         pure_pursuit: Optional[PurePursuit] = None,
-        steer_controller: Optional[SteerController] = None,
         return_extra: bool = False,
     ):
         self.ref_lane = lane
-        self.speed_controller: SpeedController = SpeedController() if speed_controller is None else speed_controller
+        self.speed_controller: SpeedController = SpeedController.from_vehicle_params(model_param=model_params)
         self.speed_behavior: SpeedBehavior = SpeedBehavior() if speed_behavior is None else speed_behavior
-        self.steer_controller: SteerController = SteerController() if steer_controller is None else steer_controller
-        self.pure_pursuit: PurePursuit = PurePursuit() if pure_pursuit is None else pure_pursuit
+        self.steer_controller: SteerController = SteerController.from_vehicle_params(vehicle_param=model_params)
+        self.pure_pursuit: PurePursuit = PurePursuit.from_model_geometry(model_geo)
         self.my_name: Optional[PlayerName] = None
         self.return_extra: bool = return_extra
         self._emergency: bool = False

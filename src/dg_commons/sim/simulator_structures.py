@@ -178,11 +178,12 @@ class SimModel(ABC, Generic[X, U]):
         pass
 
     @abstractmethod
-    def get_geometry(self) -> ModelGeometry:
+    def get_mesh(self) -> Mapping[ImpactLocation, Polygon]:
         pass
 
+    @property
     @abstractmethod
-    def get_mesh(self) -> Mapping[ImpactLocation, Polygon]:
+    def model_geometry(self) -> ModelGeometry:
         pass
 
     @property

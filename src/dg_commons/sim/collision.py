@@ -85,8 +85,8 @@ def resolve_collision(a: PlayerName, b: PlayerName, sim_context: SimContext) -> 
         a_fault, b_fault = False, False
 
     # Compute impulse resolution
-    a_geom = a_model.get_geometry()
-    b_geom = b_model.get_geometry()
+    a_geom = a_model.model_geometry
+    b_geom = b_model.model_geometry
     j_n = compute_impulse_response(
         n=impact_normal, vel_ab=rel_velocity_atP, r_ap=r_ap, r_bp=r_bp, a_geom=a_geom, b_geom=b_geom
     )
@@ -153,7 +153,7 @@ def resolve_collision_with_environment(
     a_fault = True
 
     # Compute impulse resolution
-    a_geom = a_model.get_geometry()
+    a_geom = a_model.model_geometry
     b_geom = b_obstacle.geometry
     r_bp = np.array([1, 1])  # irrelevant since it will disappear divided by infinity
     j_n = compute_impulse_response(
