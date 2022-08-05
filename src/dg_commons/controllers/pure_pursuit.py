@@ -11,6 +11,10 @@ from dg_commons.maps.lanes import DgLanelet
 
 __all__ = ["PurePursuit", "PurePursuitParam"]
 
+from dg_commons.sim.models.vehicle_structures import VehicleGeometry
+
+from dg_commons.sim.models.vehicle_utils import VehicleParameters
+
 
 @dataclass
 class PurePursuitParam:
@@ -24,6 +28,10 @@ class PurePursuitParam:
     """Max extra distance to look for the closest point on the ref path"""
     length: float = 3.5
     """Length of the vehicle"""
+
+    @classmethod
+    def from_vehicle_geo(cls, params: VehicleGeometry) -> "PurePursuitParam":
+        return PurePursuitParam(length=params.wheelbase)
 
 
 class PurePursuit:
