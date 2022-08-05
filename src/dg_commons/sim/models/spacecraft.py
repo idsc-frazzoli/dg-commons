@@ -224,6 +224,7 @@ class SpacecraftModel(SimModel[SpacecraftState, SpacecraftCommands]):
     def get_pose(self) -> SE2value:
         return SE2_from_xytheta([self._state.x, self._state.y, self._state.psi])
 
+    @property
     def model_geometry(self) -> SpacecraftGeometry:
         return self.sg
 

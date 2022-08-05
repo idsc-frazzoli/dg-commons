@@ -233,6 +233,7 @@ class VehicleModel(SimModel[TVehicleState, VehicleCommands]):
     def get_pose(self) -> SE2value:
         return SE2_from_xytheta([self._state.x, self._state.y, self._state.psi])
 
+    @property
     def model_geometry(self) -> VehicleGeometry:
         return self.vg
 

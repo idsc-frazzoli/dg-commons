@@ -223,6 +223,7 @@ class DynObstacleModel(SimModel[DynObstacleState, DynObstacleCommands]):
         self._state.vy = vel[1]
         self._state.dpsi = omega
 
+    @property
     def model_geometry(self) -> ObstacleGeometry:
         return self.og
 
