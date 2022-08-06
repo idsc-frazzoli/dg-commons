@@ -147,6 +147,8 @@ class Simulator:
         # after all the computations advance simulation time
         sim_context.time += sim_context.param.dt
         self._maybe_terminate_simulation(sim_context)
+        # remove finished players
+        self._remove_finished_players(sim_context)
         return
 
     @staticmethod
@@ -162,7 +164,6 @@ class Simulator:
             if sim_context.missions
             else False
         )
-        # todo remove players that fulfill the mission?!
         termination_condition: bool = (
             sim_context.time > sim_context.param.max_sim_time
             or sim_context.time > sim_context.first_collision_ts + sim_context.param.sim_time_after_collision
@@ -224,3 +225,13 @@ class Simulator:
                         sim_context.first_collision_ts = report.at_time
                     sim_context.collision_reports.append(report)
         return collision
+
+    @staticmethod
+    def _remove_finished_players(sim_context: SimContext):
+        """We remove players that complete their mission"""
+        for p, m in sim_context.missions.items():
+            # if p is still active
+            if p in sim_context.players:
+                p_state = sim_context.models[p].get_state()
+                if m.is_fulfilled(p_state):
+                    sim_context.players.pop(p)
