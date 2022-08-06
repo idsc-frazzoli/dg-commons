@@ -84,6 +84,8 @@ pre-commit run --all-files
 
 The tools contained in this package have contributed to the following publications:
 
-- [**Posetal Games: Efficiency, Existence, and Refinement of Equilibria in Games with Prioritized Metrics**](https://ieeexplore.ieee.org/document/9650727) - _A. Zanardi*, G. Zardini*, S. Srinivasan, S. Bolognani, A. Censi, F. Dörfler, E. Frazzoli_
+- [**Posetal Games: Efficiency, Existence, and Refinement of Equilibria in Games with Prioritized Metrics**](https://ieeexplore.ieee.org/document/9650727) - _A. Zanardi*, G. Zardini*, S. Srinivasan, S. Bolognani, A. Censi, F. Dörfler, E. Frazzoli_ - IEEE Robotics and Automation Letters, 2022
 
+- [**Factorization of Dynamic Games over Spatio-Temporal Resources**](https://www.research-collection.ethz.ch/handle/20.500.11850/560629) - _A. Zanardi, S. Bolognani, A. Censi, F. Dörfler, E. Frazzoli_ - Proceedings of the 2022 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS), 2022
+- [**Task-driven Modular Co-design of Vehicle Control Systems**](https://arxiv.org/abs/2203.16640) - _G. Zardini, Z. Suter, A. Censi, E. Frazzoli_ - Proceedings of the 61th IEEE Conference on Decision and Control (CDC), 2022
 - ...
