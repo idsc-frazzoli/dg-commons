@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from random import randint
 from typing import Optional, MutableMapping
 
+from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.scenario import Scenario
 from shapely.strtree import STRtree
 
@@ -46,6 +47,6 @@ class DgScenario:
         self.strtree_obstacles = STRtree(obs_shapes, obs_idx, node_capacity=3)
 
     @property
-    def lanelet_network(self):
+    def lanelet_network(self) -> Optional[LaneletNetwork]:
         """Just for ease of use to avoid dg_scenario.scenario..."""
-        return self.scenario.lanelet_network
+        return self.scenario.lanelet_network if self.scenario else None
