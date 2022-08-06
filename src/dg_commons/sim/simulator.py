@@ -83,7 +83,8 @@ class Simulator:
         logger.info("Beginning simulation.")
 
         for player_name, player in sim_context.players.items():
-            init_obs = InitSimObservations(my_name=player_name, seed=sim_context.seed)
+            lanelet_network = sim_context.dg_scenario.lanelet_network
+            init_obs = InitSimObservations(my_name=player_name, seed=sim_context.seed, lanelet_network=lanelet_network)
             player.on_episode_init(init_obs)
             self.simlogger[player_name] = PlayerLogger()
         while not sim_context.sim_terminated:
