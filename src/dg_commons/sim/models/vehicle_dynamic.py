@@ -239,3 +239,7 @@ class VehicleModelDyn(VehicleModel):
             return frictionx, frictiony, frictiontheta
         else:
             return 0, 0, 0
+
+    @property
+    def model_geometry(self) -> VehicleGeometry:
+        return self.vg
