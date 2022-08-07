@@ -98,7 +98,7 @@ def create_animation(
                             ax=ax, player_name=pname, trajectories=list(trajectories), colors=list(tcolors)
                         )
                     except:
-                        logger.warn(f"Cannot plot extra", extra=plog.extra)
+                        logger.warn(f"Cannot plot extra", extra=type(plog.extra))
             adjust_axes_limits(
                 ax=ax,
                 plot_limits=plot_limits,
@@ -142,7 +142,7 @@ def create_animation(
                         colors=list(tcolors),
                     )
                 except:
-                    logger.warn(f"Cannot plot extra", extra=log_at_t[pname].extra)
+                    logger.warn(f"Cannot plot extra", extra=type(log_at_t[pname].extra))
         adjust_axes_limits(
             ax=ax, plot_limits=plot_limits, players_states={p: log_entry.state for p, log_entry in log_at_t.items()}
         )
