@@ -90,6 +90,8 @@ class VehicleModelDyn(VehicleModel):
         # """ The vehicle's geometry parameters"""
         self.vp: VehicleParameters = vp
         """ The vehicle parameters"""
+        self.vg: VehicleGeometry = vg
+        """ The vehicle's geometry params"""
         self.pacejka_front: Pacejka = pacejka_front
         """ The vehicle tyre model"""
         self.pacejka_rear: Pacejka = pacejka_rear
@@ -239,3 +241,7 @@ class VehicleModelDyn(VehicleModel):
             return frictionx, frictiony, frictiontheta
         else:
             return 0, 0, 0
+
+    @property
+    def model_geometry(self) -> VehicleGeometry:
+        return self.vg
