@@ -1,3 +1,4 @@
+import numpy as np
 from geometry import SE2_from_xytheta, SE2value
 from zuper_commons.types import ZValueError
 
@@ -34,6 +35,10 @@ def extract_pose_from_state(state: X) -> SE2value:
         except AttributeError:
             msg = "Unable to extract pose from state"
             raise ZValueError(msg=msg, state=state, state_type=type(state))
+
+
+def extract_2d_position_from_state(state: X) -> np.ndarray:
+    return np.array([state.x, state.y])
 
 
 def extract_vel_from_state(state: X) -> float:

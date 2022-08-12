@@ -9,7 +9,6 @@ from commonroad_dc.pycrcc import Shape as crShape
 from shapely.geometry import Polygon, Point
 
 from dg_commons import SE2Transform
-from dg_commons.time import time_function
 
 
 @dataclass
