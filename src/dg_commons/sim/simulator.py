@@ -83,7 +83,8 @@ class Simulator:
         logger.info("Beginning simulation.")
 
         for player_name, player in sim_context.players.items():
-            init_obs = InitSimObservations(my_name=player_name, seed=sim_context.seed)
+            lanelet_network = sim_context.dg_scenario.lanelet_network
+            init_obs = InitSimObservations(my_name=player_name, seed=sim_context.seed, lanelet_network=lanelet_network)
             player.on_episode_init(init_obs)
             self.simlogger[player_name] = PlayerLogger()
         while not sim_context.sim_terminated:
@@ -121,10 +122,10 @@ class Simulator:
                     sim_context.dg_scenario, self.last_observations, player_name
                 )
                 tic = perf_counter()
-                actions = sim_context.players[player_name].get_commands(p_observations)
+                cmds = sim_context.players[player_name].get_commands(p_observations)
                 toc = perf_counter()
-                self.last_commands[player_name] = actions
-                self.simlogger[player_name].actions.add(t=t, v=actions)
+                self.last_commands[player_name] = cmds
+                self.simlogger[player_name].commands.add(t=t, v=cmds)
                 self.simlogger[player_name].info.add(t=t, v=toc - tic)
                 extra = sim_context.players[player_name].on_get_extra()
                 if extra is not None:

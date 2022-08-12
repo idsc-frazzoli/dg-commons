@@ -3,13 +3,14 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Generic, Any, Dict, Mapping, Tuple, Optional
 
+from commonroad.scenario.lanelet import LaneletNetwork
 from geometry import SE2value, T2value
 from shapely.geometry import Polygon
 from zuper_commons.types import ZValueError
 
 from dg_commons import DgSampledSequence, PlayerName, X, U
 from dg_commons.seq.sequence import DgSampledSequenceBuilder, Timestamp, UndefinedAtTime
-from dg_commons.sim import SimTime, ImpactLocation
+from dg_commons.sim import SimTime, ImpactLocation, logger
 from dg_commons.sim.models.model_structures import ModelGeometry, ModelType, ModelParameters
 
 __all__ = [
@@ -57,6 +58,7 @@ class InitSimObservations:
 
     my_name: PlayerName
     seed: int
+    lanelet_network: Optional[LaneletNetwork] = None
 
 
 @dataclass(frozen=True)
@@ -78,7 +80,7 @@ class PlayerLog:
     """A log for a player"""
 
     states: DgSampledSequence[X]
-    actions: DgSampledSequence[U]
+    commands: DgSampledSequence[U]
     extra: DgSampledSequence[Any]
     info: DgSampledSequence[float]
 
@@ -91,7 +93,7 @@ class PlayerLog:
 
         return LogEntry(
             state=self.states.at_interp(t),
-            commands=self.actions.at_or_previous(t),
+            commands=self.commands.at_or_previous(t),
             extra=extra,
             info=self.info.at_or_previous(t),
         )
@@ -102,7 +104,7 @@ class PlayerLogger(Generic[X, U]):
     """The logger of a player that builds the log"""
 
     states: DgSampledSequenceBuilder[X] = field(default_factory=DgSampledSequenceBuilder[X])
-    actions: DgSampledSequenceBuilder[U] = field(default_factory=DgSampledSequenceBuilder[U])
+    commands: DgSampledSequenceBuilder[U] = field(default_factory=DgSampledSequenceBuilder[U])
     extra: DgSampledSequenceBuilder[Any] = field(default_factory=DgSampledSequenceBuilder[Any])
     info: DgSampledSequenceBuilder[float] = field(default_factory=DgSampledSequenceBuilder[float])
 
@@ -111,7 +113,7 @@ class PlayerLogger(Generic[X, U]):
     ) -> PlayerLog:
         return PlayerLog(
             states=self.states.as_sequence(),
-            actions=self.actions.as_sequence(),
+            commands=self.commands.as_sequence(),
             extra=self.extra.as_sequence(),
             info=self.info.as_sequence(),
         )
@@ -178,11 +180,12 @@ class SimModel(ABC, Generic[X, U]):
         pass
 
     @abstractmethod
-    def get_geometry(self) -> ModelGeometry:
+    def get_mesh(self) -> Mapping[ImpactLocation, Polygon]:
         pass
 
+    @property
     @abstractmethod
-    def get_mesh(self) -> Mapping[ImpactLocation, Polygon]:
+    def model_geometry(self) -> ModelGeometry:
         pass
 
     @property
@@ -197,6 +200,10 @@ class SimModel(ABC, Generic[X, U]):
 
     def get_state(self) -> X:
         return deepcopy(self._state)
+
+    def set_state(self, new_state: X):
+        logger.warn("Setting a new state to simulation model, this is a dangerous operation")
+        self._state = new_state
 
     @abstractmethod
     def get_extra_collision_friction_acc(

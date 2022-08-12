@@ -66,7 +66,7 @@ def get_impact_point_direction(state: X, impact_point: Point) -> float:
     """returns the impact point angle wrt to the vehicle"""
     # Direction of Force (DOF) -> vector that goes from car center to impact point
     abs_angle_dof = np.arctan2(impact_point.y - state.y, impact_point.x - state.x)
-    car_heading: float = state.theta
+    car_heading: float = state.psi
     return abs_angle_dof - car_heading
 
 

@@ -1,21 +1,11 @@
 from math import pi
 
 import matplotlib.pyplot as plt
-import numpy as np
 from shapely.geometry import Point, Polygon
 
-from commonroad_dc.pycrcc import Polygon as CommonRoadPolygon
-
-from dg_commons import SE2Transform
+from dg_commons import SE2Transform, sPolygon2crPolygon
 from dg_commons.maps.shapely_viz import ShapelyViz
 from dg_commons.perception.sensor import VisRangeSensor
-
-
-def sPolygon2crPolygon(shapely_polygon: Polygon) -> CommonRoadPolygon:
-    vertices = np.array(list(zip(*shapely_polygon.exterior.xy)))
-    # magic numbers inferred from here
-    # https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker/-/blob/master/cpp/collision/include/collision/plugins/triangulation/triangulate.h
-    return CommonRoadPolygon(vertices, 0.125, 2)
 
 
 def test_visibility_filter():

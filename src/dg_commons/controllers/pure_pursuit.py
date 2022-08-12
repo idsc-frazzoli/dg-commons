@@ -8,6 +8,7 @@ from geometry import SE2value, translation_angle_from_SE2, angle_from_SE2
 
 from dg_commons.geo import norm_between_SE2value, SE2_apply_T2
 from dg_commons.maps.lanes import DgLanelet
+from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 
 __all__ = ["PurePursuit", "PurePursuitParam"]
 
@@ -24,6 +25,10 @@ class PurePursuitParam:
     """Max extra distance to look for the closest point on the ref path"""
     length: float = 3.5
     """Length of the vehicle"""
+
+    @classmethod
+    def from_vehicle_geo(cls, params: VehicleGeometry) -> "PurePursuitParam":
+        return PurePursuitParam(length=params.wheelbase)
 
 
 class PurePursuit:
@@ -102,3 +107,8 @@ class PurePursuit:
                 self.param.k_lookahead * self.speed, self.param.look_ahead_minmax[0], self.param.look_ahead_minmax[1]
             )
         )
+
+    @classmethod
+    def from_model_geometry(cls, vehicle_geo: VehicleGeometry) -> "PurePursuit":
+        params = PurePursuitParam.from_vehicle_geo(vehicle_geo)
+        return PurePursuit(params)

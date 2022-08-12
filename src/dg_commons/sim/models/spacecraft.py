@@ -224,7 +224,8 @@ class SpacecraftModel(SimModel[SpacecraftState, SpacecraftCommands]):
     def get_pose(self) -> SE2value:
         return SE2_from_xytheta([self._state.x, self._state.y, self._state.psi])
 
-    def get_geometry(self) -> SpacecraftGeometry:
+    @property
+    def model_geometry(self) -> SpacecraftGeometry:
         return self.sg
 
     def get_velocity(self, in_model_frame: bool) -> (T2value, float):
