@@ -126,3 +126,4 @@ class GhostObsFilter(ObsFilter):
             full_obs = replace(full_obs, players=filtered_players)
 
         return full_obs
+        
