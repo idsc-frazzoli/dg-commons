@@ -126,22 +126,35 @@ class VehicleModelDyn(VehicleModel):
             pacejka_rear=Pacejka4p.default_truck_rear(),
         )
 
+    def dynamics_kin(self, x0: VehicleStateDyn, u: VehicleCommands) -> VehicleStateDyn:
+        """Kinematic bicycle model with reference point at the center of mass, used for singularity"""
+        # friction model
+        frictionx, frictiony, frictiontheta = self.get_extra_collision_friction_acc()
+
+        vx = x0.vx
+        dtheta = vx * math.tan(x0.delta) / self.vg.wheelbase
+        vy = dtheta * self.vg.lr
+        costh = math.cos(x0.psi)
+        sinth = math.sin(x0.psi)
+        xdot = vx * costh - vy * sinth
+        ydot = vx * sinth + vy * costh
+
+        ddelta = steering_constraint(x0.delta, u.ddelta, self.vp)
+        acc = apply_full_acceleration_limits(x0.vx, u.acc, self.vp)
+
+        ddtheta = (acc * math.tan(x0.delta) + vx * ddelta / (math.cos(x0.delta)**2)) / self.vg.wheelbase
+        lat_acc = ddtheta * self.vg.lr
+
+        return VehicleStateDyn(x=xdot, y=ydot, psi=dtheta, vx=acc + frictionx, vy=lat_acc + frictiony, dpsi=ddtheta + frictiontheta, delta=ddelta)
+
     def dynamics(self, x0: VehicleStateDyn, u: VehicleCommands) -> VehicleStateDyn:
         """returns state derivative for given control inputs"""
         # friction model
         frictionx, frictiony, frictiontheta = self.get_extra_collision_friction_acc()
 
-        if x0.vx < 0.1:
-            dx_kin = super().dynamics(x0, u)
-            return VehicleStateDyn(
-                x=dx_kin.x,
-                y=dx_kin.y,
-                psi=dx_kin.psi,
-                vx=dx_kin.vx + frictionx,
-                vy=frictiony,
-                dpsi=frictiontheta,
-                delta=dx_kin.delta,
-            )
+        if x0.vx < 1:
+            dx_kin = self.dynamics_kin(x0, u)
+            return dx_kin
         else:
             m = self.vg.m
             acc = apply_full_acceleration_limits(x0.vx, u.acc, self.vp)
@@ -161,56 +174,49 @@ class VehicleModelDyn(VehicleModel):
             slip_angle_2 = math.atan(vel_2_tyre[1] / vel_2_tyre[0])
 
             # Rolling resistance
-            F_rr_f = - self.vg.c_rr_f * F1_n * np.sign(vel_1_tyre[0])
-            F_rr_r = - self.vg.c_rr_r * F2_n * np.sign(vel_2_tyre[0])
+            F_rr_f = -self.vg.c_rr_f * F1_n * np.sign(vel_1_tyre[0])
+            F_rr_r = -self.vg.c_rr_r * F2_n * np.sign(vel_2_tyre[0])
 
             # Torque splitting
-
-            Facc1_tyre, Facc2_tyre = self.get_acceleration_split(m * acc)
+            Facc1_tyre, Facc2_tyre = self.get_torque_split(m * acc)
             Facc1_tyre += F_rr_f
             Facc2_tyre += F_rr_r
 
             # Front wheel forces (hyp: only braking or positive acceleration)
-            if abs(vel_1_tyre[0]) > 0.1:
+            if abs(vel_1_tyre[0]) > 1:
                 Facc1_tyre = np.clip(Facc1_tyre, -F1_n * self.pacejka_front.D, F1_n * self.pacejka_front.D)
             else:
                 Facc1_tyre = np.clip(Facc1_tyre, 0, F1_n * self.pacejka_front.D)
 
             F1y_sat = F1_n * self.pacejka_front.D * math.sqrt(1 - (Facc1_tyre / (F1_n * self.pacejka_front.D)) ** 2)
-            if abs(vel_1_tyre[0]) > 0.1:
-                F1y_tyre = np.clip(- F1_n * self.pacejka_front.evaluate(slip_angle_1), -F1y_sat, F1y_sat)
-            else:
-                F1y_tyre = 0
+            F1y_tyre = np.clip(F1_n * self.pacejka_front.evaluate(-slip_angle_1), -F1y_sat, F1y_sat)
             F1 = rot_delta.T @ np.array([Facc1_tyre, F1y_tyre])
 
             # Back wheel forces (hyp: only braking or positive acceleration)
-            if abs(vel_2_tyre[0]) > 0.1:
+            if abs(vel_2_tyre[0]) > 1:
                 Facc2_tyre = np.clip(Facc2_tyre, -F2_n * self.pacejka_rear.D, F2_n * self.pacejka_front.D)
             else:
                 Facc2_tyre = np.clip(Facc2_tyre, 0, F2_n * self.pacejka_rear.D)
 
             F2y_sat = F2_n * self.pacejka_rear.D * math.sqrt(1 - (Facc2_tyre / (F2_n * self.pacejka_rear.D)) ** 2)
-            if abs(vel_2_tyre[0]) > 0.1:
-                F2y_tyre = np.clip(- F2_n * self.pacejka_rear.evaluate(slip_angle_2), -F2y_sat, F2y_sat)
-            else:
-                F2y_tyre = 0
-            F1 = rot_delta.T @ np.array([Facc1_tyre, F1y_tyre])
+            F2y_tyre = np.clip(F2_n * self.pacejka_rear.evaluate(-slip_angle_2), -F2y_sat, F2y_sat)
+            F2 = np.array([Facc2_tyre, F2y_tyre])
 
             # Drag Force
             F_drag = -0.5 * x0.vx * self.vg.a_drag * self.vg.c_drag * rho**2
+
             # longitudinal acceleration
-            acc_x = (F1[0] + F_drag + Facc2_tyre) / m + x0.dpsi * x0.vy
+            acc_x = (F1[0] + F2[0] + F_drag) / m + x0.dpsi * x0.vy
+            # lateral acceleration
+            acc_y = (F1[1] + F2[1]) / m - x0.dpsi * x0.vx
+            # yaw acceleration
+            ddtheta = (F1[1] * self.vg.lf - F2[1] * self.vg.lr) / self.vg.Iz
 
             # kinematic model
             costh = math.cos(x0.psi)
             sinth = math.sin(x0.psi)
             xdot = x0.vx * costh - x0.vy * sinth
             ydot = x0.vx * sinth + x0.vy * costh
-
-            # lateral acceleration
-            acc_y = (F1[1] + F2y_tyre) / m - x0.dpsi * x0.vx
-            # yaw acceleration
-            ddtheta = (F1[1] * self.vg.lf - F2y_tyre * self.vg.lr) / self.vg.Iz
 
             return VehicleStateDyn(
                 x=xdot,
@@ -240,7 +246,7 @@ class VehicleModelDyn(VehicleModel):
         self._state.vy = vel[1]
         self._state.dtheta = omega
 
-    def get_acceleration_split(self, Facc: float) -> Sequence[float]:
+    def get_torque_split(self, Facc: float) -> Sequence[float]:
         """Returns split of acceleration force to be applied on front and rear wheel"""
         if Facc <= 0:
             # we partition acc 60% front 40% rear while braking
