@@ -3,10 +3,12 @@ from bisect import bisect_left
 from dataclasses import replace
 from typing import List, Dict, Tuple
 
+import numpy as np
+
 from dg_commons import PlayerName, SE2Transform, sPolygon2crPolygon, fd
 from dg_commons.perception.sensor import Sensor
 from dg_commons.sim import SimObservations, PlayerObservations, SimTime
-from dg_commons.sim.models import extract_pose_from_state
+from dg_commons.sim.models import extract_pose_from_state, extract_2d_position_from_state
 from dg_commons.sim.scenarios import DgScenario
 from commonroad_dc.pycrcc import Polygon as crPolygon
 
@@ -33,7 +35,7 @@ class IdObsFilter(ObsFilter):
 
 class FovObsFilter(ObsFilter):
     """
-    FOV visibility filter
+    FOV visibility filter. Filters observations according to the sensor's FOV.
     """
 
     def __init__(self, sensor: Sensor):
@@ -73,7 +75,10 @@ class FovObsFilter(ObsFilter):
 
 
 class DelayedObsFilter(ObsFilter):
-    """Wrapper for the observations that introduces delay/latency"""
+    """
+    Wrapper around an ObsFilter that introduces delay/latency.
+    An agent equipped with this filter will receive the observations delayed in time by _latency_.
+    """
 
     def __init__(self, obs_filter: ObsFilter, latency: SimTime):
         assert issubclass(type(obs_filter), ObsFilter)
@@ -91,3 +96,33 @@ class DelayedObsFilter(ObsFilter):
 
     def _get_obs_history_timestamps(self) -> List[SimTime]:
         return [_[0] for _ in self.obs_history]
+
+
+class GhostObsFilter(ObsFilter):
+    """
+    Observation filter that "ghosts" a specific player which is further than a certain distance.
+    If _further_than_ is set to zero, the player is always ghosted (removed from others' observations).
+    Note that the ghost retains the ability to observe itself.
+    """
+
+    def __init__(self, ghost_name: PlayerName, further_than: float = 0):
+        """
+        :param ghost_name:
+        :param further_than:
+        """
+        self.ghost_name: PlayerName = ghost_name
+        self.further_than: float = further_than
+
+    def sense(self, scenario: DgScenario, full_obs: SimObservations, pov: PlayerName) -> SimObservations:
+        if pov == self.ghost_name or self.ghost_name not in full_obs.players:
+            return full_obs
+
+        pov_position = extract_2d_position_from_state(full_obs.players[pov].state)
+        ghost_position = extract_2d_position_from_state(full_obs.players[self.ghost_name].state)
+        distance = np.linalg.norm(pov_position - ghost_position)
+        if distance > self.further_than:
+            # assumes api of frozendict
+            filtered_players = full_obs.players.delete(self.ghost_name)
+            full_obs = replace(full_obs, players=filtered_players)
+
+        return full_obs
