@@ -95,6 +95,8 @@ class VehicleModelDyn(VehicleModel):
         self.pacejka_front: Pacejka = pacejka_front
         """ The vehicle tyre model"""
         self.pacejka_rear: Pacejka = pacejka_rear
+        """ Kinematic model option"""
+        self.kin: bool = False
 
     @classmethod
     def default_bicycle(cls, x0: VehicleStateDyn):
@@ -140,7 +142,7 @@ class VehicleModelDyn(VehicleModel):
         ydot = vx * sinth + vy * costh
 
         ddelta = steering_constraint(x0.delta, u.ddelta, self.vp)
-        acc = apply_full_acceleration_limits(x0.vx, u.acc, self.vp)
+        acc = apply_full_acceleration_limits(x0.vx, u.acc*0.5, self.vp)  # address continue feasibility issue
 
         ddtheta = (acc * math.tan(x0.delta) + vx * ddelta / (math.cos(x0.delta)**2)) / self.vg.wheelbase
         lat_acc = ddtheta * self.vg.lr
@@ -152,8 +154,11 @@ class VehicleModelDyn(VehicleModel):
         # friction model
         frictionx, frictiony, frictiontheta = self.get_extra_collision_friction_acc()
 
-        if x0.vx < 1:
+        if x0.vx < 0.1 or self.kin is True:
+            self.kin = True
             dx_kin = self.dynamics_kin(x0, u)
+            if abs(x0.delta) < 0.2:
+                self.kin = False
             return dx_kin
         else:
             m = self.vg.m
@@ -183,7 +188,7 @@ class VehicleModelDyn(VehicleModel):
             Facc2_tyre += F_rr_r
 
             # Front wheel forces (hyp: only braking or positive acceleration)
-            if abs(vel_1_tyre[0]) > 1:
+            if abs(vel_1_tyre[0]) > 0.1:
                 Facc1_tyre = np.clip(Facc1_tyre, -F1_n * self.pacejka_front.D, F1_n * self.pacejka_front.D)
             else:
                 Facc1_tyre = np.clip(Facc1_tyre, 0, F1_n * self.pacejka_front.D)
@@ -193,7 +198,7 @@ class VehicleModelDyn(VehicleModel):
             F1 = rot_delta.T @ np.array([Facc1_tyre, F1y_tyre])
 
             # Back wheel forces (hyp: only braking or positive acceleration)
-            if abs(vel_2_tyre[0]) > 1:
+            if abs(vel_2_tyre[0]) > 0.1:
                 Facc2_tyre = np.clip(Facc2_tyre, -F2_n * self.pacejka_rear.D, F2_n * self.pacejka_front.D)
             else:
                 Facc2_tyre = np.clip(Facc2_tyre, 0, F2_n * self.pacejka_rear.D)
