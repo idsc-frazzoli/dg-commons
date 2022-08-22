@@ -117,6 +117,7 @@ class Simulator:
         t = sim_context.time
         update_commands: bool = (t - self.last_get_commands_ts) >= sim_context.param.dt_commands
         for player_name, model in sim_context.models.items():
+            self.simlogger[player_name].states.add(t=t, v=model.get_state())
             if update_commands:
                 p_observations = sim_context.sensors[player_name].sense(
                     sim_context.dg_scenario, self.last_observations, player_name
@@ -132,7 +133,6 @@ class Simulator:
                     self.simlogger[player_name].extra.add(t=t, v=extra)
             cmds = self.last_commands[player_name]
             model.update(cmds, dt=sim_context.param.dt)
-            self.simlogger[player_name].states.add(t=t, v=model.get_state())
             logger.debug(f"Update function, sim time {sim_context.time:.2f}, player: {player_name}")
             logger.debug(f"New state {model.get_state()} reached applying {cmds}")
         if update_commands:
@@ -143,10 +143,12 @@ class Simulator:
         """
         Here all the operations that happen after we have stepped the simulation, e.g. collision checking
         """
-        collision_enviroment = self._check_collisions_with_environment(sim_context)
-        collision_players = self._check_collisions_among_players(sim_context)
         # after all the computations advance simulation time
         sim_context.time += sim_context.param.dt
+        # collision checking
+        collision_enviroment = self._check_collisions_with_environment(sim_context)
+        collision_players = self._check_collisions_among_players(sim_context)
+        # check if the simulation is over
         self._maybe_terminate_simulation(sim_context)
         return
 
