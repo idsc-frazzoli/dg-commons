@@ -122,5 +122,6 @@ def sPolygon2crPolygon(shapely_polygon: Polygon) -> CommonRoadPolygon:
     vertices = np.array(list(zip(*shapely_polygon.exterior.xy)))
     if all(np.equal(vertices[0], vertices[-1])):
         vertices = vertices[:-1]
-    cr_poly = CommonRoadPolygon(vertices, 0.125, 5)
+    # cr_poly = CommonRoadPolygon(vertices, 0.125, 5)
+    cr_poly = CommonRoadPolygon(vertices, [])
     return cr_poly
