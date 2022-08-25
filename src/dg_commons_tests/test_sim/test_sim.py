@@ -3,8 +3,10 @@ from decimal import Decimal as D
 
 from numpy import deg2rad
 from reprep import Report, MIME_GIF
+from shapely.geometry import Polygon
 
-from dg_commons import PlayerName, DgSampledSequence
+from dg_commons import PlayerName, DgSampledSequence, fd
+from dg_commons.planning import PolygonGoal
 from dg_commons.sim import SimParameters
 from dg_commons.sim.agents import NPAgent
 from dg_commons.sim.models.spacecraft import SpacecraftState, SpacecraftModel, SpacecraftCommands
@@ -68,11 +70,14 @@ def get_simple_scenario() -> SimContext:
         ],
     )
     players = {P1: NPAgent(moving_vehicle), P2: NPAgent(static_vehicle), P3: NPAgent(spacecraft_dynamic)}
+    p2_goal_poly = Polygon([[0, 13], [5, 13], [5, 20], [0, 20], [0, 13]])
+    missions = {P2: PolygonGoal(p2_goal_poly)}
     return SimContext(
         dg_scenario=DgScenario(scenario=scenario, use_road_boundaries=True),
         models=models,
         players=players,
-        param=SimParameters(dt=D("0.01"), dt_commands=D("0.1"), sim_time_after_collision=D(1), max_sim_time=D(6)),
+        param=SimParameters(dt=D("0.01"), dt_commands=D("0.1"), sim_time_after_collision=D(4), max_sim_time=D(6)),
+        missions=fd(missions),
     )
 
 

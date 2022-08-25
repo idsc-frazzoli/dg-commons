@@ -21,6 +21,7 @@ class PlanningGoal(ABC):
 
     @abstractmethod
     def get_plottable_geometry(self) -> BaseGeometry:
+        # convert to use commonroad IDrawable
         pass
 
 
