@@ -105,24 +105,28 @@ class GhostObsFilter(ObsFilter):
     Note that the ghost retains the ability to observe itself.
     """
 
-    def __init__(self, ghost_name: PlayerName, further_than: float = 0):
+    def __init__(self, obs_filter: ObsFilter, ghost_name: PlayerName, further_than: float = 0):
         """
+        :param obs_filter:
         :param ghost_name:
         :param further_than:
         """
+        assert issubclass(type(obs_filter), ObsFilter)
+        self.obs_filter = obs_filter
         self.ghost_name: PlayerName = ghost_name
         self.further_than: float = further_than
 
     def sense(self, scenario: DgScenario, full_obs: SimObservations, pov: PlayerName) -> SimObservations:
-        if pov == self.ghost_name or self.ghost_name not in full_obs.players:
-            return full_obs
+        obs = self.obs_filter.sense(scenario, full_obs, pov)
+        if pov == self.ghost_name or self.ghost_name not in obs.players:
+            return obs
 
-        pov_position = extract_2d_position_from_state(full_obs.players[pov].state)
-        ghost_position = extract_2d_position_from_state(full_obs.players[self.ghost_name].state)
+        pov_position = extract_2d_position_from_state(obs.players[pov].state)
+        ghost_position = extract_2d_position_from_state(obs.players[self.ghost_name].state)
         distance = np.linalg.norm(pov_position - ghost_position)
         if distance > self.further_than:
             # assumes api of frozendict
-            filtered_players = full_obs.players.delete(self.ghost_name)
-            full_obs = replace(full_obs, players=filtered_players)
+            filtered_players = obs.players.delete(self.ghost_name)
+            obs = replace(obs, players=filtered_players)
 
-        return full_obs
+        return obs
