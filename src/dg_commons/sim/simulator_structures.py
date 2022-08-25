@@ -3,6 +3,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Generic, Any, Dict, Mapping, Tuple, Optional
 
+from commonroad.scenario.lanelet import LaneletNetwork
 from geometry import SE2value, T2value
 from shapely.geometry import Polygon
 from zuper_commons.types import ZValueError
@@ -57,6 +58,7 @@ class InitSimObservations:
 
     my_name: PlayerName
     seed: int
+    lanelet_network: Optional[LaneletNetwork] = None
 
 
 @dataclass(frozen=True)
