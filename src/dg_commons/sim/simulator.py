@@ -117,7 +117,8 @@ class Simulator:
         t = sim_context.time
         update_commands: bool = (t - self.last_get_commands_ts) >= sim_context.param.dt_commands
         for player_name, agent in sim_context.players.items():
-            self.simlogger[player_name].states.add(t=t, v=model.get_state())
+            state = sim_context.models[player_name].get_state()
+            self.simlogger[player_name].states.add(t=t, v=state)
             if update_commands:
                 p_observations = sim_context.sensors[player_name].sense(
                     sim_context.dg_scenario, self.last_observations, player_name
