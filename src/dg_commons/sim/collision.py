@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 from geometry import translation_angle_from_SE2
@@ -20,6 +20,7 @@ from dg_commons.sim.collision_utils import (
 )
 from dg_commons.sim.models.obstacles import StaticObstacle
 from dg_commons.sim.simulator import SimContext
+from dg_commons.sim.lightweight_simulator import LightSimContext
 
 
 def impact_locations_from_polygons(a_model: SimModel, b_shape: BaseGeometry) -> List[Tuple[ImpactLocation, Polygon]]:
@@ -37,7 +38,7 @@ def impact_locations_from_polygons(a_model: SimModel, b_shape: BaseGeometry) -> 
     return locations
 
 
-def resolve_collision(a: PlayerName, b: PlayerName, sim_context: SimContext) -> Optional[CollisionReport]:
+def resolve_collision(a: PlayerName, b: PlayerName, sim_context: Union[SimContext, LightSimContext]) -> Optional[CollisionReport]:
     """
     Resolves the collision between A and B using the impulse method.
     Sources:
