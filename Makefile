@@ -11,6 +11,7 @@ xunit_output=$(tr)/nose-$(CIRCLE_NODE_INDEX)-xunit.xml
 test_packages=dg_commons_tests
 cover_packages=dg_commons
 
+junit=--junitxml=$(tr)/junit.xml
 parallel=-n auto --dist=loadfile
 coverage=--cov-config=.coveragerc --cov=$(cover_packages) --cov-report html
 extra=--capture=no -v
@@ -22,11 +23,11 @@ clean:
 
 test: clean
 	mkdir -p  $(tr)
-	DISABLE_CONTRACTS=1 pytest $(coverage) $(extra) src
+	DISABLE_CONTRACTS=1 pytest $(coverage) $(extra) $(junit) src
 
 test-parallel: clean
 	mkdir -p  $(tr)
-	DISABLE_CONTRACTS=1 pytest $(coverage) $(extra) $(parallel) src
+	DISABLE_CONTRACTS=1 pytest $(coverage) $(extra) $(junit) $(parallel) src
 
 #test-parallel-circle:
 #	DISABLE_CONTRACTS=1 \

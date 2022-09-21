@@ -22,14 +22,17 @@ def get_scenario_commonroad_replica(
     sim_param: Optional[SimParameters] = None,
     ego_player: Optional[PlayerName] = None,
     seed: int = 0,
+    assign_missions: bool = False,
 ) -> SimContext:
     """
-    This function load a CommonRoad scenario and tries to convert the dynamic obstacles into the Model/Agent paradigm
+    This function loads a CommonRoad scenario and tries to convert the dynamic obstacles into the Model/Agent paradigm
     used by the driving-game simulator.
     :param scenario_name:
     :param scenarios_dir:
     :param sim_param:
     :param ego_player:
+    :param seed:
+    :param assign_missions:
     :return:
     """
     scenario, planning_problem_set = load_commonroad_scenario(scenario_name, scenarios_dir)

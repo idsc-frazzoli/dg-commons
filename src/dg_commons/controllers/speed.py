@@ -69,7 +69,7 @@ class SpeedBehavior:
 
     def get_speed_ref(self, at: float) -> (float, bool):
         """Check if there is anyone on the right too close, then brake.
-        @:return candidate speed ref and whether or not the situation requires an emergency takeover
+        @:return candidate speed ref and whether the situation requires an emergency takeover
         (e.g. collision avoidance)
         """
 
@@ -128,7 +128,7 @@ class SpeedBehavior:
 
     def cruise_control(self, agents_rel_pose: Dict[PlayerName, SE2Transform]) -> float:
         """
-        If someone is in front with the same orientation, then apply the two seconds rule to adapt reference velocity
+        If someone is in front of us with lthe same orientation, then apply the two seconds rule to adapt reference velocity
          that allows maintaining a safe distance between the vehicles
         """
         myvel = self.agents[self.my_name].state.vx

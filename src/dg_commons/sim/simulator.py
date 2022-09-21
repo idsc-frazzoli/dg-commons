@@ -92,7 +92,7 @@ class Simulator:
             self.update(sim_context)
             self.post_update(sim_context)
         logger.info("Completed simulation. Writing logs...")
-        for player_name in sim_context.players:
+        for player_name in sim_context.models:
             sim_context.log[player_name] = self.simlogger[player_name].as_sequence()
         logger.info("Writing logs terminated.")
 
@@ -116,22 +116,24 @@ class Simulator:
         # fixme this can be parallelized later with ProcessPoolExecutor?
         t = sim_context.time
         update_commands: bool = (t - self.last_get_commands_ts) >= sim_context.param.dt_commands
-        for player_name, model in sim_context.models.items():
-            self.simlogger[player_name].states.add(t=t, v=model.get_state())
+        for player_name, agent in sim_context.players.items():
+            state = sim_context.models[player_name].get_state()
+            self.simlogger[player_name].states.add(t=t, v=state)
             if update_commands:
                 p_observations = sim_context.sensors[player_name].sense(
                     sim_context.dg_scenario, self.last_observations, player_name
                 )
                 tic = perf_counter()
-                cmds = sim_context.players[player_name].get_commands(p_observations)
+                cmds = agent.get_commands(p_observations)
                 toc = perf_counter()
                 self.last_commands[player_name] = cmds
                 self.simlogger[player_name].commands.add(t=t, v=cmds)
                 self.simlogger[player_name].info.add(t=t, v=toc - tic)
-                extra = sim_context.players[player_name].on_get_extra()
+                extra = agent.on_get_extra()
                 if extra is not None:
                     self.simlogger[player_name].extra.add(t=t, v=extra)
             cmds = self.last_commands[player_name]
+            model = sim_context.models[player_name]
             model.update(cmds, dt=sim_context.param.dt)
             logger.debug(f"Update function, sim time {sim_context.time:.2f}, player: {player_name}")
             logger.debug(f"New state {model.get_state()} reached applying {cmds}")
@@ -150,6 +152,8 @@ class Simulator:
         collision_players = self._check_collisions_among_players(sim_context)
         # check if the simulation is over
         self._maybe_terminate_simulation(sim_context)
+        # remove finished players
+        self._remove_finished_players(sim_context)
         return
 
     @staticmethod
@@ -160,16 +164,15 @@ class Simulator:
         - the minimum time after the first collision has expired
         - all missions have been fulfilled
         """
-        missions_completed: bool = (
-            all(m.is_fulfilled(sim_context.models[p].get_state()) for p, m in sim_context.missions.items())
-            if sim_context.missions
-            else False
-        )
-        # todo remove players that fulfill the mission?!
+        # missions_completed: bool = (
+        #     all(m.is_fulfilled(sim_context.models[p].get_state()) for p, m in sim_context.missions.items())
+        #     if sim_context.missions
+        #     else False
+        # )
         termination_condition: bool = (
             sim_context.time > sim_context.param.max_sim_time
             or sim_context.time > sim_context.first_collision_ts + sim_context.param.sim_time_after_collision
-            or missions_completed
+            or not sim_context.players
         )
         sim_context.sim_terminated = termination_condition
 
@@ -227,3 +230,13 @@ class Simulator:
                         sim_context.first_collision_ts = report.at_time
                     sim_context.collision_reports.append(report)
         return collision
+
+    @staticmethod
+    def _remove_finished_players(sim_context: SimContext):
+        """We remove players that complete their mission"""
+        for p, m in sim_context.missions.items():
+            # if p is still active
+            if p in sim_context.players:
+                p_state = sim_context.models[p].get_state()
+                if m.is_fulfilled(p_state):
+                    sim_context.players.pop(p)
