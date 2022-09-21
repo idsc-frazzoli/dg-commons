@@ -34,7 +34,7 @@ def test_commonroad_scenario_viz():
     file_name = os.path.join(OUT_TESTS_DIR, f"{scenario_name}.png")
     # file_name = "temp.png"
     plt.savefig(file_name, dpi=300)
-    # write_default_params("../../sim_tests/scenarios_tests/default_params.json")
+    # write_default_params("../../sim_tests/scenarios_tests/dg_default_draw_params.json")
 
 
 def test_npAgent_from_dynamic_obstacle():
