@@ -126,6 +126,20 @@ class Simulator:
                 tic = perf_counter()
                 cmds = agent.get_commands(p_observations)
                 toc = perf_counter()
+
+                import csv
+                def data2csv(file_path, data):
+                    with open(file_path, "a") as csvfile:
+                        writer = csv.writer(csvfile)
+                        writer.writerow(data)
+
+                from agents.idm_agent import IDMAgent
+                import os
+                if isinstance(agent, IDMAgent):
+                    out_dir = "/home/tracyle/dg-repo/dg-risk/out"
+                    file_path = os.path.join(out_dir, sim_context.description + ".csv")
+                    data2csv(file_path, agent.data_db.get_info_list())
+
                 self.last_commands[player_name] = cmds
                 self.simlogger[player_name].commands.add(t=t, v=cmds)
                 self.simlogger[player_name].info.add(t=t, v=toc - tic)
