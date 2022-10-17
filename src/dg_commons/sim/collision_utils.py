@@ -54,7 +54,10 @@ def _find_intersection_points(a_shape: Polygon, b_shape: BaseGeometry) -> List[T
 
         plt.figure()
         plt.plot(*a_shape.exterior.xy, "b")
-        plt.plot(*b_shape.xy, "r")
+        if isinstance(b_shape, Polygon):
+            plt.plot(*b_shape.exterior.xy, "r")
+        else:
+            plt.plot(*b_shape.xy, "r")
         for p in points:
             plt.plot(*p, "o")
         plt.savefig(f"coll_debug{time.time()}.png")
