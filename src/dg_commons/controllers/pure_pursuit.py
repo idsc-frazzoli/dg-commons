@@ -25,10 +25,12 @@ class PurePursuitParam:
     """Max extra distance to look for the closest point on the ref path"""
     length: float = 3.5
     """Length of the vehicle"""
+    lr: float = 3.5 / 2
+    """Rear length of wheelbase - dist from CoG to back axle [m]"""
 
     @classmethod
     def from_vehicle_geo(cls, params: VehicleGeometry) -> "PurePursuitParam":
-        return PurePursuitParam(length=params.wheelbase)
+        return PurePursuitParam(length=params.wheelbase, lr=params.lr)
 
 
 class PurePursuit:
@@ -94,11 +96,13 @@ class PurePursuit:
         if any([_ is None for _ in [self.pose, self.path]]):
             raise RuntimeError("Attempting to use PurePursuit before having set any observations or reference path")
         theta = angle_from_SE2(self.pose)
-        rear_axle = SE2_apply_T2(self.pose, np.array([-self.param.length / 2, 0]))
+        rear_axle = SE2_apply_T2(self.pose, np.array([-self.param.lr, 0]))
         _, goal_point = self.find_goal_point()
         p_goal, theta_goal = translation_angle_from_SE2(goal_point)
         alpha = np.arctan2(p_goal[1] - rear_axle[1], p_goal[0] - rear_axle[0]) - theta
+        # Why not use res.x from find_goal_point()?
         radius = self._get_lookahead() / (2 * sin(alpha))
+        # Why not use self.speed?
         return atan(self.param.length / radius)
 
     def _get_lookahead(self) -> float:

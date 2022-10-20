@@ -1,23 +1,28 @@
 from dataclasses import dataclass
-from math import isclose, pi, atan2
-from typing import Sequence, List
+from math import atan2, isclose, pi
+from typing import List, Sequence
 
 import numpy as np
-from cachetools import cached, LRUCache
+from cachetools import LRUCache, cached
 from commonroad.scenario.lanelet import Lanelet, LaneletNetwork
+from dg_commons import (
+    SE2_apply_T2,
+    SE2_interpolate,
+    SE2Transform,
+    get_distance_SE2,
+    relative_pose,
+)
 from geometry import (
-    SO2value,
-    SO2_from_angle,
+    SE2,
     SE2_from_translation_angle,
     SE2value,
-    SE2,
-    translation_angle_scale_from_E2,
-    translation_angle_from_SE2,
+    SO2_from_angle,
+    SO2value,
     T2value,
+    translation_angle_from_SE2,
+    translation_angle_scale_from_E2,
 )
 from scipy.optimize import minimize_scalar
-
-from dg_commons import SE2Transform, relative_pose, SE2_apply_T2, SE2_interpolate, get_distance_SE2
 
 
 @dataclass(unsafe_hash=True)
@@ -88,7 +93,7 @@ class DgLanelet:
 
     @classmethod
     def from_vertices(
-            cls, left_vertices: np.ndarray, right_vertices: np.ndarray, center_vertices: np.ndarray
+        cls, left_vertices: np.ndarray, right_vertices: np.ndarray, center_vertices: np.ndarray
     ) -> "DgLanelet":
         ctr_points = []
         for i, center in enumerate(center_vertices):
@@ -283,6 +288,19 @@ class DgLanelet:
             p = c0.q.p * (1 - alpha) + c1.q.p * alpha
             theta = c0.q.theta * (1 - alpha) + c1.q.theta * alpha
             return SE2Transform(p, theta)
+
+    def inside_from_T2value(self, position: T2value) -> bool:
+        beta, _ = self.find_along_lane_closest_point(position)
+        r = self.radius(beta)
+        center = self.center_point_fast_SE2Transform(beta).p
+        lateral = np.linalg.norm(center - position)
+
+        return lateral <= r and 0 <= beta and beta <= len(self.control_points) - 1
+
+    def along_lane_from_T2value(self, position: T2value) -> float:
+        beta, _ = self.find_along_lane_closest_point(position)
+
+        return self.along_lane_from_beta(beta)
 
     @cached(LRUCache(maxsize=128))
     def lane_profile(self, points_per_segment: int = 5) -> List[T2value]:
