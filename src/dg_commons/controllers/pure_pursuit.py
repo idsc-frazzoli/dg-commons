@@ -1,14 +1,13 @@
 from dataclasses import dataclass
-from math import sin, atan
+from math import atan, sin
 from typing import Optional, Tuple
 
 import numpy as np
 import scipy.optimize
-from geometry import SE2value, translation_angle_from_SE2, angle_from_SE2
-
-from dg_commons.geo import norm_between_SE2value, SE2_apply_T2
+from dg_commons.geo import SE2_apply_T2, norm_between_SE2value
 from dg_commons.maps.lanes import DgLanelet
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
+from geometry import SE2value, angle_from_SE2, translation_angle_from_SE2
 
 __all__ = ["PurePursuit", "PurePursuitParam"]
 
@@ -100,9 +99,7 @@ class PurePursuit:
         _, goal_point = self.find_goal_point()
         p_goal, theta_goal = translation_angle_from_SE2(goal_point)
         alpha = np.arctan2(p_goal[1] - rear_axle[1], p_goal[0] - rear_axle[0]) - theta
-        # Why not use res.x from find_goal_point()?
         radius = self._get_lookahead() / (2 * sin(alpha))
-        # Why not use self.speed?
         return atan(self.param.length / radius)
 
     def _get_lookahead(self) -> float:
