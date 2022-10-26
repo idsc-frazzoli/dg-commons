@@ -1,4 +1,4 @@
-from dg_risk.sim.simulator import SimContext, Simulator
+from dg_commons.sim.simulator import SimContext, Simulator
 
 __all__ = ["run_simulation"]
 
