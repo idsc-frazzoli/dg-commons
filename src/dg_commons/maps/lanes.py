@@ -5,13 +5,6 @@ from typing import List, Sequence
 import numpy as np
 from cachetools import LRUCache, cached
 from commonroad.scenario.lanelet import Lanelet, LaneletNetwork
-from dg_commons import (
-    SE2_apply_T2,
-    SE2_interpolate,
-    SE2Transform,
-    get_distance_SE2,
-    relative_pose,
-)
 from geometry import (
     SE2,
     SE2_from_translation_angle,
@@ -24,8 +17,16 @@ from geometry import (
 )
 from scipy.optimize import minimize_scalar
 
+from dg_commons import (
+    SE2_apply_T2,
+    SE2_interpolate,
+    SE2Transform,
+    get_distance_SE2,
+    relative_pose,
+)
 
-@dataclass(unsafe_hash=True)
+
+@dataclass(unsafe_hash=True, frozen=True)
 class DgLanePose:
     """Very detailed information about the "position in the lane"."""
 
@@ -66,7 +67,7 @@ class DgLanePose:
     center_point: SE2Transform
 
 
-@dataclass
+@dataclass(frozen=True)
 class LaneCtrPoint:
     q: SE2Transform
     """ The centerline control point in SE2"""
@@ -82,6 +83,27 @@ class DgLanelet:
 
     def __init__(self, control_points: Sequence[LaneCtrPoint]):
         self.control_points: List[LaneCtrPoint] = list(control_points)
+
+    def __eq__(self, other: "DgLanelet") -> bool:
+        if not isinstance(other, DgLanelet):
+            return False
+
+        if len(self.control_points) != len(other.control_points):
+            return False
+
+        tolerance = 1e-7
+        for my_point, other_point in zip(self.control_points, other.control_points):
+            if not isclose(my_point.r, other_point.r, abs_tol=tolerance):
+                return False
+            elif not isclose(my_point.q.theta, other_point.q.theta, abs_tol=tolerance):
+                return False
+            elif not np.allclose(my_point.q.p, other_point.q.p, atol=tolerance):
+                return False
+
+        return True
+
+    def __hash__(self) -> int:
+        return hash((control_point for control_point in self.control_points))
 
     @classmethod
     def from_commonroad_lanelet(cls, lanelet: Lanelet) -> "DgLanelet":
