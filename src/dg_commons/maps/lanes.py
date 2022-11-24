@@ -26,7 +26,7 @@ from dg_commons import (
 )
 
 
-@dataclass(unsafe_hash=True, frozen=True)
+@dataclass(frozen=True)
 class DgLanePose:
     """Very detailed information about the "position in the lane"."""
 
@@ -52,9 +52,9 @@ class DgLanePose:
 
     # am I going in the right direction?
     correct_direction: bool
-    # lateral position of closest left lane boundary
+    # lateral position of the closest left lane boundary
     lateral_left: float
-    # lateral position of closest right lane boundary
+    # lateral position of the closest right lane boundary
     lateral_right: float
 
     # The distance from us to the left lane boundary
@@ -63,7 +63,7 @@ class DgLanePose:
     distance_from_right: float
     # The distance from us to the center = abs(lateral)
     distance_from_center: float
-    # center_point: anchor point on the center of the lane
+    # center_point: anchor point in the center of the lane
     center_point: SE2Transform
 
 
@@ -83,27 +83,6 @@ class DgLanelet:
 
     def __init__(self, control_points: Sequence[LaneCtrPoint]):
         self.control_points: List[LaneCtrPoint] = list(control_points)
-
-    def __eq__(self, other: "DgLanelet") -> bool:
-        if not isinstance(other, DgLanelet):
-            return False
-
-        if len(self.control_points) != len(other.control_points):
-            return False
-
-        tolerance = 1e-7
-        for my_point, other_point in zip(self.control_points, other.control_points):
-            if not isclose(my_point.r, other_point.r, abs_tol=tolerance):
-                return False
-            elif not isclose(my_point.q.theta, other_point.q.theta, abs_tol=tolerance):
-                return False
-            elif not np.allclose(my_point.q.p, other_point.q.p, atol=tolerance):
-                return False
-
-        return True
-
-    def __hash__(self) -> int:
-        return hash((control_point for control_point in self.control_points))
 
     @classmethod
     def from_commonroad_lanelet(cls, lanelet: Lanelet) -> "DgLanelet":
@@ -311,17 +290,15 @@ class DgLanelet:
             theta = c0.q.theta * (1 - alpha) + c1.q.theta * alpha
             return SE2Transform(p, theta)
 
-    def inside_from_T2value(self, position: T2value) -> bool:
+    def is_inside_from_T2value(self, position: T2value) -> bool:
         beta, _ = self.find_along_lane_closest_point(position)
         r = self.radius(beta)
         center = self.center_point_fast_SE2Transform(beta).p
         lateral = np.linalg.norm(center - position)
-
-        return lateral <= r and 0 <= beta and beta <= len(self.control_points) - 1
+        return lateral <= r and 0 <= beta <= len(self.control_points) - 1
 
     def along_lane_from_T2value(self, position: T2value) -> float:
         beta, _ = self.find_along_lane_closest_point(position)
-
         return self.along_lane_from_beta(beta)
 
     @cached(LRUCache(maxsize=128))
@@ -342,6 +319,5 @@ class DgLanelet:
 
         return points_right + list(reversed(points_left))
 
-    @property
     def get_control_points(self):
         return self.control_points
