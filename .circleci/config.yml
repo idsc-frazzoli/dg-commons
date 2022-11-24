@@ -60,7 +60,7 @@ jobs:
           name: Run tests
           command: |
             make test
-      - store_test_results:
+      - store_artifacts:
           path: out/test-results
       - store_artifacts:
           path: out/coverage
