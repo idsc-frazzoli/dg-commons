@@ -1,13 +1,12 @@
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from commonroad.prediction.prediction import TrajectoryPrediction
 from geometry import SE2_from_xytheta
 
-from dg_commons.sim.models.obstacles import StaticObstacle
-
 from dg_commons import PlayerName, apply_SE2_to_shapely_geo
-from dg_commons.sim import logger, SimLog, SimParameters
-from dg_commons.sim.scenarios import load_commonroad_scenario, NotSupportedConversion
+from dg_commons.sim import SimLog, SimParameters, logger
+from dg_commons.sim.models.obstacles import StaticObstacle
+from dg_commons.sim.scenarios import NotSupportedConversion, load_commonroad_scenario
 from dg_commons.sim.scenarios.convert_from_commonroad import model_agent_from_dynamic_obstacle
 from dg_commons.sim.scenarios.structures import DgScenario
 from dg_commons.sim.scenarios.utils_dyn_obstacle import is_dyn_obstacle_static
@@ -23,6 +22,7 @@ def get_scenario_commonroad_replica(
     ego_player: Optional[PlayerName] = None,
     seed: int = 0,
     assign_missions: bool = False,
+    description: str = "",
 ) -> SimContext:
     """
     This function loads a CommonRoad scenario and tries to convert the dynamic obstacles into the Model/Agent paradigm
@@ -77,7 +77,8 @@ def get_scenario_commonroad_replica(
         static_obstacles.update(
             {
                 sobs.obstacle_id: StaticObstacle(
-                    obstacle_type=sobs.obstacle_type, shape=sobs.obstacle_shape.shapely_object
+                    obstacle_type=sobs.obstacle_type,
+                    shape=sobs.obstacle_shape.shapely_object,
                 )
             }
         )
@@ -90,4 +91,5 @@ def get_scenario_commonroad_replica(
         log=SimLog(),
         param=sim_param,
         seed=seed,
+        description=description,
     )
