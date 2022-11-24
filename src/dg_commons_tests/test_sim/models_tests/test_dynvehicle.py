@@ -73,5 +73,5 @@ def test_vehicle_dynamics_sim():
     sim.run(sim_context)
     report = generate_report(sim_context)
     # save report
-    report_file = os.path.join(OUT_TESTS_DIR, f"vehicle_dyn.html")
+    report_file = os.path.join(OUT_TESTS_DIR, "vehicle_dyn.html")
     report.to_html(report_file)
