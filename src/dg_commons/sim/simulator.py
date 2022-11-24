@@ -3,16 +3,16 @@ from dataclasses import dataclass, field, replace
 from decimal import Decimal
 from itertools import combinations
 from time import perf_counter
-from typing import Mapping, Optional, List, Dict, MutableMapping
+from typing import Dict, List, Mapping, MutableMapping, Optional
 
 from dg_commons import PlayerName, U, fd
 from dg_commons.planning import PlanningGoal
-from dg_commons.sim import SimTime, CollisionReport, logger
+from dg_commons.sim import CollisionReport, SimTime, logger
 from dg_commons.sim.agents.agent import Agent, TAgent
 from dg_commons.sim.collision_utils import CollisionException
 from dg_commons.sim.models.obstacles_dyn import DynObstacleModel
 from dg_commons.sim.scenarios.structures import DgScenario
-from dg_commons.sim.sim_perception import ObsFilter, IdObsFilter
+from dg_commons.sim.sim_perception import IdObsFilter, ObsFilter
 from dg_commons.sim.simulator_structures import *
 from dg_commons.sim.simulator_structures import InitSimObservations
 from dg_commons.time import time_function
@@ -179,7 +179,9 @@ class Simulator:
     @staticmethod
     def _check_collisions_with_environment(sim_context: SimContext) -> bool:
         """Check collisions of the players with the environment"""
-        from dg_commons.sim.collision import resolve_collision_with_environment  # import here to avoid circular imports
+        from dg_commons.sim.collision import (
+            resolve_collision_with_environment,  # import here to avoid circular imports
+        )
 
         env_obstacles = sim_context.dg_scenario.strtree_obstacles
         collision = False
@@ -211,7 +213,9 @@ class Simulator:
         :param sim_context:
         :return: True if at least one collision happened, False otherwise
         """
-        from dg_commons.sim.collision import resolve_collision  # import here to avoid circular imports
+        from dg_commons.sim.collision import (
+            resolve_collision,  # import here to avoid circular imports
+        )
 
         collision = False
         for p1, p2 in combinations(sim_context.models, 2):

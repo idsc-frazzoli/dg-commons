@@ -1,14 +1,13 @@
 from dataclasses import dataclass
-from math import sin, atan
+from math import atan, sin
 from typing import Optional, Tuple
 
 import numpy as np
 import scipy.optimize
-from geometry import SE2value, translation_angle_from_SE2, angle_from_SE2
-
-from dg_commons.geo import norm_between_SE2value, SE2_apply_T2
+from dg_commons.geo import SE2_apply_T2, norm_between_SE2value
 from dg_commons.maps.lanes import DgLanelet
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
+from geometry import SE2value, angle_from_SE2, translation_angle_from_SE2
 
 __all__ = ["PurePursuit", "PurePursuitParam"]
 
@@ -25,10 +24,12 @@ class PurePursuitParam:
     """Max extra distance to look for the closest point on the ref path"""
     length: float = 3.5
     """Length of the vehicle"""
+    lr: float = 3.5 / 2
+    """Rear length of wheelbase - dist from CoG to back axle [m]"""
 
     @classmethod
     def from_vehicle_geo(cls, params: VehicleGeometry) -> "PurePursuitParam":
-        return PurePursuitParam(length=params.wheelbase)
+        return PurePursuitParam(length=params.wheelbase, lr=params.lr)
 
 
 class PurePursuit:
@@ -94,7 +95,7 @@ class PurePursuit:
         if any([_ is None for _ in [self.pose, self.path]]):
             raise RuntimeError("Attempting to use PurePursuit before having set any observations or reference path")
         theta = angle_from_SE2(self.pose)
-        rear_axle = SE2_apply_T2(self.pose, np.array([-self.param.length / 2, 0]))
+        rear_axle = SE2_apply_T2(self.pose, np.array([-self.param.lr, 0]))
         _, goal_point = self.find_goal_point()
         p_goal, theta_goal = translation_angle_from_SE2(goal_point)
         alpha = np.arctan2(p_goal[1] - rear_axle[1], p_goal[0] - rear_axle[0]) - theta
