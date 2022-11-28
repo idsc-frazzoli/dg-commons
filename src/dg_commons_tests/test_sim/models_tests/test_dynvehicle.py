@@ -28,10 +28,13 @@ def get_vehicle_dyn_scenario() -> SimContext:
     # road_boundary_obstacle, road_boundary_sg_rectangles = boundary.create_road_boundary_obstacle(scenario)
 
     x0_p1 = VehicleStateDyn(x=0, y=0, psi=deg2rad(0), vx=kmh2ms(50), delta=0)
-    x0_p2 = VehicleStateDyn(x=25, y=-10, psi=deg2rad(90), vx=kmh2ms(0), delta=-1)
+    x0_p2 = VehicleStateDyn(x=25, y=-10, psi=deg2rad(90), vx=kmh2ms(0), delta=1)
+    x0_p3 = VehicleStateDyn(x=-10, y=-15, psi=deg2rad(90), vx=kmh2ms(0), vy=kmh2ms(-10), delta=-1)
+
     models = {
         P1: VehicleModelDyn.default_car(x0_p1),
         P2: VehicleModelDyn.default_bicycle(x0_p2),
+        P3: VehicleModelDyn.default_car(x0_p3),
     }
 
     cmds_p1 = DgSampledSequence[VehicleCommands](
@@ -52,12 +55,12 @@ def get_vehicle_dyn_scenario() -> SimContext:
             VehicleCommands(acc=5, ddelta=0),
             VehicleCommands(acc=5, ddelta=-1),
             VehicleCommands(acc=3, ddelta=-1),
-            VehicleCommands(acc=-5, ddelta=-3),
+            VehicleCommands(acc=5, ddelta=-3),
             VehicleCommands(acc=0, ddelta=3),
         ],
     )
 
-    players = {P1: NPAgent(cmds_p1), P2: NPAgent(cmds_p2)}
+    players = {P1: NPAgent(cmds_p1), P2: NPAgent(cmds_p2), P3: NPAgent(cmds_p2)}
     return SimContext(
         dg_scenario=DgScenario(scenario=scenario, use_road_boundaries=True),
         models=models,
