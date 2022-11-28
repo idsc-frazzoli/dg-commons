@@ -34,14 +34,15 @@ def plot_player_log(log: PlayerLog, fig: Figure = None):
         ts = log.states.timestamps
         fig.add_subplot(rows_number, 1, i + 1)
         plt.plot(ts, field_value, label=field.name)
+        plt.grid()
         plt.legend()
 
     for i, field in enumerate(cmds_fields):
         field_value = [getattr(c, field.name) for c in log.commands.values]
         ts = log.commands.timestamps
         fig.add_subplot(rows_number, 1, n_states + i + 1)
-        # todo plot as ZOH
-        plt.plot(ts, field_value, label=field.name)
+        plt.step(ts, field_value, label=field.name)
+        plt.grid()
         plt.legend()
 
     plt.draw()
