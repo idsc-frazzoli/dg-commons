@@ -9,6 +9,7 @@ from dg_commons import PlayerName, DgSampledSequence, fd
 from dg_commons.planning import PolygonGoal
 from dg_commons.sim import SimParameters
 from dg_commons.sim.agents import NPAgent
+from dg_commons.sim.log_visualisation import plot_player_log
 from dg_commons.sim.models.spacecraft import SpacecraftState, SpacecraftModel, SpacecraftCommands
 from dg_commons.sim.models.vehicle import VehicleCommands
 from dg_commons.sim.models.vehicle_dynamic import VehicleStateDyn, VehicleModelDyn
@@ -86,6 +87,13 @@ def generate_report(sim_context: SimContext) -> Report:
     gif_viz = r.figure(cols=1)
     with gif_viz.data_file("Animation", MIME_GIF) as fn:
         create_animation(file_path=fn, sim_context=sim_context, figsize=(16, 8), dt=50, dpi=120, plot_limits="auto")
+
+    # state/commands plots
+    for pn in sim_context.log.keys():
+        with r.subsection(f"Player-{pn}-log") as sub:
+            with sub.plot(f"{pn}-log", figsize=(20, 15)) as pylab:
+                plot_player_log(log=sim_context.log[pn], fig=pylab.gcf())
+
     return r
 
 
