@@ -126,7 +126,7 @@ class ShapelyViz:
         """
         x, y = [], []
         if isinstance(shape, MultiPolygon):
-            for poly in shape:
+            for poly in shape.geoms:
                 poly_x, poly_y = self._get_poly_coordinates(poly)
                 x += poly_x
                 y += poly_y
