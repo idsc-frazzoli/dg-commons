@@ -1,14 +1,15 @@
-from typing import List
+from typing import List, Tuple
 
 from commonroad.scenario.scenario import Scenario
 from shapely.geometry import LineString, Polygon
 from shapely.ops import unary_union
 
 
-def build_road_boundary_obstacle(scenario: Scenario) -> List[LineString]:
+def build_road_boundary_obstacle(scenario: Scenario) -> Tuple[List[LineString], List[Polygon]]:
     """Returns a list of LineString of the scenario that are then used for collision checking.
     The boundaries are computed taking the external perimeter of the scenario and
     removing the entrance and exiting "gates" of the lanes.
+    @:return: a tuple containing the road boundaries and the open gates. Both are represented as a lists of LineStrings
     """
 
     lanelets = scenario.lanelet_network.lanelets
@@ -34,4 +35,4 @@ def build_road_boundary_obstacle(scenario: Scenario) -> List[LineString]:
     for eeg in entrance_exit_gates:
         ext_bounds = ext_bounds.difference(eeg)
     scenario_bounds += [g for g in ext_bounds.geoms]
-    return scenario_bounds
+    return scenario_bounds, entrance_exit_gates

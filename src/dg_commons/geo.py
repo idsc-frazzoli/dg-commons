@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Sequence, Tuple
+from typing import Sequence, Tuple, Union
 
 import numpy as np
 from commonroad_dc.collision.collision_detection.pycrcc_collision_dispatch import create_collision_object
@@ -15,7 +15,7 @@ from geometry import (
 from shapely.affinity import affine_transform
 from shapely.geometry.base import BaseGeometry
 from commonroad_dc.pycrcc import Polygon as CommonRoadPolygon
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, LineString
 
 """
 Some of these structures and operations are are taken from `duckietown-world` with minor modifications
@@ -109,7 +109,7 @@ def transform_xy(q: np.ndarray, points: Sequence[Tuple[float, float]]) -> Tuple[
     return tuple(zip(x, y))
 
 
-def sPolygon2crPolygon(shapely_polygon: Polygon) -> CommonRoadPolygon:
+def sPolygon2crPolygon(shapely_polygon: Union[Polygon, LineString]) -> CommonRoadPolygon:
     """Convert a shapely polygon to a CommonRoad polygon
     Interface available at
         https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker/-/blob/master/cpp/collision/src/narrowphase/polygon.cc
@@ -119,6 +119,8 @@ def sPolygon2crPolygon(shapely_polygon: Polygon) -> CommonRoadPolygon:
         https://github.com/drufat/triangle/issues/2#issuecomment-583812662 and comment here:
         https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker/-/blob/master/commonroad_dc/collision/collision_detection/scenario.py
     """
+    if isinstance(shapely_polygon, LineString):
+        shapely_polygon = shapely_polygon.buffer(0.01)
     vertices = np.array(list(zip(*shapely_polygon.exterior.xy)))
     if all(np.equal(vertices[0], vertices[-1])):
         vertices = vertices[:-1]
