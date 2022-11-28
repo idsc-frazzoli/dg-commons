@@ -127,7 +127,7 @@ class VehicleModelDyn(VehicleModel):
     def dynamics(self, x0: VehicleStateDyn, u: VehicleCommands) -> VehicleStateDyn:
         """returns state derivative for given control inputs"""
         # friction model
-        frictionx, frictiony, frictiontheta = self.get_extra_collision_friction_acc()
+        friction_x, friction_y, friction_psi = self.get_extra_collision_friction_acc()
 
         if x0.vx < 0.1:
             dx_kin = super().dynamics(x0, u)
@@ -135,9 +135,9 @@ class VehicleModelDyn(VehicleModel):
                 x=dx_kin.x,
                 y=dx_kin.y,
                 psi=dx_kin.psi,
-                vx=dx_kin.vx + frictionx,
-                vy=frictiony,
-                dpsi=frictiontheta,
+                vx=dx_kin.vx + friction_x,
+                vy=friction_y,
+                dpsi=friction_psi,
                 delta=dx_kin.delta,
             )
         else:
@@ -193,9 +193,9 @@ class VehicleModelDyn(VehicleModel):
                 x=xdot,
                 y=ydot,
                 psi=x0.dpsi,
-                vx=acc_x + frictionx,
-                vy=acc_y + frictiony,
-                dpsi=ddtheta + frictiontheta,
+                vx=acc_x + friction_x,
+                vy=acc_y + friction_y,
+                dpsi=ddtheta + friction_psi,
                 delta=ddelta,
             )
 
@@ -225,7 +225,7 @@ class VehicleModelDyn(VehicleModel):
         else:
             if self.vg.vehicle_type in TwoWheelsTypes:
                 # only rear for acc on bicycles-like
-                return 0, Facc
+                return Facc * 0.5, Facc * 0.5  # 0, Facc
             else:
                 # assumes 4WD car
                 return Facc * 0.5, Facc * 0.5
@@ -235,7 +235,7 @@ class VehicleModelDyn(VehicleModel):
         if self.has_collided:  # and self.model_type in TwoWheelsTypes:
             frictionx = -magic_mu * self._state.vx
             frictiony = -magic_mu * self._state.vy
-            frictiontheta = -magic_mu * self._state.dpsi
-            return frictionx, frictiony, frictiontheta
+            frictionpsi = -magic_mu * self._state.dpsi
+            return frictionx, frictiony, frictionpsi
         else:
             return 0, 0, 0

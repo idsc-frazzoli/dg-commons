@@ -46,7 +46,7 @@ class Pacejka:
     def default_bicycle_rear(cls):
         logger.warn("pacejka for bikes is not tuned")
         # todo
-        return Pacejka(B=5, C=2, D=1)
+        return Pacejka(B=12, C=2, D=1)
 
 
 @dataclass(frozen=True)
