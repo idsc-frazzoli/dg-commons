@@ -33,7 +33,7 @@ class DgScenario:
             assert issubclass(type(sobstacle), StaticObstacle), sobstacle
         # add lane boundaries as obstacles after the static obstacles (since we assign random ids)
         if self.use_road_boundaries and self.scenario is not None:
-            lanelet_bounds = build_road_boundary_obstacle(self.scenario)
+            lanelet_bounds, _ = build_road_boundary_obstacle(self.scenario)
             for lanelet_bound in lanelet_bounds:
                 idx = randint(0, 100000)
                 while idx in self.static_obstacles:

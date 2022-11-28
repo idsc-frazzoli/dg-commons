@@ -13,14 +13,18 @@ from dg_commons_tests import OUT_TESTS_DIR
 def test_build_road_bounds():
     scenario_name = "USA_Lanker-1_1_T-1"
     scenario, planning_problem_set = load_commonroad_scenario(scenario_name)
-    lane_strings = build_road_boundary_obstacle(scenario)
+    lane_boundaries, gates = build_road_boundary_obstacle(scenario)
     rnd = MPRenderer(figsize=(20, 20))
-    scenario.draw(rnd, draw_params={"traffic_light": {"draw_traffic_lights": False}})
+    scenario.draw(rnd, draw_params={"traffic_light": {"draw_traffic_lights": True}})
     rnd.render()
 
-    for l in lane_strings:
+    for l in lane_boundaries:
         xy = l.coords.xy
         rnd.ax.axes.plot(xy[0], xy[1], color="orange", zorder=100)
+    for l in gates:
+        xy = l.boundary.coords.xy
+        rnd.ax.axes.plot(xy[0], xy[1], color="green", zorder=100)
+
     rnd.ax.set_facecolor("k")
     plt.show()
 
