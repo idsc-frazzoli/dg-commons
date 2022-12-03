@@ -1,4 +1,4 @@
-python_version=3.10
+python_version=3.11
 registry=alezana
 image_name=dg_base
 dockerfile=Dockerfile.base

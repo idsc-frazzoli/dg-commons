@@ -5,10 +5,10 @@ cachetools>=5.0.0
 # libraries
 numpy>=1.21.2
 scipy>=1.8.0
-matplotlib>=3.5.0
+matplotlib>=3.5.0,<3.6.0
 shapely>=1.8.3,<2 # compatibility strtree
 zuper-commons-z6>=6
 PyGeometry-z6>=2.1.4
 
-commonroad-io==2022.2
-commonroad-drivability-checker==2022.1
+commonroad-io==2022.3
+commonroad-drivability-checker==2022.2.1
