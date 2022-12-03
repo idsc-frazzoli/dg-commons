@@ -1,3 +1,4 @@
+from commonroad.visualization.draw_params import LaneletNetworkParams, MPDrawParams
 from commonroad.visualization.mp_renderer import MPRenderer
 from matplotlib import pyplot as plt
 from shapely.affinity import affine_transform
@@ -15,7 +16,10 @@ def test_build_road_bounds():
     scenario, planning_problem_set = load_commonroad_scenario(scenario_name)
     lane_boundaries, gates = build_road_boundary_obstacle(scenario)
     rnd = MPRenderer(figsize=(20, 20))
-    scenario.draw(rnd, draw_params={"traffic_light": {"draw_traffic_lights": True}})
+
+    draw_params = MPDrawParams()
+    draw_params.lanelet_network.traffic_light.draw_traffic_lights = True
+    scenario.draw(rnd, draw_params=draw_params)
     rnd.render()
 
     for l in lane_boundaries:
@@ -40,7 +44,9 @@ def test_road_bounds_dgscenario():
     static_obstacles = dict(zip(range(len(polys)), polys))
     dgscenario = DgScenario(scenario, static_obstacles=static_obstacles, use_road_boundaries=True)
     rnd = MPRenderer(figsize=(20, 20))
-    scenario.draw(rnd, draw_params={"traffic_light": {"draw_traffic_lights": False}})
+    draw_params = MPDrawParams()
+    draw_params.lanelet_network.traffic_light.draw_traffic_lights = True
+    scenario.draw(rnd, draw_params=draw_params)
     rnd.render()
     for do in scenario.dynamic_obstacles:
         do.draw(rnd)
