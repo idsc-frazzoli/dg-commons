@@ -34,7 +34,7 @@ def test_dev_vis():
     scenario, _ = load_commonroad_scenario(scenario_name)
 
     draw_params = MPDrawParams()
-    draw_params.save("default_params")
+    draw_params.save("default_params.yaml")
 
     lanelet_net_params = LaneletNetworkParams()
     lanelet_net_params.traffic_light.draw_traffic_lights = True
