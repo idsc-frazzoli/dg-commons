@@ -5,6 +5,7 @@ from math import inf
 from typing import Sequence, Tuple, Generic, Optional, List, Union
 
 import numpy as np
+from commonroad.visualization.draw_params import MPDrawParams
 from commonroad.visualization.mp_renderer import MPRenderer
 from decorator import contextmanager
 from geometry import SE2_from_xytheta, SE2value
@@ -63,13 +64,13 @@ class SimRenderer(SimRendererABC):
         self.sim_context = sim_context
         self.commonroad_renderer: MPRenderer = MPRenderer(ax=ax, *args, **kwargs)
         self.shapely_viz = ShapelyViz(ax=self.commonroad_renderer.ax)
+        self.draw_params: MPDrawParams = MPDrawParams()
 
     @contextmanager
     def plot_arena(self, ax: Axes):
         if self.sim_context.dg_scenario.scenario:
-            self.sim_context.dg_scenario.lanelet_network.draw(
-                self.commonroad_renderer, draw_params={"traffic_light": {"draw_traffic_lights": False}}
-            )
+            self.draw_params.lanelet_network.traffic_light.draw_traffic_lights = True
+            self.sim_context.dg_scenario.lanelet_network.draw(self.commonroad_renderer, draw_params=self.draw_params)
             self.commonroad_renderer.render()
         for s_obstacle in self.sim_context.dg_scenario.static_obstacles.values():
             self.shapely_viz.add_shape(s_obstacle.shape, color=s_obstacle.geometry.color, zorder=ZOrders.ENV_OBSTACLE)
