@@ -25,6 +25,8 @@ __all__ = [
     "PlayerObservations",
 ]
 
+from dg_commons.sim.scenarios import DgScenario
+
 
 @dataclass(frozen=True)
 class SimParameters:
@@ -58,7 +60,7 @@ class InitSimObservations:
 
     my_name: PlayerName
     seed: int
-    lanelet_network: Optional[LaneletNetwork] = None
+    dg_scenario: Optional[DgScenario] = None
 
 
 @dataclass(frozen=True)
