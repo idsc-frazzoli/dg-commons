@@ -21,7 +21,6 @@ from dg_commons.sim.simulator_structures import SimModel
 
 @dataclass(unsafe_hash=True, eq=True, order=True)
 class VehicleCommands:
-    # todo add horn
     acc: float
     """ Acceleration [m/s^2] """
     ddelta: float
