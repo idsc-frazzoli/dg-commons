@@ -8,7 +8,7 @@ from shapely.geometry.base import BaseGeometry
 
 from dg_commons import SE2Transform, X
 from dg_commons.maps import DgLanelet
-from dg_commons.utils_state import extract_pose_from_state
+from dg_commons.sim.models import extract_pose_from_state
 
 __all__ = ["PlanningGoal", "RefLaneGoal", "PolygonGoal", "PoseGoal"]
 
