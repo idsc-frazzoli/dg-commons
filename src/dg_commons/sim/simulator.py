@@ -7,7 +7,7 @@ from time import perf_counter
 from typing import Dict, List, Mapping, MutableMapping, Optional
 
 from dg_commons import PlayerName, U, fd
-from dg_commons.planning import PlanningGoal
+from dg_commons.sim.goals import PlanningGoal
 from dg_commons.sim import CollisionReport, SimTime, logger
 from dg_commons.sim.agents.agent import Agent, TAgent
 from dg_commons.sim.collision_utils import CollisionException
@@ -85,7 +85,12 @@ class Simulator:
         # initialize the simulation
         for player_name, player in sim_context.players.items():
             scenario = deepcopy(sim_context.dg_scenario)
-            init_obs = InitSimObservations(my_name=player_name, seed=sim_context.seed, dg_scenario=scenario)
+            init_obs = InitSimObservations(
+                my_name=player_name,
+                seed=sim_context.seed,
+                dg_scenario=scenario,
+                goal=deepcopy(sim_context.missions.get(player_name)),
+            )
             player.on_episode_init(init_obs)
             self.simlogger[player_name] = PlayerLogger()
         # actual simulation loop

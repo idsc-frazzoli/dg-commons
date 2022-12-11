@@ -6,7 +6,7 @@ from reprep import Report, MIME_GIF
 from shapely.geometry import Polygon
 
 from dg_commons import PlayerName, DgSampledSequence, fd
-from dg_commons.planning import PolygonGoal
+from dg_commons.sim.goals import PolygonGoal
 from dg_commons.sim import SimParameters
 from dg_commons.sim.agents import NPAgent
 from dg_commons.sim.log_visualisation import plot_player_log
