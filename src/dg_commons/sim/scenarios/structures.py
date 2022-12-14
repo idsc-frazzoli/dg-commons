@@ -13,7 +13,7 @@ from dg_commons.sim.models.obstacles import StaticObstacle
 __all__ = ["DgScenario"]
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class DgScenario:
     """Mainly a thin wrapper around CommonRoad scenarios. Yet it can work also as an empty world."""
 

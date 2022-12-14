@@ -7,7 +7,7 @@ from dg_commons import PlayerName, DgSampledSequence
 from dg_commons.sim import SimParameters
 from dg_commons.sim.agents import NPAgent
 from dg_commons.sim.models import kmh2ms
-from dg_commons.sim.models.vehicle import VehicleCommands
+from dg_commons.sim.models.vehicle import VehicleCommands, VehicleState, VehicleModel
 from dg_commons.sim.models.vehicle_dynamic import VehicleStateDyn, VehicleModelDyn
 from dg_commons.sim.scenarios import load_commonroad_scenario
 from dg_commons.sim.scenarios.structures import DgScenario
@@ -15,10 +15,11 @@ from dg_commons.sim.simulator import SimContext, Simulator
 from dg_commons_tests import OUT_TESTS_DIR
 from dg_commons_tests.test_sim.test_sim import generate_report
 
-P1, P2, P3 = (
+P1, P2, P3, P4 = (
     PlayerName("P1"),
     PlayerName("P2"),
     PlayerName("P3"),
+    PlayerName("P4"),
 )
 
 
@@ -30,11 +31,13 @@ def get_vehicle_dyn_scenario() -> SimContext:
     x0_p1 = VehicleStateDyn(x=0, y=0, psi=deg2rad(0), vx=kmh2ms(50), delta=0)
     x0_p2 = VehicleStateDyn(x=25, y=-10, psi=deg2rad(90), vx=kmh2ms(0), delta=1)
     x0_p3 = VehicleStateDyn(x=-10, y=-15, psi=deg2rad(90), vx=kmh2ms(0), vy=kmh2ms(-10), delta=-1)
+    x0_p4 = VehicleState(x=0, y=-15, psi=deg2rad(90), vx=kmh2ms(0), delta=-1)
 
     models = {
         P1: VehicleModelDyn.default_car(x0_p1),
         P2: VehicleModelDyn.default_bicycle(x0_p2),
         P3: VehicleModelDyn.default_car(x0_p3),
+        P4: VehicleModel.default_car(x0_p4),
     }
 
     cmds_p1 = DgSampledSequence[VehicleCommands](
@@ -60,7 +63,7 @@ def get_vehicle_dyn_scenario() -> SimContext:
         ],
     )
 
-    players = {P1: NPAgent(cmds_p1), P2: NPAgent(cmds_p2), P3: NPAgent(cmds_p2)}
+    players = {P1: NPAgent(cmds_p1), P2: NPAgent(cmds_p2), P3: NPAgent(cmds_p2), P4: NPAgent(cmds_p2)}
     return SimContext(
         dg_scenario=DgScenario(scenario=scenario, use_road_boundaries=True),
         models=models,

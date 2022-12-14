@@ -3,12 +3,12 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Generic, Any, Dict, Mapping, Tuple, Optional
 
-from commonroad.scenario.lanelet import LaneletNetwork
 from geometry import SE2value, T2value
 from shapely.geometry import Polygon
 from zuper_commons.types import ZValueError
 
 from dg_commons import DgSampledSequence, PlayerName, X, U
+from dg_commons.sim.goals import PlanningGoal
 from dg_commons.seq.sequence import DgSampledSequenceBuilder, Timestamp, UndefinedAtTime
 from dg_commons.sim import SimTime, ImpactLocation, logger
 from dg_commons.sim.models.model_structures import ModelGeometry, ModelType, ModelParameters
@@ -24,6 +24,8 @@ __all__ = [
     "PlayerLogger",
     "PlayerObservations",
 ]
+
+from dg_commons.sim.scenarios import DgScenario
 
 
 @dataclass(frozen=True)
@@ -58,7 +60,8 @@ class InitSimObservations:
 
     my_name: PlayerName
     seed: int
-    lanelet_network: Optional[LaneletNetwork] = None
+    dg_scenario: Optional[DgScenario] = None
+    goal: Optional[PlanningGoal] = None
 
 
 @dataclass(frozen=True)

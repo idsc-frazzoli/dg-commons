@@ -1,4 +1,5 @@
 from collections import defaultdict
+from copy import deepcopy
 from dataclasses import dataclass, field, replace
 from decimal import Decimal
 from itertools import combinations
@@ -6,7 +7,7 @@ from time import perf_counter
 from typing import Dict, List, Mapping, MutableMapping, Optional
 
 from dg_commons import PlayerName, U, fd
-from dg_commons.planning import PlanningGoal
+from dg_commons.sim.goals import PlanningGoal
 from dg_commons.sim import CollisionReport, SimTime, logger
 from dg_commons.sim.agents.agent import Agent, TAgent
 from dg_commons.sim.collision_utils import CollisionException
@@ -81,12 +82,18 @@ class Simulator:
     @time_function
     def run(self, sim_context: SimContext):
         logger.info("Beginning simulation.")
-
+        # initialize the simulation
         for player_name, player in sim_context.players.items():
-            lanelet_network = sim_context.dg_scenario.lanelet_network
-            init_obs = InitSimObservations(my_name=player_name, seed=sim_context.seed, lanelet_network=lanelet_network)
+            scenario = deepcopy(sim_context.dg_scenario)
+            init_obs = InitSimObservations(
+                my_name=player_name,
+                seed=sim_context.seed,
+                dg_scenario=scenario,
+                goal=deepcopy(sim_context.missions.get(player_name)),
+            )
             player.on_episode_init(init_obs)
             self.simlogger[player_name] = PlayerLogger()
+        # actual simulation loop
         while not sim_context.sim_terminated:
             self.pre_update(sim_context)
             self.update(sim_context)
