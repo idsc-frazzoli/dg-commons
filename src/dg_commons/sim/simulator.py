@@ -242,12 +242,13 @@ class Simulator:
                     sim_context.collision_reports.append(report)
         return collision
 
-    @staticmethod
-    def _remove_finished_players(sim_context: SimContext):
+    def _remove_finished_players(self, sim_context: SimContext):
         """We remove players that complete their mission"""
         for p, m in sim_context.missions.items():
             # if p is still active
             if p in sim_context.players:
                 p_state = sim_context.models[p].get_state()
                 if m.is_fulfilled(p_state):
+                    t = sim_context.time
+                    self.simlogger[p].states.add(t=t, v=p_state)
                     sim_context.players.pop(p)
