@@ -75,7 +75,8 @@ class SimRenderer(SimRendererABC):
         for s_obstacle in self.sim_context.dg_scenario.static_obstacles.values():
             self.shapely_viz.add_shape(s_obstacle.shape, color=s_obstacle.geometry.color, zorder=ZOrders.ENV_OBSTACLE)
         for p, goal in self.sim_context.missions.items():
-            self.shapely_viz.add_shape(goal.get_plottable_geometry(), color="orange", zorder=ZOrders.GOAL, alpha=0.5)
+            goal_color = self.sim_context.models[p].model_geometry.color
+            self.shapely_viz.add_shape(goal.get_plottable_geometry(), color=goal_color, zorder=ZOrders.GOAL, alpha=0.5)
         yield
 
     def plot_player(
