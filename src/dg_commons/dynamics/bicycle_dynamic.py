@@ -1,13 +1,13 @@
 import math
 from dataclasses import replace
 from decimal import Decimal as D
-from typing import Mapping, FrozenSet, TypeVar
+from typing import FrozenSet, Mapping, TypeVar
 
 import numpy as np
 from scipy.integrate import solve_ivp
 
 from dg_commons import Timestamp, U, X
-from dg_commons.sim.models.vehicle import VehicleState, VehicleCommands
+from dg_commons.sim.models.vehicle import VehicleCommands, VehicleState
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 from dg_commons.sim.models.vehicle_utils import VehicleParameters
 
@@ -38,7 +38,7 @@ class BicycleDynamics:
         This method is very inaccurate for integration steps above 0.1[s]"""
         dt = float(dt)
         # input constraints
-        acc = float(np.clip(u.ddelta, self.vp.acc_limits[0], self.vp.acc_limits[1]))
+        acc = float(np.clip(u.acc, self.vp.acc_limits[0], self.vp.acc_limits[1]))
         ddelta = float(np.clip(u.ddelta, -self.vp.ddelta_max, self.vp.ddelta_max))
 
         state_rate = self.dynamics(x0, replace(u, acc=acc, ddelta=ddelta))
@@ -79,6 +79,64 @@ class BicycleDynamics:
             raise RuntimeError("Failed to integrate ivp!")
         new_state, _ = _stateactions_from_array(result.y[:, -1])
         return new_state
+
+    def constrained_successor_ivp(self, x0: VehicleState, u: VehicleCommands, dt: Timestamp) -> VehicleState:
+        """Perform initial value problem integration to propagate state using actions for time dt.
+        State constraints are applied."""
+        total_time = float(dt)
+
+        acc = float(np.clip(u.acc, self.vp.acc_limits[0], self.vp.acc_limits[1]))
+        ddelta = float(np.clip(u.ddelta, -self.vp.ddelta_max, self.vp.ddelta_max))
+        u = replace(u, acc=acc, ddelta=ddelta)
+
+        v_init = x0.vx
+        delta_init = x0.delta
+
+        if acc == 0:
+            v_limit = None
+        elif acc > 0:
+            v_limit = self.vp.vx_limits[1]
+        else:
+            v_limit = self.vp.vx_limits[0]
+
+        # Time to reach the limit
+        if v_limit is not None:
+            t_v_limit = (v_limit - v_init) / acc
+        else:
+            t_v_limit = total_time
+
+        if ddelta == 0:
+            delta_limit = None
+        elif ddelta > 0:
+            delta_limit = self.vp.delta_max
+        else:
+            delta_limit = -self.vp.delta_max
+
+        # Time to reach the limit
+        if delta_limit is not None:
+            t_delta_limit = (delta_limit - delta_init) / ddelta
+        else:
+            t_delta_limit = total_time
+
+        if t_v_limit >= total_time and t_delta_limit >= total_time:
+            return self.successor_ivp(x0, u, dt)
+        elif t_v_limit < total_time and t_delta_limit >= total_time:
+            x_temp = self.successor_ivp(x0, u, t_v_limit)
+            return self.successor_ivp(x_temp, replace(u, acc=0.0), total_time - t_v_limit)
+        elif t_v_limit >= total_time and t_delta_limit < total_time:
+            x_temp = self.successor_ivp(x0, u, t_delta_limit)
+            return self.successor_ivp(x_temp, replace(u, ddelta=0.0), total_time - t_delta_limit)
+        else:
+            if t_v_limit < t_delta_limit:
+                x_temp = self.successor_ivp(x0, u, t_v_limit)
+                u = replace(u, acc=0.0)
+                x_temp = self.successor_ivp(x_temp, u, t_delta_limit - t_v_limit)
+                return self.successor_ivp(x_temp, replace(u, ddelta=0.0), total_time - t_delta_limit)
+            else:
+                x_temp = self.successor_ivp(x0, u, t_delta_limit)
+                u = replace(u, ddelta=0.0)
+                x_temp = self.successor_ivp(x_temp, u, t_v_limit - t_delta_limit)
+                return self.successor_ivp(x_temp, replace(u, acc=0.0), total_time - t_v_limit)
 
     def dynamics(self, x0: VehicleState, u: VehicleCommands) -> VehicleState:
         """Get rate of change of states for given control inputs"""
