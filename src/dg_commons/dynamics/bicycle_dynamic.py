@@ -76,7 +76,7 @@ class BicycleDynamics:
         result = solve_ivp(fun=_dynamics, t_span=(0.0, float(dt)), y0=y0)
 
         if not result.success:
-            raise RuntimeError("Failed to integrate ivp!")
+            raise RuntimeError(f"Failed to integrate ivp! x0: {x0} u: {u} dt: {dt}")
         new_state, _ = _stateactions_from_array(result.y[:, -1])
         return new_state
 
