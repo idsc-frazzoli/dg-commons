@@ -90,6 +90,8 @@ class Simulator:
                 seed=sim_context.seed,
                 dg_scenario=scenario,
                 goal=deepcopy(sim_context.missions.get(player_name)),
+                model_geometry=sim_context.models[player_name].model_geometry,
+                model_params=sim_context.models[player_name].model_params,
             )
             player.on_episode_init(init_obs)
             self.simlogger[player_name] = PlayerLogger()
