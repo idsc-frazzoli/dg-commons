@@ -62,6 +62,8 @@ class InitSimObservations:
     seed: int
     dg_scenario: Optional[DgScenario] = None
     goal: Optional[PlanningGoal] = None
+    model_geometry: Optional[ModelGeometry] = None
+    model_params: Optional[ModelParameters] = None
 
 
 @dataclass(frozen=True)
