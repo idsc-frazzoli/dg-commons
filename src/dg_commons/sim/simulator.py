@@ -107,28 +107,28 @@ class Simulator:
 
     def pre_update(self, sim_context: SimContext):
         """Prior to stepping the simulation we compute the observations for each agent"""
-        players_observations: Dict[PlayerName, PlayerObservations] = {}
-        for player_name, model in sim_context.models.items():
-            # todo not always necessary to update observations
-            player_obs = PlayerObservations(state=model.get_state(), occupancy=model.get_footprint())
-            players_observations.update({player_name: player_obs})
-        self.last_observations = replace(
-            self.last_observations, players=fd(players_observations), time=sim_context.time
-        )
+        # we update the observations only when we will need to use them
+        if self._need_to_update_commands(sim_context):
+            players_observations: Dict[PlayerName, PlayerObservations] = {}
+            for player_name, model in sim_context.models.items():
+                player_obs = PlayerObservations(state=model.get_state(), occupancy=model.get_footprint())
+                players_observations.update({player_name: player_obs})
+            self.last_observations = replace(
+                self.last_observations, players=fd(players_observations), time=sim_context.time
+            )
 
-        logger.debug(f"Pre update function, sim time {sim_context.time}")
-        logger.debug(f"Last observations:\n{self.last_observations}")
+            logger.debug(f"Pre update function, sim time {sim_context.time}")
+            logger.debug(f"Last observations:\n{self.last_observations}")
         return
 
     def update(self, sim_context: SimContext):
         """The real step of the simulation"""
         # fixme this can be parallelized later with ProcessPoolExecutor?
         t = sim_context.time
-        update_commands: bool = (t - self.last_get_commands_ts) >= sim_context.param.dt_commands
         for player_name, agent in sim_context.players.items():
             state = sim_context.models[player_name].get_state()
             self.simlogger[player_name].states.add(t=t, v=state)
-            if update_commands:
+            if self._need_to_update_commands(sim_context):
                 p_observations = sim_context.sensors[player_name].sense(
                     sim_context.dg_scenario, self.last_observations, player_name
                 )
@@ -146,7 +146,7 @@ class Simulator:
             model.update(cmds, dt=sim_context.param.dt)
             logger.debug(f"Update function, sim time {sim_context.time:.2f}, player: {player_name}")
             logger.debug(f"New state {model.get_state()} reached applying {cmds}")
-        if update_commands:
+        if self._need_to_update_commands(sim_context):
             self.last_get_commands_ts = t
         return
 
@@ -171,13 +171,8 @@ class Simulator:
         The simulation is considered terminated if:
         - the maximum time has expired
         - the minimum time after the first collision has expired
-        - all missions have been fulfilled
+        - all missions have been fulfilled (i.e. there are no players left)
         """
-        # missions_completed: bool = (
-        #     all(m.is_fulfilled(sim_context.models[p].get_state()) for p, m in sim_context.missions.items())
-        #     if sim_context.missions
-        #     else False
-        # )
         termination_condition: bool = (
             sim_context.time > sim_context.param.max_sim_time
             or sim_context.time > sim_context.first_collision_ts + sim_context.param.sim_time_after_collision
@@ -254,3 +249,7 @@ class Simulator:
                     t = sim_context.time
                     self.simlogger[p].states.add(t=t, v=p_state)
                     sim_context.players.pop(p)
+
+    def _need_to_update_commands(self, sim_context: SimContext) -> bool:
+        """Checks if we need to update the commands of the players"""
+        return (sim_context.time - self.last_get_commands_ts) >= sim_context.param.dt_commands

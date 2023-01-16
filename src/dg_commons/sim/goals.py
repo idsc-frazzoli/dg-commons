@@ -29,6 +29,7 @@ class PlanningGoal(ABC):
 class RefLaneGoal(PlanningGoal):
     ref_lane: DgLanelet
     goal_progress: float
+    """Parametrized in along_lane [meters], need to convert from beta if using control points parametrization"""
 
     def is_fulfilled(self, state: X) -> bool:
         pose = extract_pose_from_state(state)
