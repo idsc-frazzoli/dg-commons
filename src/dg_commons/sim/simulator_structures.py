@@ -8,10 +8,11 @@ from shapely.geometry import Polygon
 from zuper_commons.types import ZValueError
 
 from dg_commons import DgSampledSequence, PlayerName, X, U
-from dg_commons.sim.goals import PlanningGoal
 from dg_commons.seq.sequence import DgSampledSequenceBuilder, Timestamp, UndefinedAtTime
 from dg_commons.sim import SimTime, ImpactLocation, logger
-from dg_commons.sim.models.model_structures import ModelGeometry, ModelType, ModelParameters
+from dg_commons.sim.goals import TPlanningGoal
+from dg_commons.sim.models.model_structures import ModelType, TModelGeometry, TModelParameters
+from dg_commons.sim.scenarios import DgScenario
 
 __all__ = [
     "SimObservations",
@@ -24,8 +25,6 @@ __all__ = [
     "PlayerLogger",
     "PlayerObservations",
 ]
-
-from dg_commons.sim.scenarios import DgScenario
 
 
 @dataclass(frozen=True)
@@ -61,9 +60,9 @@ class InitSimObservations:
     my_name: PlayerName
     seed: int
     dg_scenario: Optional[DgScenario] = None
-    goal: Optional[PlanningGoal] = None
-    model_geometry: Optional[ModelGeometry] = None
-    model_params: Optional[ModelParameters] = None
+    goal: Optional[TPlanningGoal] = None
+    model_geometry: Optional[TModelGeometry] = None
+    model_params: Optional[TModelParameters] = None
 
 
 @dataclass(frozen=True)
@@ -190,7 +189,7 @@ class SimModel(ABC, Generic[X, U]):
 
     @property
     @abstractmethod
-    def model_geometry(self) -> ModelGeometry:
+    def model_geometry(self) -> TModelGeometry:
         pass
 
     @property
@@ -200,7 +199,7 @@ class SimModel(ABC, Generic[X, U]):
 
     @property
     @abstractmethod
-    def model_params(self) -> ModelParameters:
+    def model_params(self) -> TModelParameters:
         pass
 
     def get_state(self) -> X:

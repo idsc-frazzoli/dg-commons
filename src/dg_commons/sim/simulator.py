@@ -7,7 +7,7 @@ from time import perf_counter
 from typing import Dict, List, Mapping, MutableMapping, Optional
 
 from dg_commons import PlayerName, U, fd
-from dg_commons.sim.goals import PlanningGoal
+from dg_commons.sim.goals import PlanningGoal, TPlanningGoal
 from dg_commons.sim import CollisionReport, SimTime, logger
 from dg_commons.sim.agents.agent import Agent, TAgent
 from dg_commons.sim.collision_utils import CollisionException
@@ -34,7 +34,7 @@ class SimContext:
     """The players in the simulation (Agents mapping observations to commands)"""
     param: SimParameters
     """The simulation parameters"""
-    missions: Mapping[PlayerName, PlanningGoal] = field(default_factory=dict)
+    missions: Mapping[PlayerName, TPlanningGoal] = field(default_factory=dict)
     """The ultimate goal of each player, it can be specified only for a subset of the players"""
     sensors: Mapping[PlayerName, ObsFilter] = field(default_factory=lambda: defaultdict(lambda: IdObsFilter()))
     """The sensors for each player, if not specified the default is the identity filter returning full observations"""

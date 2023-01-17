@@ -1,5 +1,6 @@
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
+from typing import TypeVar
 
 import numpy as np
 from geometry import translation_from_SE2
@@ -10,7 +11,7 @@ from dg_commons import SE2Transform, X
 from dg_commons.maps import DgLanelet
 from dg_commons.sim.models import extract_pose_from_state
 
-__all__ = ["PlanningGoal", "RefLaneGoal", "PolygonGoal", "PoseGoal"]
+__all__ = ["PlanningGoal", "TPlanningGoal", "RefLaneGoal", "PolygonGoal", "PoseGoal"]
 
 
 @dataclass(frozen=True)
@@ -23,6 +24,10 @@ class PlanningGoal(ABC):
     def get_plottable_geometry(self) -> BaseGeometry:
         # convert to use commonroad IDrawable
         pass
+
+
+# from 3.11 can switch to Self
+TPlanningGoal = TypeVar("TPlanningGoal", bound=PlanningGoal)
 
 
 @dataclass(frozen=True)
