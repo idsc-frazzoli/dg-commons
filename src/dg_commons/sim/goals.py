@@ -1,6 +1,7 @@
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
-from typing import TypeVar
+from functools import cached_property
+from typing import TypeVar, Optional
 
 import numpy as np
 from geometry import translation_from_SE2
@@ -38,10 +39,36 @@ class RefLaneGoal(PlanningGoal):
 
     def is_fulfilled(self, state: X) -> bool:
         pose = extract_pose_from_state(state)
-        return self.ref_lane.lane_pose_from_SE2_generic(pose).along_lane >= self.goal_progress
+        xy = translation_from_SE2(pose)
+        if self.goal_polygon.contains(Point(xy)):
+            return self.ref_lane.lane_pose_from_SE2_generic(pose).along_lane >= self.goal_progress
+        else:
+            return False
 
     def get_plottable_geometry(self) -> BaseGeometry:
         raise NotImplementedError
+
+    @cached_property
+    def goal_polygon(self) -> Polygon:
+        poly = _polygon_at_along_lane(self.ref_lane, self.goal_progress)
+        return poly
+
+
+def _polygon_at_along_lane(
+    lanelet: DgLanelet,
+    at_beta: Optional[float] = None,
+    inflation_radius: float = 1,
+) -> Polygon:
+    maxbeta = at_beta if at_beta is not None else len(lanelet.control_points)
+    q = lanelet.center_point(maxbeta)
+    r = lanelet.radius(maxbeta)
+    delta_left = np.array([0, r])
+    delta_right = np.array([0, -r])
+    point_left = SE2_apply_T2(q, delta_left)
+    point_right = SE2_apply_T2(q, delta_right)
+    coords = [point_left.tolist(), point_right.tolist()]
+    end_goal_poly = LineString(coords).buffer(inflation_radius)
+    return end_goal_poly
 
 
 @dataclass(frozen=True)
@@ -50,15 +77,7 @@ class PolygonGoal(PlanningGoal):
 
     @classmethod
     def from_DgLanelet(cls, lanelet: DgLanelet, inflation_radius: float = 1) -> "PolygonGoal":
-        maxbeta = len(lanelet.control_points)
-        q = lanelet.center_point(maxbeta)
-        r = lanelet.radius(maxbeta)
-        delta_left = np.array([0, r])
-        delta_right = np.array([0, -r])
-        point_left = SE2_apply_T2(q, delta_left)
-        point_right = SE2_apply_T2(q, delta_right)
-        coords = [point_left.tolist(), point_right.tolist()]
-        end_goal_segment = LineString(coords).buffer(inflation_radius)
+        end_goal_segment = _polygon_at_along_lane(lanelet, inflation_radius=inflation_radius)
         return cls(end_goal_segment)
 
     def is_fulfilled(self, state: X) -> bool:
