@@ -11,7 +11,7 @@ from scipy.integrate import solve_ivp
 from shapely.geometry import Polygon
 
 from dg_commons.sim import logger, ImpactLocation, IMPACT_RIGHT, IMPACT_LEFT, IMPACT_BACK, IMPACT_FRONT
-from dg_commons.sim.models import ModelType, CAR, ModelParameters
+from dg_commons.sim.models import ModelType, CAR
 from dg_commons.sim.models.model_utils import apply_full_acceleration_limits
 from dg_commons.sim.models.vehicle_ligths import LightsCmd, NO_LIGHTS
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
@@ -263,7 +263,7 @@ class VehicleModel(SimModel[TVehicleState, VehicleCommands]):
         return self.vg.vehicle_type
 
     @property
-    def model_params(self) -> ModelParameters:
+    def model_params(self) -> VehicleParameters:
         return self.vp
 
     def get_extra_collision_friction_acc(self):
