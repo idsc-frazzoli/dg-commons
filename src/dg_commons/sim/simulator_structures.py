@@ -39,7 +39,7 @@ class SimParameters:
     """The simulation time for which to continue after the first collision is detected [s]"""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, unsafe_hash=True)
 class PlayerObservations:
     state: X
     occupancy: Optional[Polygon]

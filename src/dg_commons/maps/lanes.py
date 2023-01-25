@@ -124,10 +124,10 @@ class DgLanelet:
     def get_lane_length(self) -> float:
         return sum(self.get_lane_lengths())
 
-    def lane_pose_from_SE2Transform(self, qt: SE2Transform, tol: float = 1e-4) -> DgLanePose:
+    def lane_pose_from_SE2Transform(self, qt: SE2Transform, tol: float = 1e-3) -> DgLanePose:
         return self.lane_pose_from_SE2_generic(qt.as_SE2(), tol=tol)
 
-    def lane_pose_from_SE2_generic(self, q: SE2value, tol: float = 1e-4) -> DgLanePose:
+    def lane_pose_from_SE2_generic(self, q: SE2value, tol: float = 1e-3) -> DgLanePose:
         """Note this function performs a local search, not very robust to strange situations"""
         p, _, _ = translation_angle_scale_from_E2(q)
 
@@ -290,15 +290,15 @@ class DgLanelet:
             theta = c0.q.theta * (1 - alpha) + c1.q.theta * alpha
             return SE2Transform(p, theta)
 
-    def is_inside_from_T2value(self, position: T2value) -> bool:
-        beta, _ = self.find_along_lane_closest_point(position)
+    def is_inside_from_T2value(self, position: T2value, tol: float = 1e-3) -> bool:
+        beta, _ = self.find_along_lane_closest_point(position, tol=tol)
         r = self.radius(beta)
         center = self.center_point_fast_SE2Transform(beta).p
         lateral = np.linalg.norm(center - position)
         return lateral <= r and 0 <= beta <= len(self.control_points) - 1
 
-    def along_lane_from_T2value(self, position: T2value) -> float:
-        beta, _ = self.find_along_lane_closest_point(position)
+    def along_lane_from_T2value(self, position: T2value, tol: float = 1e-3) -> float:
+        beta, _ = self.find_along_lane_closest_point(position, tol=tol)
         return self.along_lane_from_beta(beta)
 
     @cached(LRUCache(maxsize=128))
