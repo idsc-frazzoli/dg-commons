@@ -206,7 +206,7 @@ class SimModel(ABC, Generic[X, U]):
         return deepcopy(self._state)
 
     def set_state(self, new_state: X):
-        logger.warn("Setting a new state to simulation model, this is a dangerous operation")
+        # logger.warn("Setting a new state to simulation model, this is a dangerous operation")
         self._state = new_state
 
     @abstractmethod
