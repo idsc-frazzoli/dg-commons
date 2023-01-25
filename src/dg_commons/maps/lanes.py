@@ -124,10 +124,10 @@ class DgLanelet:
     def get_lane_length(self) -> float:
         return sum(self.get_lane_lengths())
 
-    def lane_pose_from_SE2Transform(self, qt: SE2Transform, tol: float = 1e-4) -> DgLanePose:
+    def lane_pose_from_SE2Transform(self, qt: SE2Transform, tol: float = 1e-3) -> DgLanePose:
         return self.lane_pose_from_SE2_generic(qt.as_SE2(), tol=tol)
 
-    def lane_pose_from_SE2_generic(self, q: SE2value, tol: float = 1e-4) -> DgLanePose:
+    def lane_pose_from_SE2_generic(self, q: SE2value, tol: float = 1e-3) -> DgLanePose:
         """Note this function performs a local search, not very robust to strange situations"""
         p, _, _ = translation_angle_scale_from_E2(q)
 
