@@ -4,10 +4,11 @@ from typing import Optional, Tuple
 
 import numpy as np
 import scipy.optimize
+from geometry import SE2value, angle_from_SE2, translation_angle_from_SE2
+
 from dg_commons.geo import SE2_apply_T2, norm_between_SE2value
 from dg_commons.maps.lanes import DgLanelet
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
-from geometry import SE2value, angle_from_SE2, translation_angle_from_SE2
 
 __all__ = ["PurePursuit", "PurePursuitParam"]
 
@@ -16,7 +17,7 @@ __all__ = ["PurePursuit", "PurePursuitParam"]
 class PurePursuitParam:
     look_ahead_minmax: Tuple[float, float] = (3, 30)
     """min and max lookahead"""
-    k_lookahead: float = 1.1
+    k_lookahead: float = 0.8
     """Scaling constant for speed dependent params"""
     min_distance: float = 2
     """Min initial progress to look for the next goal point"""
@@ -84,7 +85,9 @@ class PurePursuit:
         min_along_path = self.along_path + self.param.min_distance
 
         bounds = [min_along_path, min_along_path + lookahead]
-        res = scipy.optimize.minimize_scalar(fun=goal_point_error, bounds=bounds, method="Bounded")
+        res = scipy.optimize.minimize_scalar(
+            fun=goal_point_error, bounds=bounds, method="Bounded"
+        )
         goal_point = self.path.center_point(self.path.beta_from_along_lane(res.x))
         return res.x, goal_point
 
@@ -93,7 +96,9 @@ class PurePursuit:
         :return: float the desired wheel angle
         """
         if any([_ is None for _ in [self.pose, self.path]]):
-            raise RuntimeError("Attempting to use PurePursuit before having set any observations or reference path")
+            raise RuntimeError(
+                "Attempting to use PurePursuit before having set any observations or reference path"
+            )
         theta = angle_from_SE2(self.pose)
         rear_axle = SE2_apply_T2(self.pose, np.array([-self.param.lr, 0]))
         _, goal_point = self.find_goal_point()
@@ -105,7 +110,9 @@ class PurePursuit:
     def _get_lookahead(self) -> float:
         return float(
             np.clip(
-                self.param.k_lookahead * self.speed, self.param.look_ahead_minmax[0], self.param.look_ahead_minmax[1]
+                self.param.k_lookahead * self.speed,
+                self.param.look_ahead_minmax[0],
+                self.param.look_ahead_minmax[1],
             )
         )
 
