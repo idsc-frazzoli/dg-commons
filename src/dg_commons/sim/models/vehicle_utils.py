@@ -37,16 +37,16 @@ def steering_constraint(steering_angle: float, steering_velocity: float, vp: Veh
         steering_angle >= vp.delta_max and steering_velocity > 0
     ):
         steering_velocity = 0
-        logger.warn(
+        logger.debug(
             f"Reached max steering boundaries:\n angle:{steering_angle:.2f}\tlimits:[{-vp.delta_max:.2f},{vp.delta_max:.2f}]"
         )
     elif steering_velocity < -vp.ddelta_max:
-        logger.warn(
+        logger.debug(
             f"Commanded steering rate out of limits, clipping value: {steering_velocity:.2f}<{-vp.ddelta_max:.2f}"
         )
         steering_velocity = -vp.ddelta_max
     elif steering_velocity > vp.ddelta_max:
-        logger.warn(
+        logger.debug(
             f"Commanded steering rate out of limits, clipping value: {steering_velocity:.2f}>{vp.ddelta_max:.2f}"
         )
         steering_velocity = vp.ddelta_max
