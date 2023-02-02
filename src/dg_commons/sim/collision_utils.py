@@ -51,7 +51,7 @@ def _find_intersection_points(a_shape: Polygon, b_shape: BaseGeometry) -> List[T
 
     points = list(remove(is_contained_in_aorb, points))
     if not len(points) == 2:
-        if logger.getEffectiveLevel() < logging.INFO:
+        if logger.logger.getEffectiveLevel() < logging.INFO:
             from matplotlib import pyplot as plt
 
             plt.figure()
