@@ -37,7 +37,7 @@ class PID:
 
     def update_reference(self, reference: float):
         if not self.params.setpoint_minmax[0] <= reference <= self.params.setpoint_minmax[1]:
-            logger.warn(f"PID-controller: Desired ref {reference} out of range {self.params.setpoint_minmax}.")
+            logger.debug(f"PID-controller: Desired ref {reference} out of range {self.params.setpoint_minmax}.")
         self.reference = np.clip(reference, self.params.setpoint_minmax[0], self.params.setpoint_minmax[1])
 
     def get_control(self, at: float) -> float:
