@@ -41,12 +41,13 @@ class RefLaneGoal(PlanningGoal):
         pose = extract_pose_from_state(state)
         xy = translation_from_SE2(pose)
         if self.goal_polygon.contains(Point(xy)):
-            return self.ref_lane.lane_pose_from_SE2_generic(pose).along_lane >= self.goal_progress
+            beyond_goal = self.ref_lane.lane_pose_from_SE2_generic(pose).along_lane >= self.goal_progress
+            return beyond_goal
         else:
             return False
 
     def get_plottable_geometry(self) -> BaseGeometry:
-        raise NotImplementedError
+        return self.goal_polygon
 
     @cached_property
     def goal_polygon(self) -> Polygon:
