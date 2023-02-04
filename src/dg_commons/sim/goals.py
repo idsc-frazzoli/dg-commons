@@ -8,7 +8,7 @@ from geometry import translation_from_SE2
 from shapely.geometry import Polygon, Point, LineString
 from shapely.geometry.base import BaseGeometry
 
-from dg_commons import SE2Transform, X, SE2_apply_T2
+from dg_commons import SE2Transform, X, SE2_apply_T2, apply_SE2_to_shapely_geo
 from dg_commons.maps import DgLanelet
 from dg_commons.sim.models import extract_pose_from_state
 
@@ -102,3 +102,9 @@ class PoseGoal(PlanningGoal):
     def get_plottable_geometry(self) -> BaseGeometry:
         # todo return a Polygon triangle
         raise NotImplementedError
+
+    @cached_property
+    def goal_pose(self) -> Polygon:
+        goal_shape = Polygon([(-0.2, 0.5), (0, 0), (-0.2, -0.5), (0.8, 0)])
+        goal = apply_SE2_to_shapely_geo(goal_shape, self.goal_pose.as_SE2())
+        return goal
