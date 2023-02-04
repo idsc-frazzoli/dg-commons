@@ -60,11 +60,16 @@ class ZOrders(IntEnum):
 class SimRenderer(SimRendererABC):
     """Visualization for the trajectory games"""
 
-    def __init__(self, sim_context: SimContext, ax: Axes = None, *args, **kwargs):
+    def __init__(
+        self, sim_context: SimContext, ax: Axes = None, draw_params: MPDrawParams = MPDrawParams(), *args, **kwargs
+    ):
         self.sim_context = sim_context
-        self.commonroad_renderer: MPRenderer = MPRenderer(ax=ax, *args, **kwargs)
+        self.commonroad_renderer: MPRenderer = MPRenderer(ax=ax, draw_params=draw_params, *args, **kwargs)
         self.shapely_viz = ShapelyViz(ax=self.commonroad_renderer.ax)
-        self.draw_params: MPDrawParams = MPDrawParams()
+
+    @property
+    def draw_params(self):
+        return self.commonroad_renderer.draw_params
 
     @contextmanager
     def plot_arena(self, ax: Axes):
