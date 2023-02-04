@@ -100,8 +100,7 @@ class PoseGoal(PlanningGoal):
         return np.linalg.norm(pose - goal_pose) <= tol
 
     def get_plottable_geometry(self) -> BaseGeometry:
-        # todo return a Polygon triangle
-        raise NotImplementedError
+        raise self.goal_pose
 
     @cached_property
     def goal_pose(self) -> Polygon:
