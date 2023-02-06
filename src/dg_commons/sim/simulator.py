@@ -189,7 +189,8 @@ class Simulator:
 
         env_obstacles = sim_context.dg_scenario.strtree_obstacles
         collision = False
-        for p, p_model in sim_context.models.items():
+        for p in sim_context.players:
+            p_model = sim_context.models[p]
             p_shape = p_model.get_footprint()
             items = env_obstacles.query_items(p_shape)
             for idx in items:
