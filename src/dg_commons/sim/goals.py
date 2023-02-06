@@ -8,7 +8,7 @@ from geometry import translation_from_SE2
 from shapely.geometry import Polygon, Point, LineString
 from shapely.geometry.base import BaseGeometry
 
-from dg_commons import SE2Transform, X, SE2_apply_T2
+from dg_commons import SE2Transform, X, SE2_apply_T2, apply_SE2_to_shapely_geo
 from dg_commons.maps import DgLanelet
 from dg_commons.sim.models import extract_pose_from_state
 
@@ -41,12 +41,13 @@ class RefLaneGoal(PlanningGoal):
         pose = extract_pose_from_state(state)
         xy = translation_from_SE2(pose)
         if self.goal_polygon.contains(Point(xy)):
-            return self.ref_lane.lane_pose_from_SE2_generic(pose).along_lane >= self.goal_progress
+            beyond_goal = self.ref_lane.lane_pose_from_SE2_generic(pose).along_lane >= self.goal_progress
+            return beyond_goal
         else:
             return False
 
     def get_plottable_geometry(self) -> BaseGeometry:
-        raise NotImplementedError
+        return self.goal_polygon
 
     @cached_property
     def goal_polygon(self) -> Polygon:
@@ -99,5 +100,10 @@ class PoseGoal(PlanningGoal):
         return np.linalg.norm(pose - goal_pose) <= tol
 
     def get_plottable_geometry(self) -> BaseGeometry:
-        # todo return a Polygon triangle
-        raise NotImplementedError
+        raise self.goal_pose
+
+    @cached_property
+    def goal_pose(self) -> Polygon:
+        goal_shape = Polygon([(-0.2, 0.5), (0, 0), (-0.2, -0.5), (0.8, 0)])
+        goal = apply_SE2_to_shapely_geo(goal_shape, self.goal_pose.as_SE2())
+        return goal
