@@ -180,6 +180,8 @@ def resolve_collision_with_environment(
         energy_delta=a_kenergy_delta,
     )
     # create a report for the "environment" as a fictitious player
+    if not isinstance(b_shape, Polygon):
+        b_shape = Polygon(b_shape)
     b_locations = [
         (IMPACT_EVERYWHERE, b_shape),
     ]
