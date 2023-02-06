@@ -7,7 +7,7 @@ from shapely.geometry.base import BaseGeometry
 
 from dg_commons import PlayerName
 from dg_commons.sim import ImpactLocation, CollisionReport, logger, SimModel, SimTime
-from dg_commons.sim.collision_structures import CollisionReportPlayer
+from dg_commons.sim.collision_structures import CollisionReportPlayer, IMPACT_EVERYWHERE
 from dg_commons.sim.collision_utils import (
     compute_impact_geometry,
     velocity_after_collision,
@@ -126,6 +126,10 @@ def resolve_collision(a: PlayerName, b: PlayerName, sim_context: SimContext) -> 
     )
 
 
+EnvPlayer = PlayerName("Env")
+"""The environment as a fictitious player"""
+
+
 def resolve_collision_with_environment(
     a: PlayerName, a_model: SimModel, b_obstacle: StaticObstacle, time: SimTime
 ) -> Optional[CollisionReport]:
@@ -175,9 +179,23 @@ def resolve_collision_with_environment(
         velocity_after=(a_vel_after, a_omega_after),
         energy_delta=a_kenergy_delta,
     )
+    # create a report for the "environment" as a fictitious player
+    if not isinstance(b_shape, Polygon):
+        b_shape = Polygon(b_shape)
+    b_locations = [
+        (IMPACT_EVERYWHERE, b_shape),
+    ]
+    env_report = CollisionReportPlayer(
+        locations=b_locations,
+        at_fault=False,
+        footprint=b_shape,
+        velocity=(np.array([0, 0]), 0),
+        velocity_after=(np.array([0, 0]), 0),
+        energy_delta=0,
+    )
 
     return CollisionReport(
-        players={a: a_report},
+        players={a: a_report, EnvPlayer: env_report},
         impact_point=impact_point,
         impact_normal=impact_normal,
         at_time=time,
