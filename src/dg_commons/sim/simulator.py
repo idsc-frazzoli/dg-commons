@@ -222,7 +222,7 @@ class Simulator:
         )
 
         collision = False
-        for p1, p2 in combinations(sim_context.models, 2):
+        for p1, p2 in combinations(sim_context.players, 2):
             a_shape = sim_context.models[p1].get_footprint()
             b_shape = sim_context.models[p2].get_footprint()
             if a_shape.intersects(b_shape):
