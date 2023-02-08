@@ -140,7 +140,7 @@ class DgLanelet:
 
         return self.lane_pose(along_lane=along_lane, relative_heading=relative_heading, lateral=lateral)
 
-    def find_along_lane_closest_point(self, p: T2value, tol: float = 1e-7):
+    def find_along_lane_closest_point(self, p: T2value, tol: float = 1e-5):
         def get_delta(beta):
             q0 = self.center_point(beta)
             t0, _ = translation_angle_from_SE2(q0)
