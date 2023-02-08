@@ -65,7 +65,7 @@ class PurePursuit:
     def update_speed(self, speed: float):
         self.speed = speed
 
-    def find_goal_point(self) -> Tuple[float, SE2value]:
+    def find_goal_point(self, tol: float = 1e-3) -> Tuple[float, SE2value]:
         """
         Find goal point along the path
         :return: along_path, SE2value
@@ -85,7 +85,7 @@ class PurePursuit:
         min_along_path = self.along_path + self.param.min_distance
 
         bounds = [min_along_path, min_along_path + lookahead]
-        res = scipy.optimize.minimize_scalar(fun=goal_point_error, bounds=bounds, method="Bounded")
+        res = scipy.optimize.minimize_scalar(fun=goal_point_error, bounds=bounds, method="Bounded", tol=tol)
         goal_point = self.path.center_point(self.path.beta_from_along_lane(res.x))
         return res.x, goal_point
 
