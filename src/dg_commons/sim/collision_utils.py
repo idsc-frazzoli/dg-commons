@@ -1,3 +1,4 @@
+import logging
 import time
 from math import pi
 from typing import List, Tuple, Mapping, Dict
@@ -50,17 +51,18 @@ def _find_intersection_points(a_shape: Polygon, b_shape: BaseGeometry) -> List[T
 
     points = list(remove(is_contained_in_aorb, points))
     if not len(points) == 2:
-        from matplotlib import pyplot as plt
+        if logger.logger.getEffectiveLevel() < logging.INFO:
+            from matplotlib import pyplot as plt
 
-        plt.figure()
-        plt.plot(*a_shape.exterior.xy, "b")
-        if isinstance(b_shape, Polygon):
-            plt.plot(*b_shape.exterior.xy, "r")
-        else:
-            plt.plot(*b_shape.xy, "r")
-        for p in points:
-            plt.plot(*p, "o")
-        plt.savefig(f"coll_debug{time.time()}.png")
+            plt.figure()
+            plt.plot(*a_shape.exterior.xy, "b")
+            if isinstance(b_shape, Polygon):
+                plt.plot(*b_shape.exterior.xy, "r")
+            else:
+                plt.plot(*b_shape.xy, "r")
+            for p in points:
+                plt.plot(*p, "o")
+            plt.savefig(f"coll_debug{time.time()}.png")
         raise CollisionException(f"At the moment collisions with {len(points)} intersecting points are not supported")
     return points
 
