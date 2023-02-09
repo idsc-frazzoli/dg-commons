@@ -24,10 +24,8 @@ from dg_commons.sim.models.vehicle_ligths import (
 from dg_commons.sim.simulator import SimContext
 from dg_commons.sim.simulator_structures import LogEntry
 from dg_commons.sim.simulator_visualisation import SimRenderer, approximate_bounding_box_players, ZOrders
-from dg_commons.time import time_function
 
 
-@time_function
 def create_animation(
     file_path: str,
     sim_context: SimContext,
