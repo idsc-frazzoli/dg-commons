@@ -7,10 +7,10 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.artist import Artist
 from matplotlib.axes import Axes
 from toolz.sandbox import unzip
+from tqdm import tqdm
 from zuper_commons.types import ZValueError
 
-from dg_commons import PlayerName, X
-from dg_commons import Timestamp
+from dg_commons import PlayerName, X, Timestamp
 from dg_commons.sim import logger
 from dg_commons.sim.models.vehicle import VehicleCommands
 from dg_commons.sim.models.vehicle_ligths import (
@@ -24,10 +24,8 @@ from dg_commons.sim.models.vehicle_ligths import (
 from dg_commons.sim.simulator import SimContext
 from dg_commons.sim.simulator_structures import LogEntry
 from dg_commons.sim.simulator_visualisation import SimRenderer, approximate_bounding_box_players, ZOrders
-from dg_commons.time import time_function
 
 
-@time_function
 def create_animation(
     file_path: str,
     sim_context: SimContext,
@@ -116,7 +114,6 @@ def create_animation(
 
     def update_plot(frame: int = 0) -> Iterable[Artist]:
         t: float = frame * dt / 1000.0
-        logger.info(f"Plotting t = {t}\r")
         log_at_t: Mapping[PlayerName, LogEntry] = sim_context.log.at_interp(t)
         for pname, box_handle in states.items():
             lights_colors: LightsColors = get_lights_colors_from_cmds(log_at_t[pname].commands, t=t)
@@ -161,14 +158,15 @@ def create_animation(
         file_path += ".mp4"
     fps = int(math.ceil(1000.0 / dt))
     interval_seconds = dt / 1000.0
-    anim.save(
-        file_path,
-        dpi=dpi,
-        writer="ffmpeg",
-        fps=fps,
-        # extra_args=["-g", "1", "-keyint_min", str(interval_seconds)]
-    )
-    logger.info("Animation saved...")
+    with tqdm(total=frame_count, unit="frame") as t:
+        anim.save(
+            file_path,
+            dpi=dpi,
+            writer="ffmpeg",
+            fps=fps,
+            progress_callback=lambda *_: t.update(1),
+            # extra_args=["-g", "1", "-keyint_min", str(interval_seconds)]
+        )
     ax.clear()
 
 
