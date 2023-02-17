@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from math import atan2, isclose, pi
-from typing import List, Sequence
+from typing import Sequence
 
 import numpy as np
 from cachetools import LRUCache, cached
@@ -82,7 +82,7 @@ class DgLanelet:
     """Taking the best from commonroad Lanelet and Duckietown LaneSegment"""
 
     def __init__(self, control_points: Sequence[LaneCtrPoint]):
-        self.control_points: List[LaneCtrPoint] = list(control_points)
+        self.control_points: list[LaneCtrPoint] = list(control_points)
 
     @classmethod
     def from_commonroad_lanelet(cls, lanelet: Lanelet) -> "DgLanelet":
@@ -107,12 +107,12 @@ class DgLanelet:
 
     @cached(LRUCache(maxsize=128))
     @staticmethod
-    def get_lanelets(lane_network: LaneletNetwork, points: List[np.ndarray]) -> List[Lanelet]:
+    def get_lanelets(lane_network: LaneletNetwork, points: list[np.ndarray]) -> list[Lanelet]:
         lane_ids = lane_network.find_lanelet_by_position(point_list=points)
         return [lane_network.find_lanelet_by_id(lid[0]) for lid in lane_ids]
 
     @cached(LRUCache(maxsize=128))
-    def get_lane_lengths(self) -> List[float]:
+    def get_lane_lengths(self) -> list[float]:
         res = []
         for i in range(len(self.control_points) - 1):
             p0 = self.control_points[i].q
@@ -302,7 +302,7 @@ class DgLanelet:
         return self.along_lane_from_beta(beta)
 
     @cached(LRUCache(maxsize=128))
-    def lane_profile(self, points_per_segment: int = 5) -> List[T2value]:
+    def lane_profile(self, points_per_segment: int = 5) -> list[T2value]:
         """Lane bounds - left and right along the lane"""
         points_left = []
         points_right = []

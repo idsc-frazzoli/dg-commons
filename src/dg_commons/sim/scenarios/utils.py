@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Tuple, Optional
+from typing import Optional
 
 from commonroad.common.file_reader import CommonRoadFileReader
 from commonroad.planning.planning_problem import PlanningProblemSet
@@ -20,7 +20,7 @@ class NotSupportedConversion(ZException):
 
 def load_commonroad_scenario(
     scenario_name: str, scenarios_dir: Optional[str] = None
-) -> Tuple[Scenario, PlanningProblemSet]:
+) -> tuple[Scenario, PlanningProblemSet]:
     """Loads a CommonRoad scenario.
     If no directory is provided it looks for a `scenarios` folder at the src level of the current project."""
     if scenarios_dir is None:

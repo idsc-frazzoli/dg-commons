@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import asdict
 from enum import IntEnum
 from math import inf
-from typing import Sequence, Tuple, Generic, Optional, List, Union
+from typing import Sequence, Generic, Optional, List, Union
 
 import numpy as np
 from commonroad.visualization.draw_params import MPDrawParams
@@ -15,8 +15,7 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon, Circle
 from zuper_commons.types import ZValueError
 
-from dg_commons import Color, transform_xy, apply_SE2_to_shapely_geo
-from dg_commons import PlayerName, X, U
+from dg_commons import Color, transform_xy, apply_SE2_to_shapely_geo, PlayerName, X, U
 from dg_commons.maps.shapely_viz import ShapelyViz
 from dg_commons.planning.trajectory import Trajectory
 from dg_commons.sim.models.obstacles_dyn import DynObstacleState, DynObstacleModel
@@ -90,12 +89,12 @@ class SimRenderer(SimRendererABC):
         player_name: PlayerName,
         state: X,
         lights_colors: Optional[LightsColors],
-        model_poly: Optional[List[Polygon]] = None,
-        lights_patches: Optional[List[Circle]] = None,
+        model_poly: Optional[list[Polygon]] = None,
+        lights_patches: Optional[list[Circle]] = None,
         alpha: float = 0.6,
         plot_wheels: bool = False,
         plot_lights: bool = False,
-    ) -> Tuple[List[Polygon], List[Circle]]:
+    ) -> tuple[list[Polygon], list[Circle]]:
         """Draw the player the state."""
         # todo make it nicer with a map of plotting functions based on the state type
 
@@ -152,12 +151,12 @@ class SimRenderer(SimRendererABC):
         ax: Axes,
         player_name: PlayerName,
         trajectories: Sequence[Trajectory],
-        traj_lines: Optional[List[LineCollection]] = None,
-        traj_points: Optional[List[PathCollection]] = None,
-        colors: Optional[List[Color]] = None,
+        traj_lines: Optional[list[LineCollection]] = None,
+        traj_points: Optional[list[PathCollection]] = None,
+        colors: Optional[list[Color]] = None,
         width: float = 1,
         alpha: float = 1,
-    ) -> Tuple[List[LineCollection], List[PathCollection]]:
+    ) -> tuple[list[LineCollection], list[PathCollection]]:
         mg = self.sim_context.models[player_name].model_geometry
         assert colors is None or len(colors) == len(trajectories)
         colors = mg.color if colors is None else colors
@@ -175,12 +174,12 @@ class SimRenderer(SimRendererABC):
 def plot_trajectories(
     ax: Axes,
     trajectories: Sequence[Trajectory],
-    traj_lines: Optional[List[LineCollection]] = None,
-    traj_points: Optional[List[PathCollection]] = None,
-    colors: Union[List[Color], Color] = None,
+    traj_lines: Optional[list[LineCollection]] = None,
+    traj_points: Optional[list[PathCollection]] = None,
+    colors: Union[list[Color], Color] = None,
     width: float = 1,
     alpha: float = 1,
-) -> Tuple[List[LineCollection], List[PathCollection]]:
+) -> tuple[list[LineCollection], list[PathCollection]]:
     segments, mcolor = [], []
     for traj in trajectories:
         sampled_traj = np.vstack([[x.x, x.y, x.vx] for x in traj.values])
@@ -210,14 +209,14 @@ def plot_vehicle(
     lights_colors: LightsColors,
     vg: VehicleGeometry,
     alpha: float,
-    vehicle_poly: Optional[List[Polygon]] = None,
-    lights_patches: Optional[List[Circle]] = None,
+    vehicle_poly: Optional[list[Polygon]] = None,
+    lights_patches: Optional[list[Circle]] = None,
     plot_wheels: bool = False,
     plot_ligths: bool = False,
     **style_kwargs,
-) -> Tuple[List[Polygon], List[Circle]]:
+) -> tuple[list[Polygon], list[Circle]]:
     """"""
-    vehicle_outline: Sequence[Tuple[float, float], ...] = vg.outline
+    vehicle_outline: Sequence[tuple[float, float], ...] = vg.outline
     vehicle_color: Color = vg.color
     q = SE2_from_xytheta((state.x, state.y, state.psi))
     if vehicle_poly is None:
@@ -259,7 +258,7 @@ def plot_vehicle(
     return vehicle_poly, lights_patches
 
 
-def _plot_lights(ax: Axes, q: SE2value, lights_colors: LightsColors, vg: VehicleGeometry) -> List[Circle]:
+def _plot_lights(ax: Axes, q: SE2value, lights_colors: LightsColors, vg: VehicleGeometry) -> list[Circle]:
     radius_light = 0.04 * vg.width
     light_dict = asdict(lights_colors)
     patches = []
@@ -285,8 +284,8 @@ def plot_pedestrian(
     state: PedestrianState,
     pg: PedestrianGeometry,
     alpha: float,
-    ped_poly: Optional[List[Polygon]],
-) -> List[Polygon]:
+    ped_poly: Optional[list[Polygon]],
+) -> list[Polygon]:
     q = SE2_from_xytheta((state.x, state.y, state.psi))
     if ped_poly is None:
         pedestrian_box = ax.fill([], [], color=pg.color, alpha=alpha, zorder=ZOrders.MODEL)[0]
@@ -297,7 +296,7 @@ def plot_pedestrian(
         ax.text(
             x4, y4, player_name, zorder=ZOrders.PLAYER_NAME, horizontalalignment="center", verticalalignment="center"
         )
-    ped_outline: Sequence[Tuple[float, float], ...] = pg.outline
+    ped_outline: Sequence[tuple[float, float], ...] = pg.outline
     outline_xy = transform_xy(q, ped_outline)
     ped_poly[0].set_xy(outline_xy)
     return ped_poly
@@ -309,8 +308,8 @@ def plot_spacecraft(
     state: SpacecraftState,
     sg: SpacecraftGeometry,
     alpha: float,
-    scraft_poly: Optional[List[Polygon]],
-) -> List[Polygon]:
+    scraft_poly: Optional[list[Polygon]],
+) -> list[Polygon]:
     q = SE2_from_xytheta((state.x, state.y, state.psi))
     if scraft_poly is None:
         spacecraft_box = ax.fill([], [], color=sg.color, alpha=alpha, zorder=ZOrders.MODEL)[0]
@@ -326,7 +325,7 @@ def plot_spacecraft(
         ]
         scraft_poly.extend(thrusters_boxes)
     # body
-    ped_outline: Sequence[Tuple[float, float], ...] = sg.outline
+    ped_outline: Sequence[tuple[float, float], ...] = sg.outline
     outline_xy = transform_xy(q, ped_outline)
     scraft_poly[0].set_xy(outline_xy)
     # thrusters

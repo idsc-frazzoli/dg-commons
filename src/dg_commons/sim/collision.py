@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 from geometry import translation_angle_from_SE2
@@ -22,12 +22,12 @@ from dg_commons.sim.models.obstacles import StaticObstacle
 from dg_commons.sim.simulator import SimContext
 
 
-def impact_locations_from_polygons(a_model: SimModel, b_shape: BaseGeometry) -> List[Tuple[ImpactLocation, Polygon]]:
+def impact_locations_from_polygons(a_model: SimModel, b_shape: BaseGeometry) -> list[tuple[ImpactLocation, Polygon]]:
     """
     Checks the impact locations of A based on its mesh and the footprint of B
     :return:
     """
-    locations: List[Tuple[ImpactLocation, Polygon]] = []
+    locations: list[tuple[ImpactLocation, Polygon]] = []
     a_mesh = a_model.get_mesh()
     for loc, loc_shape in a_mesh.items():
         if b_shape.intersects(loc_shape):

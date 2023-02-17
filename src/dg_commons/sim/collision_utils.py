@@ -1,7 +1,7 @@
 import logging
 import time
 from math import pi
-from typing import List, Tuple, Mapping, Dict
+from typing import Mapping
 
 import numpy as np
 from commonroad.scenario.lanelet import LaneletNetwork
@@ -28,7 +28,7 @@ def velocity_of_P_given_A(vel: T2value, omega: float, vec_ap: T2value) -> T2valu
     return vel + omega * (_rot90 @ vec_ap)
 
 
-def _find_intersection_points(a_shape: Polygon, b_shape: BaseGeometry) -> List[Tuple[float, float]]:
+def _find_intersection_points(a_shape: Polygon, b_shape: BaseGeometry) -> list[tuple[float, float]]:
     """#todo"""
     int_shape = a_shape.intersection(b_shape)
     if isinstance(int_shape, Polygon):
@@ -171,7 +171,7 @@ def check_who_is_at_fault(
     dglanes_at_impact = [
         DgLanelet.from_commonroad_lanelet(lanelet_network.find_lanelet_by_id(id)) for id in lanesid_at_impact
     ]
-    who_is_at_fault: Dict[PlayerName, bool] = {p: False for p in p_poses}
+    who_is_at_fault: dict[PlayerName, bool] = {p: False for p in p_poses}
     for p, p_pose in p_poses.items():
         dglane_poses = [dglane.lane_pose_from_SE2_generic(p_pose) for dglane in dglanes_at_impact]
         illegal_poses = [_is_illegal_lanepose(pose) for pose in dglane_poses]

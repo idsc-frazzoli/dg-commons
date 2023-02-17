@@ -1,6 +1,6 @@
 from dataclasses import replace
 from functools import partial
-from typing import List, Type, Mapping, Set, Iterator, Tuple
+from typing import Type, Mapping, Set, Iterator
 
 import numpy as np
 from geometry import xytheta_from_SE2
@@ -21,7 +21,7 @@ class Trajectory(DgSampledSequence[VehicleState]):
     def XT(self) -> Type[X]:
         return VehicleState
 
-    def as_path(self) -> List[SE2Transform]:
+    def as_path(self) -> list[SE2Transform]:
         """Returns cartesian coordinates (SE2) of transition states"""
         return [SE2Transform(p=np.array([x.x, x.y]), theta=x.psi) for x in self.values]
 
@@ -112,8 +112,8 @@ class Trajectory(DgSampledSequence[VehicleState]):
         # todo this method can be moved to be a method of the generic DGSampledSequence
         """
         timestamps = list(self.timestamps)
-        up_values: List[VehicleState] = []
-        up_timestamps: List[Timestamp] = []
+        up_values: list[VehicleState] = []
+        up_timestamps: list[Timestamp] = []
 
         for t_previous, t_next in zip(timestamps, timestamps[1:]):
             up_timestamps.append(t_previous)
@@ -158,7 +158,7 @@ def commands_plan_from_trajectory(trajectory: Trajectory) -> DgSampledSequence[V
     return DgSampledSequence[VehicleCommands](timestamps, commands)
 
 
-TimedVehicleState = Tuple[Timestamp, VehicleState]
+TimedVehicleState = tuple[Timestamp, VehicleState]
 
 
 class TrajectoryGraph(DiGraph):

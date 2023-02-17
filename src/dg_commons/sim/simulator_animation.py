@@ -1,6 +1,6 @@
 import math
 from itertools import chain
-from typing import Mapping, List, Union, Optional, Sequence, Iterable
+from typing import Mapping, Union, Optional, Sequence, Iterable
 
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -63,7 +63,7 @@ def create_animation(
     plot_ligths: bool = True
 
     # self.f.set_size_inches(*fig_size)
-    def _get_list() -> List[Artist]:
+    def _get_list() -> list[Artist]:
         # fixme this is supposed to be an iterable of artists
         return (
             list(chain.from_iterable(states.values()))
