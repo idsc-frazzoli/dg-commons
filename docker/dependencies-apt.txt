@@ -16,3 +16,4 @@ libomp-dev
 libcgal-dev
 
 git-lfs
+libfcl-dev
