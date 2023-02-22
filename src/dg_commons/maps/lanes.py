@@ -142,7 +142,7 @@ class DgLanelet:
 
     def find_along_lane_closest_point(self, p: T2value, tol: float = 1e-5):
         def get_delta(beta):
-            q0 = self.center_point(beta)
+            q0 = self.center_point_fast_SE2Transform(beta).as_SE2()
             t0, _ = translation_angle_from_SE2(q0)
             d = np.linalg.norm(p - t0)
 
@@ -156,11 +156,12 @@ class DgLanelet:
             D1 = np.linalg.norm(p1 - p)
             res = np.maximum(D1, D2)
             return res
+            # return d
 
-        bracket = (-1.0, len(self.control_points))
+        bracket = (0, len(self.control_points) - 1)
         res0 = minimize_scalar(get_delta, bracket=bracket, tol=tol)
         beta0 = res0.x
-        q = self.center_point(beta0)
+        q = self.center_point_fast_SE2Transform(beta0).as_SE2()
         return beta0, q
 
     def lane_pose(self, along_lane: float, relative_heading: float, lateral: float) -> DgLanePose:
