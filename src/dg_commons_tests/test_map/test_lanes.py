@@ -42,6 +42,8 @@ def test_lane_vis():
             plt.plot(*right, "x")
             plt.gca().set_aspect("equal")
         file_name = os.path.join(OUT_TESTS_DIR, f"lane_vis/{lanelet.lanelet_id}.png")
+        # create directory if not exists
+        os.makedirs(os.path.dirname(file_name), exist_ok=True)
         plt.savefig(file_name)
         plt.close()
 
@@ -67,5 +69,7 @@ def test_find_along_lane_closest_point():
             plt.plot(*t_fast, "x")
             plt.gca().set_aspect("equal")
         file_name = os.path.join(OUT_TESTS_DIR, f"center_point/{lanelet.lanelet_id}.png")
+        # create directory if not exists
+        os.makedirs(os.path.dirname(file_name), exist_ok=True)
         plt.savefig(file_name)
         plt.close()
