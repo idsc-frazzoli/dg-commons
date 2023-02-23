@@ -305,8 +305,11 @@ class DgLanelet:
         lateral = np.linalg.norm(center - position)
         return lateral <= r and 0 <= beta <= len(self.control_points) - 1
 
-    def along_lane_from_T2value(self, position: T2value, tol: float = 1e-3) -> float:
-        beta, _ = self.find_along_lane_closest_point(position, tol=tol)
+    def along_lane_from_T2value(self, position: T2value, tol: float = 1e-3, fast: bool = False) -> float:
+        if fast:
+            beta, _ = self.find_along_lane_closest_point_fast(position, tol=tol)
+        else:
+            beta, _ = self.find_along_lane_closest_point(position, tol=tol)
         return self.along_lane_from_beta(beta)
 
     @cached(LRUCache(maxsize=128))
