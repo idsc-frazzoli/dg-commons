@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import NewType, AbstractSet, Mapping
+from typing import AbstractSet, Mapping, NewType
 
 import numpy as np
 
@@ -51,11 +51,12 @@ yellow = (1.0, 1.0, 0.0)
 red = (0.5, 0.0, 0.0)
 red_more = (1.0, 0.0, 0.0)
 orange = (1.0, 0.5, 0.3)
+green = (0.0, 1.0, 0.0)
 
 phase2colors: Mapping[LightsCmd, LightsColors] = fd(
     {
         NO_LIGHTS: LightsColors(back_left=red, back_right=red, front_left=white, front_right=white),
-        LIGHTS_HEADLIGHTS: LightsColors(back_left=red, back_right=red, front_left=yellow, front_right=yellow),
+        LIGHTS_HEADLIGHTS: LightsColors(back_left=red, back_right=red, front_left=green, front_right=green),
         LIGHTS_TURN_LEFT: LightsColors(
             back_left=orange,
             back_right=red,
