@@ -81,7 +81,7 @@ class Simulator:
 
     @time_function
     def run(self, sim_context: SimContext):
-        logger.info("Beginning simulation.")
+        logger.info("~~~~~> Beginning simulation")
         # initialize the simulation
         for player_name, player in sim_context.players.items():
             scenario = deepcopy(sim_context.dg_scenario)
@@ -100,10 +100,10 @@ class Simulator:
             self.pre_update(sim_context)
             self.update(sim_context)
             self.post_update(sim_context)
-        logger.info("Completed simulation. Writing logs...")
+        logger.info("<~~~~~ Completed simulation")
         for player_name in sim_context.models:
             sim_context.log[player_name] = self.simlogger[player_name].as_sequence()
-        logger.info("Writing logs terminated.")
+        logger.debug("Writing logs terminated.")
 
     def pre_update(self, sim_context: SimContext):
         """Prior to stepping the simulation we compute the observations for each agent"""
