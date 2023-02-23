@@ -6,8 +6,8 @@ from numpy import deg2rad
 from shapely.geometry import LinearRing, Polygon
 
 from dg_commons import apply_SE2_to_shapely_geo
-from dg_commons.maps.shapes_generator import create_star_polygon, create_random_starshaped_polygon
 from dg_commons.maps.shapely_viz import ShapelyViz
+from dg_commons.maps.shapes_generator import create_star_polygon, create_random_starshaped_polygon
 from dg_commons_tests import OUT_TESTS_DIR
 
 

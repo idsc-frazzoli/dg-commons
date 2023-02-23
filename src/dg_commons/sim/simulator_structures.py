@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Generic, Any, Dict, Mapping, Tuple, Optional
+from typing import Generic, Any, Mapping, Optional
 
 from geometry import SE2value, T2value
 from shapely.geometry import Polygon
@@ -9,7 +9,7 @@ from zuper_commons.types import ZValueError
 
 from dg_commons import DgSampledSequence, PlayerName, X, U
 from dg_commons.seq.sequence import DgSampledSequenceBuilder, Timestamp, UndefinedAtTime
-from dg_commons.sim import SimTime, ImpactLocation, logger
+from dg_commons.sim import SimTime, ImpactLocation
 from dg_commons.sim.goals import TPlanningGoal
 from dg_commons.sim.models.model_structures import ModelType, TModelGeometry, TModelParameters
 from dg_commons.sim.scenarios import DgScenario
@@ -123,7 +123,7 @@ class PlayerLogger(Generic[X, U]):
         )
 
 
-class SimLog(Dict[PlayerName, PlayerLog]):
+class SimLog(dict[PlayerName, PlayerLog]):
     """The logger for a simulation. For each player it records sampled sequences of states, commands and extra
     arguments than an agent might want to log."""
 
@@ -133,7 +133,7 @@ class SimLog(Dict[PlayerName, PlayerLog]):
         super(SimLog, self).__setitem__(key, value)
 
     def at_interp(self, t: Timestamp) -> Mapping[PlayerName, LogEntry]:
-        interpolated_entry: Dict[PlayerName, LogEntry] = {}
+        interpolated_entry: dict[PlayerName, LogEntry] = {}
         for player in self:
             interpolated_entry[player] = self[player].at_interp(t)
         return interpolated_entry
@@ -212,5 +212,5 @@ class SimModel(ABC, Generic[X, U]):
     @abstractmethod
     def get_extra_collision_friction_acc(
         self,
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         pass

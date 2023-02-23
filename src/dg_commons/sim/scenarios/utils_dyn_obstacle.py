@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import DynamicObstacle
@@ -33,8 +31,8 @@ def infer_lane_from_dyn_obs(dyn_obs: DynamicObstacle, network: LaneletNetwork) -
     return _dglane_from_trajectory(dyn_obs.prediction.trajectory.state_list)
 
 
-def _dglane_from_trajectory(states: List[State], width: float = 3) -> DgLanelet:
-    control_points: List[LaneCtrPoint] = []
+def _dglane_from_trajectory(states: list[State], width: float = 3) -> DgLanelet:
+    control_points: list[LaneCtrPoint] = []
     for state in states:
         q = SE2Transform(p=state.position, theta=state.orientation)
         control_points.append(LaneCtrPoint(q=q, r=width / 2))

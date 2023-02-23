@@ -1,6 +1,6 @@
 import math
 from dataclasses import dataclass
-from typing import Tuple, Optional
+from typing import Optional
 
 from dg_commons.controllers.pid import PIDParam, PID
 from dg_commons.sim.models.vehicle_utils import VehicleParameters
@@ -13,9 +13,9 @@ class SteerControllerParam(PIDParam):
     kP: float = 4
     kI: float = 0.1
     kD: float = 0.2
-    antiwindup: Tuple[float, float] = (-0.5, 0.5)
-    setpoint_minmax: Tuple[float, float] = (-math.pi / 6, math.pi / 6)
-    output_minmax: Tuple[float, float] = (-1, 1)  # minmax steer derivative [rad/s]
+    antiwindup: tuple[float, float] = (-0.5, 0.5)
+    setpoint_minmax: tuple[float, float] = (-math.pi / 6, math.pi / 6)
+    output_minmax: tuple[float, float] = (-1, 1)  # minmax steer derivative [rad/s]
 
     @classmethod
     def from_vehicle_params(cls, vehicle_param: VehicleParameters) -> "SteerControllerParam":

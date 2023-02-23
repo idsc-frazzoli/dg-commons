@@ -1,4 +1,4 @@
-from commonroad.visualization.draw_params import LaneletNetworkParams, MPDrawParams
+from commonroad.visualization.draw_params import MPDrawParams
 from commonroad.visualization.mp_renderer import MPRenderer
 from matplotlib import pyplot as plt
 from shapely.affinity import affine_transform
