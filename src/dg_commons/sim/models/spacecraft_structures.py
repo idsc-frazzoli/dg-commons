@@ -1,7 +1,6 @@
 import math
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Tuple, List
 
 from geometry import SE2value, SE2_from_xytheta
 from shapely import affinity
@@ -60,7 +59,7 @@ class SpacecraftGeometry(ModelGeometry):
         return self.w_half * 2
 
     @cached_property
-    def outline(self) -> Tuple[Tuple[float, float], ...]:
+    def outline(self) -> tuple[tuple[float, float], ...]:
         """
         Outline of the spacecraft. The outline is made by the union of an ellipse and a rectangle.
         The cog is at the end of the rectangle (circle center).
@@ -93,24 +92,24 @@ class SpacecraftGeometry(ModelGeometry):
         return w_half, l_half
 
     @property
-    def thruster_outline(self) -> Tuple[Tuple[float, float], ...]:
+    def thruster_outline(self) -> tuple[tuple[float, float], ...]:
         w_half, l_half = self.thruster_shape
         return (l_half, -w_half), (-l_half, -w_half), (-l_half, w_half), (l_half, w_half), (l_half, -w_half)
 
     @property
-    def thrusters_position(self) -> List[SE2value]:
+    def thrusters_position(self) -> list[SE2value]:
         positions = [SE2_from_xytheta((-self.lr, -self.w_half, 0)), SE2_from_xytheta((-self.lr, self.w_half, 0))]
         return positions
 
     @cached_property
-    def thrusters_outline_in_body_frame(self) -> List[Tuple[Tuple[float, float], ...]]:
+    def thrusters_outline_in_body_frame(self) -> list[tuple[tuple[float, float], ...]]:
         thrusters_outline = [transform_xy(q, self.thruster_outline) for q in self.thrusters_position]
         return thrusters_outline
 
 
 @dataclass(frozen=True, unsafe_hash=True)
 class SpacecraftParameters(ModelParameters):
-    dpsi_limits: Tuple[float, float]
+    dpsi_limits: tuple[float, float]
     """ Maximum yaw rate [rad/s] """
 
     @classmethod

@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Optional
 
 from commonroad.prediction.prediction import TrajectoryPrediction
 from geometry import SE2_from_xytheta
@@ -37,7 +37,7 @@ def get_scenario_commonroad_replica(
     """
     scenario, planning_problem_set = load_commonroad_scenario(scenario_name, scenarios_dir)
     players, models = {}, {}
-    static_obstacles: Dict[int, StaticObstacle] = {}
+    static_obstacles: dict[int, StaticObstacle] = {}
 
     for i, dyn_obs in enumerate(scenario.dynamic_obstacles):
         assert isinstance(dyn_obs.prediction, TrajectoryPrediction), "Only trajectory predictions are supported"

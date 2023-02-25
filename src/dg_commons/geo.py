@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from typing import Sequence, Tuple, Union
+from typing import Sequence, Union
 
 import numpy as np
-from commonroad_dc.collision.collision_detection.pycrcc_collision_dispatch import create_collision_object
+from commonroad_dc.pycrcc import Polygon as CommonRoadPolygon
 from geometry import (
     SE2value,
     translation_from_SE2,
@@ -13,9 +13,8 @@ from geometry import (
     linear_angular_from_se2,
 )
 from shapely.affinity import affine_transform
-from shapely.geometry.base import BaseGeometry
-from commonroad_dc.pycrcc import Polygon as CommonRoadPolygon
 from shapely.geometry import Polygon, LineString
+from shapely.geometry.base import BaseGeometry
 
 """
 Some of these structures and operations are are taken from `duckietown-world` with minor modifications
@@ -100,7 +99,7 @@ def apply_SE2_to_shapely_geo(shapely_geometry: BaseGeometry, se2_value: SE2value
     return affine_transform(shapely_geometry, coeffs)
 
 
-def transform_xy(q: np.ndarray, points: Sequence[Tuple[float, float]]) -> Tuple[Tuple[float, float]]:
+def transform_xy(q: np.ndarray, points: Sequence[tuple[float, float]]) -> tuple[tuple[float, float]]:
     """Transform a list of points according to q"""
     points_array = np.array([(x, y, 1) for x, y in points]).T
     points = q @ points_array

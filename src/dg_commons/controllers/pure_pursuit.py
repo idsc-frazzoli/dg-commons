@@ -1,22 +1,23 @@
 from dataclasses import dataclass
 from math import atan, sin
-from typing import Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import scipy.optimize
+from geometry import SE2value, angle_from_SE2, translation_angle_from_SE2
+
 from dg_commons.geo import SE2_apply_T2, norm_between_SE2value
 from dg_commons.maps.lanes import DgLanelet
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
-from geometry import SE2value, angle_from_SE2, translation_angle_from_SE2
 
 __all__ = ["PurePursuit", "PurePursuitParam"]
 
 
 @dataclass
 class PurePursuitParam:
-    look_ahead_minmax: Tuple[float, float] = (3, 30)
+    look_ahead_minmax: tuple[float, float] = (3, 30)
     """min and max lookahead"""
-    k_lookahead: float = 1.1
+    k_lookahead: float = 0.8
     """Scaling constant for speed dependent params"""
     min_distance: float = 2
     """Min initial progress to look for the next goal point"""
@@ -64,7 +65,7 @@ class PurePursuit:
     def update_speed(self, speed: float):
         self.speed = speed
 
-    def find_goal_point(self) -> Tuple[float, SE2value]:
+    def find_goal_point(self) -> tuple[float, SE2value]:
         """
         Find goal point along the path
         :return: along_path, SE2value

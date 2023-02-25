@@ -45,7 +45,11 @@ def plot_collision(collision_report: CollisionReport, sim_log: SimLog):
         # vehicle outline
         footprint = p_report.footprint
         plt.plot(*footprint.exterior.xy, color=p_color)
-        xc, yc = log_entries[player].state.x, log_entries[player].state.y  # footprint.centroid.coords[0]
+        try:
+            xc, yc = log_entries[player].state.x, log_entries[player].state.y  # footprint.centroid.coords[0]
+        except KeyError:
+            # special case for static environment that is not in the log
+            xc, yc = footprint.centroid.coords[0]
         plt.text(
             xc, yc, f"{player}", horizontalalignment="center", verticalalignment="center", zorder=_Zorders.PLAYER_NAME
         )

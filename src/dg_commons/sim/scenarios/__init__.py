@@ -1,2 +1,2 @@
-from .utils import *
 from .structures import *
+from .utils import *

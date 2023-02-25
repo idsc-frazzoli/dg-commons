@@ -2,10 +2,12 @@
 frozendict>=2.3.4
 cytoolz>=0.12.0
 cachetools>=5.0.0
+tqdm>=4.62.3
+
 # libraries
 numpy>=1.21.2
 scipy>=1.8.0
-matplotlib>=3.5.0,<3.6.0
+matplotlib>=3.5.0
 shapely>=1.8.3,<2 # compatibility strtree
 zuper-commons-z6>=6
 PyGeometry-z6>=2.1.4

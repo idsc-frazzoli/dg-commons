@@ -1,7 +1,7 @@
 from dataclasses import dataclass, replace
 from functools import cached_property
 from math import cos, sin
-from typing import Tuple, Type, Sequence, Mapping
+from typing import Type, Sequence, Mapping
 
 import numpy as np
 from frozendict import frozendict
@@ -22,7 +22,7 @@ from dg_commons.sim.models.pedestrian_utils import PedestrianParameters, rotatio
 @dataclass(frozen=True)
 class PedestrianGeometry(ModelGeometry):
     @cached_property
-    def outline(self) -> Sequence[Tuple[float, float]]:
+    def outline(self) -> Sequence[tuple[float, float]]:
         circle = Point(0, 0).buffer(0.5)  # type(circle)=polygon
         ellipse = affinity.scale(circle, 1, 1.5)  # not sure, maybe just a circle?
         return tuple(ellipse.exterior.coords)

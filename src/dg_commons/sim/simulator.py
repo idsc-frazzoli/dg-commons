@@ -4,13 +4,13 @@ from dataclasses import dataclass, field, replace
 from decimal import Decimal
 from itertools import combinations
 from time import perf_counter
-from typing import Dict, List, Mapping, MutableMapping, Optional
+from typing import Mapping, MutableMapping, Optional
 
 from dg_commons import PlayerName, U, fd
-from dg_commons.sim.goals import PlanningGoal, TPlanningGoal
 from dg_commons.sim import CollisionReport, SimTime, logger
 from dg_commons.sim.agents.agent import Agent, TAgent
 from dg_commons.sim.collision_utils import CollisionException
+from dg_commons.sim.goals import PlanningGoal, TPlanningGoal
 from dg_commons.sim.models.obstacles_dyn import DynObstacleModel
 from dg_commons.sim.scenarios.structures import DgScenario
 from dg_commons.sim.sim_perception import IdObsFilter, ObsFilter
@@ -46,7 +46,7 @@ class SimContext:
     "The seed for reproducible randomness"
     sim_terminated: bool = False
     "Whether the simulation has terminated"
-    collision_reports: List[CollisionReport] = field(default_factory=list)
+    collision_reports: list[CollisionReport] = field(default_factory=list)
     "The log of collision reports"
     first_collision_ts: SimTime = SimTime("Infinity")
     "The first collision time"
@@ -76,12 +76,12 @@ class Simulator:
     # fixme check if this is okay once you have multiple simulators running together
     last_observations: SimObservations = SimObservations(players=fd({}), time=Decimal(0))
     last_get_commands_ts: SimTime = SimTime("-Infinity")
-    last_commands: Dict[PlayerName, U] = {}
-    simlogger: Dict[PlayerName, PlayerLogger] = {}
+    last_commands: dict[PlayerName, U] = {}
+    simlogger: dict[PlayerName, PlayerLogger] = {}
 
     @time_function
     def run(self, sim_context: SimContext):
-        logger.info("Beginning simulation.")
+        logger.info("~~~~~> Beginning simulation")
         # initialize the simulation
         for player_name, player in sim_context.players.items():
             scenario = deepcopy(sim_context.dg_scenario)
@@ -100,16 +100,16 @@ class Simulator:
             self.pre_update(sim_context)
             self.update(sim_context)
             self.post_update(sim_context)
-        logger.info("Completed simulation. Writing logs...")
+        logger.info("<~~~~~ Completed simulation")
         for player_name in sim_context.models:
             sim_context.log[player_name] = self.simlogger[player_name].as_sequence()
-        logger.info("Writing logs terminated.")
+        logger.debug("Writing logs terminated.")
 
     def pre_update(self, sim_context: SimContext):
         """Prior to stepping the simulation we compute the observations for each agent"""
         # we update the observations only when we will need to use them
         if self._need_to_update_commands(sim_context):
-            players_observations: Dict[PlayerName, PlayerObservations] = {}
+            players_observations: dict[PlayerName, PlayerObservations] = {}
             for player_name, model in sim_context.models.items():
                 player_obs = PlayerObservations(state=model.get_state(), occupancy=model.get_footprint())
                 players_observations.update({player_name: player_obs})
@@ -189,7 +189,8 @@ class Simulator:
 
         env_obstacles = sim_context.dg_scenario.strtree_obstacles
         collision = False
-        for p, p_model in sim_context.models.items():
+        for p in sim_context.players:
+            p_model = sim_context.models[p]
             p_shape = p_model.get_footprint()
             items = env_obstacles.query_items(p_shape)
             for idx in items:
