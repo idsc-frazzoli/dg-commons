@@ -228,9 +228,14 @@ def plot_vehicle(
     x4, y4 = transform_xy(q, ((0, 0),))[0]
     if vehicle_poly is None:
         vehicle_box = ax.fill([], [], color=vehicle_color, alpha=alpha, zorder=ZOrders.MODEL, **style_kwargs)[0]
-
         text: Text = ax.text(
-            x4, y4, player_name, zorder=ZOrders.PLAYER_NAME, horizontalalignment="center", verticalalignment="center"
+            x4,
+            y4,
+            player_name,
+            zorder=ZOrders.PLAYER_NAME,
+            horizontalalignment="center",
+            verticalalignment="center",
+            clip_on=True,
         )
         vehicle_poly = [vehicle_box, text]
         if plot_wheels:
@@ -297,7 +302,13 @@ def plot_pedestrian(
     if ped_poly is None:
         pedestrian_box = ax.fill([], [], color=pg.color, alpha=alpha, zorder=ZOrders.MODEL)[0]
         text = ax.text(
-            x4, y4, player_name, zorder=ZOrders.PLAYER_NAME, horizontalalignment="center", verticalalignment="center"
+            x4,
+            y4,
+            player_name,
+            zorder=ZOrders.PLAYER_NAME,
+            horizontalalignment="center",
+            verticalalignment="center",
+            clip_on=True,
         )
         ped_poly = [pedestrian_box, text]
     ped_outline: Sequence[tuple[float, float], ...] = pg.outline
@@ -320,7 +331,13 @@ def plot_spacecraft(
     if scraft_poly is None:
         spacecraft_box = ax.fill([], [], color=sg.color, alpha=alpha, zorder=ZOrders.MODEL)[0]
         text: Text = ax.text(
-            x4, y4, player_name, zorder=ZOrders.PLAYER_NAME, horizontalalignment="center", verticalalignment="center"
+            x4,
+            y4,
+            player_name,
+            zorder=ZOrders.PLAYER_NAME,
+            horizontalalignment="center",
+            verticalalignment="center",
+            clip_on=True,
         )
         scraft_poly = [spacecraft_box, text]
         thrusters_boxes = [
