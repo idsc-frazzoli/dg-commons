@@ -13,6 +13,7 @@ from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection, PathCollection
 from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon, Circle
+from matplotlib.text import Text
 from zuper_commons.types import ZValueError
 
 from dg_commons import Color, transform_xy, apply_SE2_to_shapely_geo, PlayerName, X, U
@@ -224,15 +225,14 @@ def plot_vehicle(
     vehicle_outline: Sequence[tuple[float, float], ...] = vg.outline
     vehicle_color: Color = vg.color
     q = SE2_from_xytheta((state.x, state.y, state.psi))
+    x4, y4 = transform_xy(q, ((0, 0),))[0]
     if vehicle_poly is None:
         vehicle_box = ax.fill([], [], color=vehicle_color, alpha=alpha, zorder=ZOrders.MODEL, **style_kwargs)[0]
-        vehicle_poly = [
-            vehicle_box,
-        ]
-        x4, y4 = transform_xy(q, ((0, 0),))[0]
-        ax.text(
+
+        text: Text = ax.text(
             x4, y4, player_name, zorder=ZOrders.PLAYER_NAME, horizontalalignment="center", verticalalignment="center"
         )
+        vehicle_poly = [vehicle_box, text]
         if plot_wheels:
             wheels_boxes = [
                 ax.fill([], [], color="k", alpha=alpha, zorder=ZOrders.MODEL)[0] for _ in range(vg.n_wheels)
@@ -243,11 +243,12 @@ def plot_vehicle(
 
     outline = transform_xy(q, vehicle_outline)
     vehicle_poly[0].set_xy(outline)
+    vehicle_poly[1].set_position((x4, y4))
 
     if plot_wheels:
         wheels_outlines = vg.get_rotated_wheels_outlines(state.delta)
         wheels_outlines = [q @ w_outline for w_outline in wheels_outlines]
-        for w_idx, wheel in enumerate(vehicle_poly[1:]):
+        for w_idx, wheel in enumerate(vehicle_poly[2:]):
             xy_poly = wheels_outlines[w_idx][:2, :].T
             wheel.set_xy(xy_poly)
 
@@ -292,18 +293,17 @@ def plot_pedestrian(
     ped_poly: Optional[list[Polygon]],
 ) -> list[Polygon]:
     q = SE2_from_xytheta((state.x, state.y, state.psi))
+    x4, y4 = transform_xy(q, ((0, 0),))[0]
     if ped_poly is None:
         pedestrian_box = ax.fill([], [], color=pg.color, alpha=alpha, zorder=ZOrders.MODEL)[0]
-        ped_poly = [
-            pedestrian_box,
-        ]
-        x4, y4 = transform_xy(q, ((0, 0),))[0]
-        ax.text(
+        text = ax.text(
             x4, y4, player_name, zorder=ZOrders.PLAYER_NAME, horizontalalignment="center", verticalalignment="center"
         )
+        ped_poly = [pedestrian_box, text]
     ped_outline: Sequence[tuple[float, float], ...] = pg.outline
     outline_xy = transform_xy(q, ped_outline)
     ped_poly[0].set_xy(outline_xy)
+    ped_poly[1].set_position((x4, y4))
     return ped_poly
 
 
@@ -316,15 +316,13 @@ def plot_spacecraft(
     scraft_poly: Optional[list[Polygon]],
 ) -> list[Polygon]:
     q = SE2_from_xytheta((state.x, state.y, state.psi))
+    x4, y4 = transform_xy(q, ((0, 0),))[0]
     if scraft_poly is None:
         spacecraft_box = ax.fill([], [], color=sg.color, alpha=alpha, zorder=ZOrders.MODEL)[0]
-        scraft_poly = [
-            spacecraft_box,
-        ]
-        x4, y4 = transform_xy(q, ((0, 0),))[0]
-        ax.text(
+        text: Text = ax.text(
             x4, y4, player_name, zorder=ZOrders.PLAYER_NAME, horizontalalignment="center", verticalalignment="center"
         )
+        scraft_poly = [spacecraft_box, text]
         thrusters_boxes = [
             ax.fill([], [], color="k", alpha=alpha, zorder=ZOrders.MODEL)[0] for _ in range(sg.n_thrusters)
         ]
@@ -333,9 +331,10 @@ def plot_spacecraft(
     ped_outline: Sequence[tuple[float, float], ...] = sg.outline
     outline_xy = transform_xy(q, ped_outline)
     scraft_poly[0].set_xy(outline_xy)
+    scraft_poly[1].set_position((x4, y4))
     # thrusters
     thrusters_outline = np.array([transform_xy(q, t_outline) for t_outline in sg.thrusters_outline_in_body_frame])
-    for t_idx, thruster in enumerate(scraft_poly[1:]):
+    for t_idx, thruster in enumerate(scraft_poly[2:]):
         xy_poly = thrusters_outline[t_idx]
         thruster.set_xy(xy_poly)
     return scraft_poly
