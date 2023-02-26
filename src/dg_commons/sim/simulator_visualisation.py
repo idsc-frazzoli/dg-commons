@@ -376,21 +376,21 @@ def approximate_bounding_box_players(obj_list: Sequence[X]) -> Union[Sequence[Li
     return None
 
 
-def approximate_bounding_box_single_player(state: X) -> Union[Sequence[List], None]:
-    minmax = [[inf, -inf], [inf, -inf]]
-
-    x, y = state.x, state.y
-    for i in range(2):
-        xory = x if i == 0 else y
-        if xory < minmax[i][0]:
-            minmax[i][0] = xory
-        if xory > minmax[i][1]:
-            minmax[i][1] = xory
-
-    if not (max(minmax) == inf and min(minmax) == -inf):
-        for i in range(2):
-            assert minmax[i][0] <= minmax[i][1]
-            minmax[i][0] -= 10
-            minmax[i][1] += 10
-        return minmax
-    return None
+# def approximate_bounding_box_single_player(state: X) -> Union[Sequence[List], None]:
+#     minmax = [[inf, -inf], [inf, -inf]]
+#
+#     x, y = state.x, state.y
+#     for i in range(2):
+#         xory = x if i == 0 else y
+#         if xory < minmax[i][0]:
+#             minmax[i][0] = xory
+#         if xory > minmax[i][1]:
+#             minmax[i][1] = xory
+#
+#     if not (max(minmax) == inf and min(minmax) == -inf):
+#         for i in range(2):
+#             assert minmax[i][0] <= minmax[i][1]
+#             minmax[i][0] -= 10
+#             minmax[i][1] += 10
+#         return minmax
+#     return None

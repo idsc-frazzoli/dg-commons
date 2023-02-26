@@ -194,10 +194,11 @@ def adjust_axes_limits(
         try:
             state = players_states[plot_limits]
             slack = 30
-            v_scaling = 3
+            v_scaling = 1.5
             # we shift the center of the image forward according to the velocity vector of the player
             velocity_v = v_scaling * np.array([state.vx * np.cos(state.psi), state.vx * np.sin(state.psi)])
-            velocity_v = np.clip(velocity_v, -slack + 2, slack - 2)
+            buffer = slack / 3
+            velocity_v = np.clip(velocity_v, -slack + buffer, slack - buffer)
             x_c, y_c = state.x + velocity_v[0], state.y + velocity_v[1]
             ax.axis(xmin=x_c - slack, xmax=x_c + slack, ymin=y_c - slack, ymax=y_c + slack)
         except AssertionError:
