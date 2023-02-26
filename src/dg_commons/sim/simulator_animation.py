@@ -193,7 +193,7 @@ def adjust_axes_limits(
         # str instead of "PlayerName" since https://github.com/python/mypy/issues/3325
         try:
             state = players_states[plot_limits]
-            slack = 30
+            slack = 35
             v_scaling = 1.5
             # we shift the center of the image forward according to the velocity vector of the player
             velocity_v = v_scaling * np.array([state.vx * np.cos(state.psi), state.vx * np.sin(state.psi)])
