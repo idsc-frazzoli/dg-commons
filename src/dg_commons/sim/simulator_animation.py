@@ -2,6 +2,7 @@ import math
 from itertools import chain
 from typing import Mapping, Union, Optional, Sequence, Iterable
 
+import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.artist import Artist
@@ -32,16 +33,16 @@ def create_animation(
     figsize: Optional[Union[list, tuple]] = None,
     dt: float = 30,
     dpi: int = 120,
-    plot_limits: Optional[Union[str, Sequence[Sequence[float]]]] = "auto",
+    plot_limits: Union[str, Sequence[Sequence[float]], PlayerName] = "auto",
 ) -> None:
     """
     Creates an animation of the simulation.
-    :param plot_limits:
     :param sim_context:
     :param file_path: filename of generated video (ends on .mp4/.gif/.avi, default mp4, when nothing is specified)
     :param figsize: size of the video
     :param dt: time step between frames in ms
     :param dpi: resolution of the video
+    :param plot_limits: "auto"/"" ,hardcoded limits, or player name to focus on
     :return: None
     """
     logger.info("Creating animation...")
@@ -175,13 +176,10 @@ def adjust_axes_limits(
     plot_limits: Union[str, PlayerName, Sequence[Sequence[float]]],
     players_states: Optional[Mapping[PlayerName, X]] = None,
 ):
-    if plot_limits is None:
-        ax.autoscale()
-    elif plot_limits == "auto":
-        if plot_limits is None:
+    if plot_limits == "auto":
+        if not players_states:
             raise ZValueError('Plotting with "auto" option requires players positions')
         players_limits = approximate_bounding_box_players(obj_list=list(players_states.values()))
-        # todo instead of artificially add +5 -5, make bounding box around trajectories + vehicle
         if players_limits is not None:
             ax.axis(
                 xmin=players_limits[0][0] - 5.0,
@@ -192,17 +190,25 @@ def adjust_axes_limits(
         else:
             ax.autoscale()
     elif isinstance(plot_limits, str):
+        # str instead of "PlayerName" since https://github.com/python/mypy/issues/3325
         try:
             state = players_states[plot_limits]
             slack = 30
-            ax.axis(xmin=state.x - slack, xmax=state.x + slack, ymin=state.y - slack, ymax=state.y + slack)
+            v_scaling = 3
+            # we shift the center of the image forward according to the velocity vector of the player
+            velocity_v = v_scaling * np.array([state.vx * np.cos(state.psi), state.vx * np.sin(state.psi)])
+            velocity_v = np.clip(velocity_v, -slack + 2, slack - 2)
+            x_c, y_c = state.x + velocity_v[0], state.y + velocity_v[1]
+            ax.axis(xmin=x_c - slack, xmax=x_c + slack, ymin=y_c - slack, ymax=y_c + slack)
         except AssertionError:
             ax.autoscale()
 
-    else:
+    elif isinstance(plot_limits, Sequence):
         # plotlimits are expected to be seq of seq of floats
         ax.set_xlim(plot_limits[0][0], plot_limits[0][1])
         ax.set_ylim(plot_limits[1][0], plot_limits[1][1])
+    else:
+        raise ZValueError(f"Plot limits {plot_limits} not recognized")
     return
 
 
