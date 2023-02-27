@@ -21,11 +21,11 @@ def build_road_boundary_obstacle(scenario: Scenario, buffer: float = 0.1) -> tup
         if len(lanelet.successor) == 0:
             pt1 = lanelet.right_vertices[-1]
             pt2 = lanelet.left_vertices[-1]
-            entrance_exit_gates.append(LineString([pt1, pt2]).buffer(0.5))
+            entrance_exit_gates.append(LineString([pt1, pt2]).buffer(buffer * 2))
         if len(lanelet.predecessor) == 0:
             pt1 = lanelet.right_vertices[0]
             pt2 = lanelet.left_vertices[0]
-            entrance_exit_gates.append(LineString([pt1, pt2]).buffer(0.5))
+            entrance_exit_gates.append(LineString([pt1, pt2]).buffer(buffer * 2))
 
     overall_poly = unary_union(lane_polygons)
     for interior in overall_poly.interiors:
