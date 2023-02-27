@@ -3,10 +3,12 @@ from shapely.geometry import LineString, Polygon
 from shapely.ops import unary_union
 
 
-def build_road_boundary_obstacle(scenario: Scenario) -> tuple[list[LineString], list[Polygon]]:
+def build_road_boundary_obstacle(scenario: Scenario, buffer: float = 0.1) -> tuple[list[LineString], list[Polygon]]:
     """Returns a list of LineString of the scenario that are then used for collision checking.
     The boundaries are computed taking the external perimeter of the scenario and
     removing the entrance and exiting "gates" of the lanes.
+    :param scenario: the scenario to build the boundaries for
+    :param buffer: the buffer to apply to the lanelets
     @:return: a tuple containing the road boundaries and the open gates. Both are represented as a lists of LineStrings
     """
 
@@ -15,7 +17,7 @@ def build_road_boundary_obstacle(scenario: Scenario) -> tuple[list[LineString], 
     lane_polygons: list[Polygon] = []
     entrance_exit_gates = []
     for lanelet in lanelets:
-        lane_polygons.append(lanelet.polygon.shapely_object.buffer(0.1))
+        lane_polygons.append(lanelet.polygon.shapely_object.buffer(buffer))
         if len(lanelet.successor) == 0:
             pt1 = lanelet.right_vertices[-1]
             pt2 = lanelet.left_vertices[-1]
