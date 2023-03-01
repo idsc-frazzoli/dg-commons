@@ -37,7 +37,7 @@ def infer_lane_from_dyn_obs(dyn_obs: DynamicObstacle, network: LaneletNetwork) -
         for candidate_lane in candidates:
             _, q = candidate_lane.find_along_lane_closest_point_fast(init_position)
             s_prime = angle_from_SE2(q)
-            displacement_angles.append(np.abs(dyn_obs.initial_state.orienation - s_prime))
+            displacement_angles.append(np.abs(dyn_obs.initial_state.orientation - s_prime))
         return candidates[np.argmin(displacement_angles)]
     else:
         # if we reach this point we did not find any lanelet,
