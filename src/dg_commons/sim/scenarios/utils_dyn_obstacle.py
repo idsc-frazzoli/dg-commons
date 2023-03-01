@@ -2,7 +2,7 @@ import numpy as np
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import DynamicObstacle
 from commonroad.scenario.trajectory import State
-from geometry import translation_angle_from_SE2, angle_from_SE2
+from geometry import angle_from_SE2
 
 from dg_commons import SE2Transform
 from dg_commons.maps.lanes import DgLanelet, LaneCtrPoint
