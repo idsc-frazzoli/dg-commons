@@ -23,6 +23,8 @@ class DgScenario:
     """A mapping of indexed static obstacles"""
     use_road_boundaries: bool = False
     """If True the external boundaries of the road are forced to be obstacles """
+    road_boundaries_buffer: float = 0.1
+    """Buffer to be added to the lanelets when building the road boundaries"""
     strtree_obstacles: STRtree = field(init=False)
     """Store the obstacles in a spatial index for fast collision detection"""
 
@@ -33,7 +35,8 @@ class DgScenario:
             assert issubclass(type(sobstacle), StaticObstacle), sobstacle
         # add lane boundaries as obstacles after the static obstacles (since we assign random ids)
         if self.use_road_boundaries and self.scenario is not None:
-            lanelet_bounds, _ = build_road_boundary_obstacle(self.scenario)
+            assert self.road_boundaries_buffer >= 0, self.road_boundaries_buffer
+            lanelet_bounds, _ = build_road_boundary_obstacle(self.scenario, buffer=self.road_boundaries_buffer)
             for lanelet_bound in lanelet_bounds:
                 idx = randint(0, 100000)
                 while idx in self.static_obstacles:
