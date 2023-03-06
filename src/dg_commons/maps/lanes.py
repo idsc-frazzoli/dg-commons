@@ -148,7 +148,7 @@ class DgLanelet:
             return d**2
 
         bracket = (-1, len(self.control_points))
-        res0 = minimize_scalar(get_delta, bracket=bracket, tol=tol)
+        res0 = minimize_scalar(get_delta, bracket=bracket, tol=tol, method="Golden")
         beta0 = res0.x
         q = self.center_point(beta0)
         return beta0, q
@@ -161,7 +161,7 @@ class DgLanelet:
             return d**2
 
         bracket = (0, len(self.control_points) - 1)
-        res0 = minimize_scalar(get_delta, bracket=bracket, tol=tol)
+        res0 = minimize_scalar(get_delta, bracket=bracket, tol=tol, method="Golden")
         beta0 = res0.x
         q = self.center_point_fast_SE2Transform(beta0).as_SE2()
         return beta0, q
