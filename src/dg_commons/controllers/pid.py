@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Tuple, Optional
+from typing import Optional
 
 import numpy as np
 
@@ -11,9 +11,9 @@ class PIDParam:
     kP: float
     kI: float
     kD: float
-    antiwindup: Tuple[float, float] = (-1, 1)
-    setpoint_minmax: Tuple[float, float] = (-1, 1)
-    output_minmax: Tuple[float, float] = (-1, 1)
+    antiwindup: tuple[float, float] = (-1, 1)
+    setpoint_minmax: tuple[float, float] = (-1, 1)
+    output_minmax: tuple[float, float] = (-1, 1)
 
     def __post_init__(self):
         assert self.antiwindup[0] < self.antiwindup[1]
@@ -37,7 +37,7 @@ class PID:
 
     def update_reference(self, reference: float):
         if not self.params.setpoint_minmax[0] <= reference <= self.params.setpoint_minmax[1]:
-            logger.warn(f"PID-controller: Desired ref {reference} out of range {self.params.setpoint_minmax}.")
+            logger.debug(f"PID-controller: Desired ref {reference} out of range {self.params.setpoint_minmax}.")
         self.reference = np.clip(reference, self.params.setpoint_minmax[0], self.params.setpoint_minmax[1])
 
     def get_control(self, at: float) -> float:

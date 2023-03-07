@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Tuple, List, Mapping
+from typing import Mapping
 
 import numpy as np
 from geometry import SE2_from_xytheta
@@ -122,7 +122,7 @@ class VehicleGeometry(ModelGeometry):
         return self.lf + self.lr
 
     @cached_property
-    def outline(self) -> Tuple[Tuple[float, float], ...]:
+    def outline(self) -> tuple[tuple[float, float], ...]:
         """Outline of the vehicle intended as the whole car body."""
         tyre_halfw, _ = self.wheel_shape
         frontbumper, backbumper = self.bumpers_length
@@ -135,7 +135,7 @@ class VehicleGeometry(ModelGeometry):
         )
 
     @cached_property
-    def bumpers_length(self) -> Tuple[float, float]:
+    def bumpers_length(self) -> tuple[float, float]:
         """Returns size of bumpers from wheels' axle to border
         @:return: (front,back)"""
         tyre_halfw, radius = self.wheel_shape
@@ -194,7 +194,7 @@ class VehicleGeometry(ModelGeometry):
         return positions
 
     @cached_property
-    def lights_position(self) -> Mapping[str, Tuple[float, float]]:
+    def lights_position(self) -> Mapping[str, tuple[float, float]]:
         halfwidth, _ = self.wheel_shape
         frontbumper, backbumper = self.bumpers_length
         return {
@@ -208,7 +208,7 @@ class VehicleGeometry(ModelGeometry):
     def n_wheels(self) -> int:
         return self.wheels_position.shape[1]
 
-    def get_rotated_wheels_outlines(self, delta: float) -> List[np.ndarray]:
+    def get_rotated_wheels_outlines(self, delta: float) -> list[np.ndarray]:
         """
         :param delta: Steering angle of front wheels
         :return:

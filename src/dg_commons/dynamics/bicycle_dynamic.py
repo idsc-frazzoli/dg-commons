@@ -1,13 +1,13 @@
 import math
 from dataclasses import replace
 from decimal import Decimal as D
-from typing import Mapping, FrozenSet, TypeVar
+from typing import FrozenSet, Mapping, TypeVar
 
 import numpy as np
 from scipy.integrate import solve_ivp
 
 from dg_commons import Timestamp, U, X
-from dg_commons.sim.models.vehicle import VehicleState, VehicleCommands
+from dg_commons.sim.models.vehicle import VehicleCommands, VehicleState
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 from dg_commons.sim.models.vehicle_utils import VehicleParameters
 
@@ -28,17 +28,21 @@ class BicycleDynamics:
     def all_actions(self) -> FrozenSet[U]:
         pass
 
-    def successors(self, x: VehicleState, u0: VehicleCommands, dt: D = None) -> Mapping[VehicleCommands, VehicleState]:
+    def successors(
+        self, x: VehicleState, u0: VehicleCommands, dt: D = None
+    ) -> Mapping[VehicleCommands, VehicleState]:
         """For each state, returns a dictionary U -> Possible Xs"""
         # todo
         pass
 
-    def successor(self, x0: VehicleState, u: VehicleCommands, dt: Timestamp) -> VehicleState:
+    def successor(
+        self, x0: VehicleState, u: VehicleCommands, dt: Timestamp
+    ) -> VehicleState:
         """Perform Euler forward integration to propagate state using actions for time dt.
         This method is very inaccurate for integration steps above 0.1[s]"""
         dt = float(dt)
         # input constraints
-        acc = float(np.clip(u.ddelta, self.vp.acc_limits[0], self.vp.acc_limits[1]))
+        acc = float(np.clip(u.acc, self.vp.acc_limits[0], self.vp.acc_limits[1]))
         ddelta = float(np.clip(u.ddelta, -self.vp.ddelta_max, self.vp.ddelta_max))
 
         state_rate = self.dynamics(x0, replace(u, acc=acc, ddelta=ddelta))
@@ -51,7 +55,9 @@ class BicycleDynamics:
         new_state = replace(x0, vx=vx, delta=delta)
         return new_state
 
-    def successor_ivp(self, x0: VehicleState, u: VehicleCommands, dt: Timestamp) -> VehicleState:
+    def successor_ivp(
+        self, x0: VehicleState, u: VehicleCommands, dt: Timestamp
+    ) -> VehicleState:
         """
         Perform initial value problem integration to propagate state using actions for time dt
         """
@@ -60,7 +66,8 @@ class BicycleDynamics:
             n_states = VehicleState.get_n_states()
             state = VehicleState.from_array(y[0:n_states])
             actions = VehicleCommands(
-                acc=y[VehicleCommands.idx["acc"] + n_states], ddelta=y[VehicleCommands.idx["ddelta"] + n_states]
+                acc=y[VehicleCommands.idx["acc"] + n_states],
+                ddelta=y[VehicleCommands.idx["ddelta"] + n_states],
             )
             return state, actions
 
@@ -76,7 +83,7 @@ class BicycleDynamics:
         result = solve_ivp(fun=_dynamics, t_span=(0.0, float(dt)), y0=y0)
 
         if not result.success:
-            raise RuntimeError("Failed to integrate ivp!")
+            raise RuntimeError(f"Failed to integrate ivp! x0: {x0} u: {u} dt: {dt}")
         new_state, _ = _stateactions_from_array(result.y[:, -1])
         return new_state
 

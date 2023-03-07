@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from math import atan2, isclose, pi
-from typing import List, Sequence
+from typing import Sequence
 
 import numpy as np
 from cachetools import LRUCache, cached
@@ -82,7 +82,7 @@ class DgLanelet:
     """Taking the best from commonroad Lanelet and Duckietown LaneSegment"""
 
     def __init__(self, control_points: Sequence[LaneCtrPoint]):
-        self.control_points: List[LaneCtrPoint] = list(control_points)
+        self.control_points: list[LaneCtrPoint] = list(control_points)
 
     @classmethod
     def from_commonroad_lanelet(cls, lanelet: Lanelet) -> "DgLanelet":
@@ -107,12 +107,12 @@ class DgLanelet:
 
     @cached(LRUCache(maxsize=128))
     @staticmethod
-    def get_lanelets(lane_network: LaneletNetwork, points: List[np.ndarray]) -> List[Lanelet]:
+    def get_lanelets(lane_network: LaneletNetwork, points: list[np.ndarray]) -> list[Lanelet]:
         lane_ids = lane_network.find_lanelet_by_position(point_list=points)
         return [lane_network.find_lanelet_by_id(lid[0]) for lid in lane_ids]
 
     @cached(LRUCache(maxsize=128))
-    def get_lane_lengths(self) -> List[float]:
+    def get_lane_lengths(self) -> list[float]:
         res = []
         for i in range(len(self.control_points) - 1):
             p0 = self.control_points[i].q
@@ -124,10 +124,10 @@ class DgLanelet:
     def get_lane_length(self) -> float:
         return sum(self.get_lane_lengths())
 
-    def lane_pose_from_SE2Transform(self, qt: SE2Transform, tol: float = 1e-4) -> DgLanePose:
+    def lane_pose_from_SE2Transform(self, qt: SE2Transform, tol: float = 1e-3) -> DgLanePose:
         return self.lane_pose_from_SE2_generic(qt.as_SE2(), tol=tol)
 
-    def lane_pose_from_SE2_generic(self, q: SE2value, tol: float = 1e-4) -> DgLanePose:
+    def lane_pose_from_SE2_generic(self, q: SE2value, tol: float = 1e-3) -> DgLanePose:
         """Note this function performs a local search, not very robust to strange situations"""
         p, _, _ = translation_angle_scale_from_E2(q)
 
@@ -140,27 +140,30 @@ class DgLanelet:
 
         return self.lane_pose(along_lane=along_lane, relative_heading=relative_heading, lateral=lateral)
 
-    def find_along_lane_closest_point(self, p: T2value, tol: float = 1e-7):
+    def find_along_lane_closest_point(self, p: T2value, tol: float = 1e-5) -> tuple[float, SE2value]:
         def get_delta(beta):
             q0 = self.center_point(beta)
             t0, _ = translation_angle_from_SE2(q0)
             d = np.linalg.norm(p - t0)
+            return d**2
 
-            d1 = np.array([0, -d])
-            p1 = SE2_apply_T2(q0, d1)
-
-            d2 = np.array([0, +d])
-            p2 = SE2_apply_T2(q0, d2)
-
-            D2 = np.linalg.norm(p2 - p)
-            D1 = np.linalg.norm(p1 - p)
-            res = np.maximum(D1, D2)
-            return res
-
-        bracket = (-1.0, len(self.control_points))
+        bracket = (-1, len(self.control_points))
         res0 = minimize_scalar(get_delta, bracket=bracket, tol=tol)
         beta0 = res0.x
         q = self.center_point(beta0)
+        return beta0, q
+
+    def find_along_lane_closest_point_fast(self, p: T2value, tol: float = 1e-5) -> tuple[float, SE2value]:
+        def get_delta(beta):
+            q0 = self.center_point_fast_SE2Transform(beta).as_SE2()
+            t0, _ = translation_angle_from_SE2(q0)
+            d = np.linalg.norm(p - t0)
+            return d**2
+
+        bracket = (0, len(self.control_points) - 1)
+        res0 = minimize_scalar(get_delta, bracket=bracket, tol=tol)
+        beta0 = res0.x
+        q = self.center_point_fast_SE2Transform(beta0).as_SE2()
         return beta0, q
 
     def lane_pose(self, along_lane: float, relative_heading: float, lateral: float) -> DgLanePose:
@@ -262,7 +265,6 @@ class DgLanelet:
             q0 = self.control_points[0].q.as_SE2()
             q1 = SE2.multiply(q0, SE2_from_translation_angle([0.1, 0], 0))
             alpha = beta
-
         elif i >= n - 1:
             q0 = self.control_points[-1].q.as_SE2()
             q1 = SE2.multiply(q0, SE2_from_translation_angle([0.1, 0], 0))
@@ -279,30 +281,39 @@ class DgLanelet:
         n = len(self.control_points)
         i = int(np.floor(beta))
         if i < 0:
-            return self.control_points[0].q
+            q0 = self.control_points[0].q
+            q1_tmp = SE2.multiply(q0.as_SE2(), SE2_from_translation_angle([0.1, 0], 0))
+            q1 = SE2Transform.from_SE2(q1_tmp)
+            alpha = beta
         elif i >= n - 1:
-            return self.control_points[-1].q
+            q0 = self.control_points[-1].q
+            q1_tmp = SE2.multiply(q0.as_SE2(), SE2_from_translation_angle([0.1, 0], 0))
+            q1 = SE2Transform.from_SE2(q1_tmp)
+            alpha = beta - (n - 1)
         else:
+            q0 = self.control_points[i].q
+            q1 = self.control_points[i + 1].q
             alpha = beta - i
-            c0 = self.control_points[i]
-            c1 = self.control_points[i + 1]
-            p = c0.q.p * (1 - alpha) + c1.q.p * alpha
-            theta = c0.q.theta * (1 - alpha) + c1.q.theta * alpha
-            return SE2Transform(p, theta)
+        p = q0.p * (1 - alpha) + q1.p * alpha
+        theta = q0.theta * (1 - alpha) + q1.theta * alpha
+        return SE2Transform(p, theta)
 
-    def is_inside_from_T2value(self, position: T2value) -> bool:
-        beta, _ = self.find_along_lane_closest_point(position)
+    def is_inside_from_T2value(self, position: T2value, tol: float = 1e-3) -> bool:
+        beta, _ = self.find_along_lane_closest_point(position, tol=tol)
         r = self.radius(beta)
         center = self.center_point_fast_SE2Transform(beta).p
         lateral = np.linalg.norm(center - position)
         return lateral <= r and 0 <= beta <= len(self.control_points) - 1
 
-    def along_lane_from_T2value(self, position: T2value) -> float:
-        beta, _ = self.find_along_lane_closest_point(position)
+    def along_lane_from_T2value(self, position: T2value, tol: float = 1e-3, fast: bool = False) -> float:
+        if fast:
+            beta, _ = self.find_along_lane_closest_point_fast(position, tol=tol)
+        else:
+            beta, _ = self.find_along_lane_closest_point(position, tol=tol)
         return self.along_lane_from_beta(beta)
 
     @cached(LRUCache(maxsize=128))
-    def lane_profile(self, points_per_segment: int = 5) -> List[T2value]:
+    def lane_profile(self, points_per_segment: int = 5) -> list[T2value]:
         """Lane bounds - left and right along the lane"""
         points_left = []
         points_right = []

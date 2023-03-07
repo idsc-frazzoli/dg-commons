@@ -4,13 +4,13 @@ from dataclasses import dataclass, field, replace
 from decimal import Decimal
 from itertools import combinations
 from time import perf_counter
-from typing import Dict, List, Mapping, MutableMapping, Optional
+from typing import Mapping, MutableMapping, Optional
 
 from dg_commons import PlayerName, U, fd
-from dg_commons.sim.goals import PlanningGoal
 from dg_commons.sim import CollisionReport, SimTime, logger
 from dg_commons.sim.agents.agent import Agent, TAgent
 from dg_commons.sim.collision_utils import CollisionException
+from dg_commons.sim.goals import PlanningGoal, TPlanningGoal
 from dg_commons.sim.models.obstacles_dyn import DynObstacleModel
 from dg_commons.sim.scenarios.structures import DgScenario
 from dg_commons.sim.sim_perception import IdObsFilter, ObsFilter
@@ -34,7 +34,7 @@ class SimContext:
     """The players in the simulation (Agents mapping observations to commands)"""
     param: SimParameters
     """The simulation parameters"""
-    missions: Mapping[PlayerName, PlanningGoal] = field(default_factory=dict)
+    missions: Mapping[PlayerName, TPlanningGoal] = field(default_factory=dict)
     """The ultimate goal of each player, it can be specified only for a subset of the players"""
     sensors: Mapping[PlayerName, ObsFilter] = field(default_factory=lambda: defaultdict(lambda: IdObsFilter()))
     """The sensors for each player, if not specified the default is the identity filter returning full observations"""
@@ -46,7 +46,7 @@ class SimContext:
     "The seed for reproducible randomness"
     sim_terminated: bool = False
     "Whether the simulation has terminated"
-    collision_reports: List[CollisionReport] = field(default_factory=list)
+    collision_reports: list[CollisionReport] = field(default_factory=list)
     "The log of collision reports"
     first_collision_ts: SimTime = SimTime("Infinity")
     "The first collision time"
@@ -76,12 +76,12 @@ class Simulator:
     # fixme check if this is okay once you have multiple simulators running together
     last_observations: SimObservations = SimObservations(players=fd({}), time=Decimal(0))
     last_get_commands_ts: SimTime = SimTime("-Infinity")
-    last_commands: Dict[PlayerName, U] = {}
-    simlogger: Dict[PlayerName, PlayerLogger] = {}
+    last_commands: dict[PlayerName, U] = {}
+    simlogger: dict[PlayerName, PlayerLogger] = {}
 
     @time_function
     def run(self, sim_context: SimContext):
-        logger.info("Beginning simulation.")
+        logger.info("~~~~~> Beginning simulation")
         # initialize the simulation
         for player_name, player in sim_context.players.items():
             scenario = deepcopy(sim_context.dg_scenario)
@@ -90,6 +90,8 @@ class Simulator:
                 seed=sim_context.seed,
                 dg_scenario=scenario,
                 goal=deepcopy(sim_context.missions.get(player_name)),
+                model_geometry=sim_context.models[player_name].model_geometry,
+                model_params=sim_context.models[player_name].model_params,
             )
             player.on_episode_init(init_obs)
             self.simlogger[player_name] = PlayerLogger()
@@ -98,35 +100,35 @@ class Simulator:
             self.pre_update(sim_context)
             self.update(sim_context)
             self.post_update(sim_context)
-        logger.info("Completed simulation. Writing logs...")
+        logger.info("<~~~~~ Completed simulation")
         for player_name in sim_context.models:
             sim_context.log[player_name] = self.simlogger[player_name].as_sequence()
-        logger.info("Writing logs terminated.")
+        logger.debug("Writing logs terminated.")
 
     def pre_update(self, sim_context: SimContext):
         """Prior to stepping the simulation we compute the observations for each agent"""
-        players_observations: Dict[PlayerName, PlayerObservations] = {}
-        for player_name, model in sim_context.models.items():
-            # todo not always necessary to update observations
-            player_obs = PlayerObservations(state=model.get_state(), occupancy=model.get_footprint())
-            players_observations.update({player_name: player_obs})
-        self.last_observations = replace(
-            self.last_observations, players=fd(players_observations), time=sim_context.time
-        )
+        # we update the observations only when we will need to use them
+        if self._need_to_update_commands(sim_context):
+            players_observations: dict[PlayerName, PlayerObservations] = {}
+            for player_name, model in sim_context.models.items():
+                player_obs = PlayerObservations(state=model.get_state(), occupancy=model.get_footprint())
+                players_observations.update({player_name: player_obs})
+            self.last_observations = replace(
+                self.last_observations, players=fd(players_observations), time=sim_context.time
+            )
 
-        logger.debug(f"Pre update function, sim time {sim_context.time}")
-        logger.debug(f"Last observations:\n{self.last_observations}")
+            logger.debug(f"Pre update function, sim time {sim_context.time}")
+            logger.debug(f"Last observations:\n{self.last_observations}")
         return
 
     def update(self, sim_context: SimContext):
         """The real step of the simulation"""
         # fixme this can be parallelized later with ProcessPoolExecutor?
         t = sim_context.time
-        update_commands: bool = (t - self.last_get_commands_ts) >= sim_context.param.dt_commands
         for player_name, agent in sim_context.players.items():
             state = sim_context.models[player_name].get_state()
             self.simlogger[player_name].states.add(t=t, v=state)
-            if update_commands:
+            if self._need_to_update_commands(sim_context):
                 p_observations = sim_context.sensors[player_name].sense(
                     sim_context.dg_scenario, self.last_observations, player_name
                 )
@@ -144,7 +146,7 @@ class Simulator:
             model.update(cmds, dt=sim_context.param.dt)
             logger.debug(f"Update function, sim time {sim_context.time:.2f}, player: {player_name}")
             logger.debug(f"New state {model.get_state()} reached applying {cmds}")
-        if update_commands:
+        if self._need_to_update_commands(sim_context):
             self.last_get_commands_ts = t
         return
 
@@ -169,13 +171,8 @@ class Simulator:
         The simulation is considered terminated if:
         - the maximum time has expired
         - the minimum time after the first collision has expired
-        - all missions have been fulfilled
+        - all missions have been fulfilled (i.e. there are no players left)
         """
-        # missions_completed: bool = (
-        #     all(m.is_fulfilled(sim_context.models[p].get_state()) for p, m in sim_context.missions.items())
-        #     if sim_context.missions
-        #     else False
-        # )
         termination_condition: bool = (
             sim_context.time > sim_context.param.max_sim_time
             or sim_context.time > sim_context.first_collision_ts + sim_context.param.sim_time_after_collision
@@ -192,7 +189,8 @@ class Simulator:
 
         env_obstacles = sim_context.dg_scenario.strtree_obstacles
         collision = False
-        for p, p_model in sim_context.models.items():
+        for p in sim_context.players:
+            p_model = sim_context.models[p]
             p_shape = p_model.get_footprint()
             items = env_obstacles.query_items(p_shape)
             for idx in items:
@@ -225,7 +223,7 @@ class Simulator:
         )
 
         collision = False
-        for p1, p2 in combinations(sim_context.models, 2):
+        for p1, p2 in combinations(sim_context.players, 2):
             a_shape = sim_context.models[p1].get_footprint()
             b_shape = sim_context.models[p2].get_footprint()
             if a_shape.intersects(b_shape):
@@ -252,3 +250,7 @@ class Simulator:
                     t = sim_context.time
                     self.simlogger[p].states.add(t=t, v=p_state)
                     sim_context.players.pop(p)
+
+    def _need_to_update_commands(self, sim_context: SimContext) -> bool:
+        """Checks if we need to update the commands of the players"""
+        return (sim_context.time - self.last_get_commands_ts) >= sim_context.param.dt_commands

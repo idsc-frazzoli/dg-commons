@@ -4,14 +4,14 @@ from decimal import Decimal
 from typing import Type, Mapping, TypeVar
 
 import numpy as np
-from dg_commons import apply_SE2_to_shapely_geo, PoseState
 from frozendict import frozendict
 from geometry import SE2value, SE2_from_xytheta, SO2_from_angle, SO2value, T2value
 from scipy.integrate import solve_ivp
 from shapely.geometry import Polygon
 
+from dg_commons import apply_SE2_to_shapely_geo, PoseState
 from dg_commons.sim import logger, ImpactLocation, IMPACT_RIGHT, IMPACT_LEFT, IMPACT_BACK, IMPACT_FRONT
-from dg_commons.sim.models import ModelType, CAR, ModelParameters
+from dg_commons.sim.models import ModelType, CAR
 from dg_commons.sim.models.model_utils import apply_full_acceleration_limits
 from dg_commons.sim.models.vehicle_ligths import LightsCmd, NO_LIGHTS
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
@@ -263,7 +263,7 @@ class VehicleModel(SimModel[TVehicleState, VehicleCommands]):
         return self.vg.vehicle_type
 
     @property
-    def model_params(self) -> ModelParameters:
+    def model_params(self) -> VehicleParameters:
         return self.vp
 
     def get_extra_collision_friction_acc(self):

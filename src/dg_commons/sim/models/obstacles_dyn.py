@@ -1,6 +1,6 @@
 from dataclasses import replace, dataclass
 from math import cos, sin
-from typing import Tuple, Mapping, Type
+from typing import Mapping, Type
 
 import numpy as np
 from frozendict import frozendict
@@ -9,12 +9,12 @@ from scipy.integrate import solve_ivp
 from shapely.geometry import Polygon
 
 from dg_commons import U, apply_SE2_to_shapely_geo
-from dg_commons.sim.sim_types import ImpactLocation, SimTime
-from dg_commons.sim.simulator_structures import SimModel
 from dg_commons.sim.collision_structures import IMPACT_EVERYWHERE
-from dg_commons.sim.models import ModelType, DYNAMIC_OBSTACLE, ModelGeometry, ModelParameters
+from dg_commons.sim.models import ModelType, DYNAMIC_OBSTACLE, ModelParameters
 from dg_commons.sim.models.model_utils import apply_full_acceleration_limits, apply_rot_speed_constraint
 from dg_commons.sim.models.obstacles import ObstacleGeometry, DynObstacleParameters
+from dg_commons.sim.sim_types import ImpactLocation, SimTime
+from dg_commons.sim.simulator_structures import SimModel
 
 
 @dataclass(unsafe_hash=True, eq=True, order=True)
@@ -242,5 +242,5 @@ class DynObstacleModel(SimModel[DynObstacleState, DynObstacleCommands]):
     def model_params(self) -> ModelParameters:
         return self.op
 
-    def get_extra_collision_friction_acc(self) -> Tuple[float, float, float]:
+    def get_extra_collision_friction_acc(self) -> tuple[float, float, float]:
         raise NotImplementedError()

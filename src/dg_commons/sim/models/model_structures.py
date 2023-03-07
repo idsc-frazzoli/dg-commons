@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from math import inf
-from typing import Tuple, Sequence, NewType
+from typing import Sequence, NewType, TypeVar
 
 from dg_commons import Color
 
@@ -16,6 +16,8 @@ __all__ = [
     "DYNAMIC_OBSTACLE",
     "ModelGeometry",
     "ModelParameters",
+    "TModelGeometry",
+    "TModelParameters",
     "TwoWheelsTypes",
     "FourWheelsTypes",
 ]
@@ -46,13 +48,17 @@ class ModelGeometry(ABC):
 
     @property
     @abstractmethod
-    def outline(self) -> Sequence[Tuple[float, float]]:
+    def outline(self) -> Sequence[tuple[float, float]]:
         pass
+
+
+# from 3.11 can switch to Self
+TModelGeometry = TypeVar("TModelGeometry", bound=ModelGeometry)
 
 
 @dataclass(frozen=True, unsafe_hash=True)
 class StaticModelGeometry(ModelGeometry):
-    def outline(self) -> Sequence[Tuple[float, float]]:
+    def outline(self) -> Sequence[tuple[float, float]]:
         raise NotImplementedError("Outline method for static model geometry is not implemented")
 
     @staticmethod
@@ -62,11 +68,15 @@ class StaticModelGeometry(ModelGeometry):
 
 @dataclass(frozen=True, unsafe_hash=True)
 class ModelParameters:
-    vx_limits: Tuple[float, float]
+    vx_limits: tuple[float, float]
     """ Minimum and Maximum velocities [m/s] """
-    acc_limits: Tuple[float, float]
+    acc_limits: tuple[float, float]
     """ Minimum and Maximum acceleration [m/s^2] """
 
     def __post_init__(self):
         assert self.vx_limits[0] < self.vx_limits[1]
         assert self.acc_limits[0] < self.acc_limits[1]
+
+
+# from 3.11 can switch to Self
+TModelParameters = TypeVar("TModelParameters", bound=ModelParameters)

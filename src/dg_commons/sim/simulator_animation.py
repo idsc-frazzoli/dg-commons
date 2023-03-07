@@ -1,16 +1,17 @@
 import math
 from itertools import chain
-from typing import Mapping, List, Union, Optional, Sequence, Iterable
+from typing import Mapping, Union, Optional, Sequence, Iterable
 
+import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.artist import Artist
 from matplotlib.axes import Axes
 from toolz.sandbox import unzip
+from tqdm import tqdm
 from zuper_commons.types import ZValueError
 
-from dg_commons import PlayerName, X
-from dg_commons import Timestamp
+from dg_commons import PlayerName, X, Timestamp
 from dg_commons.sim import logger
 from dg_commons.sim.models.vehicle import VehicleCommands
 from dg_commons.sim.models.vehicle_ligths import (
@@ -24,26 +25,24 @@ from dg_commons.sim.models.vehicle_ligths import (
 from dg_commons.sim.simulator import SimContext
 from dg_commons.sim.simulator_structures import LogEntry
 from dg_commons.sim.simulator_visualisation import SimRenderer, approximate_bounding_box_players, ZOrders
-from dg_commons.time import time_function
 
 
-@time_function
 def create_animation(
     file_path: str,
     sim_context: SimContext,
     figsize: Optional[Union[list, tuple]] = None,
     dt: float = 30,
     dpi: int = 120,
-    plot_limits: Optional[Union[str, Sequence[Sequence[float]]]] = "auto",
+    plot_limits: Union[str, Sequence[Sequence[float]], PlayerName] = "auto",
 ) -> None:
     """
     Creates an animation of the simulation.
-    :param plot_limits:
     :param sim_context:
     :param file_path: filename of generated video (ends on .mp4/.gif/.avi, default mp4, when nothing is specified)
     :param figsize: size of the video
     :param dt: time step between frames in ms
     :param dpi: resolution of the video
+    :param plot_limits: "auto"/"" ,hardcoded limits, or player name to focus on
     :return: None
     """
     logger.info("Creating animation...")
@@ -65,7 +64,7 @@ def create_animation(
     plot_ligths: bool = True
 
     # self.f.set_size_inches(*fig_size)
-    def _get_list() -> List[Artist]:
+    def _get_list() -> list[Artist]:
         # fixme this is supposed to be an iterable of artists
         return (
             list(chain.from_iterable(states.values()))
@@ -98,7 +97,7 @@ def create_animation(
                             ax=ax, player_name=pname, trajectories=list(trajectories), colors=list(tcolors)
                         )
                     except:
-                        logger.warn("Cannot plot extra", extra=type(plog.extra))
+                        logger.debug("Cannot plot extra", extra=type(plog.extra))
             adjust_axes_limits(
                 ax=ax,
                 plot_limits=plot_limits,
@@ -116,7 +115,6 @@ def create_animation(
 
     def update_plot(frame: int = 0) -> Iterable[Artist]:
         t: float = frame * dt / 1000.0
-        logger.info(f"Plotting t = {t}\r")
         log_at_t: Mapping[PlayerName, LogEntry] = sim_context.log.at_interp(t)
         for pname, box_handle in states.items():
             lights_colors: LightsColors = get_lights_colors_from_cmds(log_at_t[pname].commands, t=t)
@@ -142,7 +140,7 @@ def create_animation(
                         colors=list(tcolors),
                     )
                 except:
-                    logger.warn("Cannot plot extra", extra=type(log_at_t[pname].extra))
+                    pass
         adjust_axes_limits(
             ax=ax, plot_limits=plot_limits, players_states={p: log_entry.state for p, log_entry in log_at_t.items()}
         )
@@ -161,14 +159,15 @@ def create_animation(
         file_path += ".mp4"
     fps = int(math.ceil(1000.0 / dt))
     interval_seconds = dt / 1000.0
-    anim.save(
-        file_path,
-        dpi=dpi,
-        writer="ffmpeg",
-        fps=fps,
-        # extra_args=["-g", "1", "-keyint_min", str(interval_seconds)]
-    )
-    logger.info("Animation saved...")
+    with tqdm(total=frame_count, unit="frame") as t:
+        anim.save(
+            file_path,
+            dpi=dpi,
+            writer="ffmpeg",
+            fps=fps,
+            progress_callback=lambda *_: t.update(1),
+            # extra_args=["-g", "1", "-keyint_min", str(interval_seconds)]
+        )
     ax.clear()
 
 
@@ -177,13 +176,10 @@ def adjust_axes_limits(
     plot_limits: Union[str, PlayerName, Sequence[Sequence[float]]],
     players_states: Optional[Mapping[PlayerName, X]] = None,
 ):
-    if plot_limits is None:
-        ax.autoscale()
-    elif plot_limits == "auto":
-        if plot_limits is None:
+    if plot_limits == "auto":
+        if not players_states:
             raise ZValueError('Plotting with "auto" option requires players positions')
         players_limits = approximate_bounding_box_players(obj_list=list(players_states.values()))
-        # todo instead of artificially add +5 -5, make bounding box around trajectories + vehicle
         if players_limits is not None:
             ax.axis(
                 xmin=players_limits[0][0] - 5.0,
@@ -194,17 +190,26 @@ def adjust_axes_limits(
         else:
             ax.autoscale()
     elif isinstance(plot_limits, str):
+        # str instead of "PlayerName" since https://github.com/python/mypy/issues/3325
         try:
             state = players_states[plot_limits]
-            slack = 30
-            ax.axis(xmin=state.x - slack, xmax=state.x + slack, ymin=state.y - slack, ymax=state.y + slack)
+            slack = 35
+            v_scaling = 1.5
+            # we shift the center of the image forward according to the velocity vector of the player
+            velocity_v = v_scaling * np.array([state.vx * np.cos(state.psi), state.vx * np.sin(state.psi)])
+            buffer = slack / 3
+            velocity_v = np.clip(velocity_v, -slack + buffer, slack - buffer)
+            x_c, y_c = state.x + velocity_v[0], state.y + velocity_v[1]
+            ax.axis(xmin=x_c - slack, xmax=x_c + slack, ymin=y_c - slack, ymax=y_c + slack)
         except AssertionError:
             ax.autoscale()
 
-    else:
+    elif isinstance(plot_limits, Sequence):
         # plotlimits are expected to be seq of seq of floats
         ax.set_xlim(plot_limits[0][0], plot_limits[0][1])
         ax.set_ylim(plot_limits[1][0], plot_limits[1][1])
+    else:
+        raise ZValueError(f"Plot limits {plot_limits} not recognized")
     return
 
 

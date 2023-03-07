@@ -1,17 +1,18 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Generic, Any, Dict, Mapping, Tuple, Optional
+from typing import Generic, Any, Mapping, Optional
 
 from geometry import SE2value, T2value
 from shapely.geometry import Polygon
 from zuper_commons.types import ZValueError
 
 from dg_commons import DgSampledSequence, PlayerName, X, U
-from dg_commons.sim.goals import PlanningGoal
 from dg_commons.seq.sequence import DgSampledSequenceBuilder, Timestamp, UndefinedAtTime
-from dg_commons.sim import SimTime, ImpactLocation, logger
-from dg_commons.sim.models.model_structures import ModelGeometry, ModelType, ModelParameters
+from dg_commons.sim import SimTime, ImpactLocation
+from dg_commons.sim.goals import TPlanningGoal
+from dg_commons.sim.models.model_structures import ModelType, TModelGeometry, TModelParameters
+from dg_commons.sim.scenarios import DgScenario
 
 __all__ = [
     "SimObservations",
@@ -24,8 +25,6 @@ __all__ = [
     "PlayerLogger",
     "PlayerObservations",
 ]
-
-from dg_commons.sim.scenarios import DgScenario
 
 
 @dataclass(frozen=True)
@@ -40,7 +39,7 @@ class SimParameters:
     """The simulation time for which to continue after the first collision is detected [s]"""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, unsafe_hash=True)
 class PlayerObservations:
     state: X
     occupancy: Optional[Polygon]
@@ -61,7 +60,9 @@ class InitSimObservations:
     my_name: PlayerName
     seed: int
     dg_scenario: Optional[DgScenario] = None
-    goal: Optional[PlanningGoal] = None
+    goal: Optional[TPlanningGoal] = None
+    model_geometry: Optional[TModelGeometry] = None
+    model_params: Optional[TModelParameters] = None
 
 
 @dataclass(frozen=True)
@@ -122,7 +123,7 @@ class PlayerLogger(Generic[X, U]):
         )
 
 
-class SimLog(Dict[PlayerName, PlayerLog]):
+class SimLog(dict[PlayerName, PlayerLog]):
     """The logger for a simulation. For each player it records sampled sequences of states, commands and extra
     arguments than an agent might want to log."""
 
@@ -132,7 +133,7 @@ class SimLog(Dict[PlayerName, PlayerLog]):
         super(SimLog, self).__setitem__(key, value)
 
     def at_interp(self, t: Timestamp) -> Mapping[PlayerName, LogEntry]:
-        interpolated_entry: Dict[PlayerName, LogEntry] = {}
+        interpolated_entry: dict[PlayerName, LogEntry] = {}
         for player in self:
             interpolated_entry[player] = self[player].at_interp(t)
         return interpolated_entry
@@ -188,7 +189,7 @@ class SimModel(ABC, Generic[X, U]):
 
     @property
     @abstractmethod
-    def model_geometry(self) -> ModelGeometry:
+    def model_geometry(self) -> TModelGeometry:
         pass
 
     @property
@@ -198,18 +199,18 @@ class SimModel(ABC, Generic[X, U]):
 
     @property
     @abstractmethod
-    def model_params(self) -> ModelParameters:
+    def model_params(self) -> TModelParameters:
         pass
 
     def get_state(self) -> X:
         return deepcopy(self._state)
 
     def set_state(self, new_state: X):
-        logger.warn("Setting a new state to simulation model, this is a dangerous operation")
+        # logger.warn("Setting a new state to simulation model, this is a dangerous operation")
         self._state = new_state
 
     @abstractmethod
     def get_extra_collision_friction_acc(
         self,
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         pass
