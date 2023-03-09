@@ -59,7 +59,7 @@ def get_simple_scenario() -> SimContext:
     poly1 = Polygon([[0, 0], [3, 0], [3, 3], [0, 3], [0, 0]])
     poly2 = apply_SE2_to_shapely_geo(poly1, SE2_from_xytheta((7, 15, deg2rad(30))))
 
-    static_obstacles = {0: StaticObstacle(boundaries), 1: StaticObstacle(poly1), 2: StaticObstacle(poly2)}
+    static_obstacles = [StaticObstacle(boundaries), StaticObstacle(poly1), StaticObstacle(poly2)]
     players = {Ego: NPAgent(moving_vehicle), DObs1: NPAgent(dyn_obstacle_commands)}
 
     return SimContext(
