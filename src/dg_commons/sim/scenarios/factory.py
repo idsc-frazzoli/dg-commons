@@ -37,7 +37,7 @@ def get_scenario_commonroad_replica(
     """
     scenario, planning_problem_set = load_commonroad_scenario(scenario_name, scenarios_dir)
     players, models = {}, {}
-    static_obstacles: dict[int, StaticObstacle] = {}
+    static_obstacles: list[StaticObstacle] = []
 
     for i, dyn_obs in enumerate(scenario.dynamic_obstacles):
         assert isinstance(dyn_obs.prediction, TrajectoryPrediction), "Only trajectory predictions are supported"
@@ -47,14 +47,7 @@ def get_scenario_commonroad_replica(
                 shapely_geometry=dyn_obs.obstacle_shape.shapely_object,
                 se2_value=SE2_from_xytheta([*dyn_obs.initial_state.position, dyn_obs.initial_state.orientation]),
             )
-            static_obstacles.update(
-                {
-                    dyn_obs.obstacle_id: StaticObstacle(
-                        obstacle_type=dyn_obs.obstacle_type,
-                        shape=shape,
-                    )
-                }
-            )
+            static_obstacles.append(StaticObstacle(obstacle_type=dyn_obs.obstacle_type, shape=shape))
         # if not we convert it to be a standard agent
         else:
             try:
@@ -74,15 +67,12 @@ def get_scenario_commonroad_replica(
                 logger.warn("Unable to convert CommonRoad dynamic obstacle due to " + e.args[0] + " skipping...")
     logger.info(f"Managed to load {len(players)}")
     for sobs in scenario.static_obstacles:
-        static_obstacles.update(
-            {
-                sobs.obstacle_id: StaticObstacle(
-                    obstacle_type=sobs.obstacle_type,
-                    shape=sobs.obstacle_shape.shapely_object,
-                )
-            }
+        static_obstacles.append(
+            StaticObstacle(
+                obstacle_type=sobs.obstacle_type,
+                shape=sobs.obstacle_shape.shapely_object,
+            )
         )
-
     sim_param = SimParameters() if sim_param is None else sim_param
     return SimContext(
         dg_scenario=DgScenario(scenario, static_obstacles=static_obstacles),
