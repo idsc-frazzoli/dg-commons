@@ -50,13 +50,12 @@ def test_road_bounds_dgscenario():
     for do in scenario.dynamic_obstacles:
         do.draw(rnd)
         do_shapely = do.occupancy_at_time(0).shape.shapely_object
-        extents_collisions = dgscenario.strtree_obstacles.query(do_shapely)
-        # todo: check if this is correct
-        for col_obj in extents_collisions:
-            if col_obj.intersects(do_shapely):
-                col_obj_peri = col_obj.exterior if isinstance(col_obj, Polygon) else col_obj
-                rnd.ax.plot(col_obj_peri.xy[0], col_obj_peri.xy[1], color="purple", zorder=100)
-                rnd.ax.plot(do_shapely.exterior.xy[0], do_shapely.exterior.xy[1], color="purple", zorder=100)
+        coll_indexes = dgscenario.strtree_obstacles.query(do_shapely, predicate="intersects")
+        for idx in coll_indexes:
+            col_obj = dgscenario.static_obstacles[idx].shape
+            col_obj_peri = col_obj.exterior if isinstance(col_obj, Polygon) else col_obj
+            rnd.ax.plot(col_obj_peri.xy[0], col_obj_peri.xy[1], color="purple", zorder=100)
+            rnd.ax.plot(do_shapely.exterior.xy[0], do_shapely.exterior.xy[1], color="purple", zorder=100)
 
     for so in polys:
         shapely_obj = so.shape

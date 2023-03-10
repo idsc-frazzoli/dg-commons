@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Sequence
 
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.scenario import Scenario
@@ -18,7 +18,7 @@ class DgScenario:
 
     scenario: Optional[Scenario] = None
     """A CommonRoad scenario"""
-    static_obstacles: Iterable[StaticObstacle] = None
+    static_obstacles: Sequence[StaticObstacle] = None
     """Static obstacles of the scenario and/or extra additional ones"""
     use_road_boundaries: bool = False
     """If True the external boundaries of the road are forced to be obstacles """
