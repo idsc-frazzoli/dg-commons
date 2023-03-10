@@ -3,7 +3,7 @@ from decimal import Decimal
 from numpy.testing import assert_raises
 
 from dg_commons import DgSampledSequence, seq_accumulate
-from dg_commons.seq.seq_op import seq_differentiate, seq_integrate
+from dg_commons.seq.seq_op import seq_differentiate, seq_integrate, find_crossings
 
 ts = (1, 2, 3, 4, 5)
 tsD = [Decimal(t) for t in ts]
@@ -41,3 +41,23 @@ def test_illegal_assign():
         seq.timestamps = [1, -3, 4.5]
 
     assert_raises(RuntimeError, _try_assign)
+
+
+def test_find_crossings():
+    seq = DgSampledSequence[float]([1, 2, 3, 4, 5], [1, 2, 3, 4, 5])
+    values = find_crossings(seq, 3.5)
+    assert values == [3.5]
+    #
+    seq = DgSampledSequence[float]([1, 2, 3, 4, 5], [-1, -2, -3, -4, -5])
+    values = find_crossings(seq, -3.5)
+    assert values == [3.5]
+    #
+    values = find_crossings(seq, 2)
+    assert values == []
+    #
+    seq = DgSampledSequence[float]([1, 2, 3, 4, 5], [1, 0, 0, 1, 2])
+    values = find_crossings(seq, 0)
+    assert values == []
+    #
+    values = find_crossings(seq, 0.5)
+    assert values == [1.5, 3.5]
