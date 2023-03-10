@@ -4,7 +4,7 @@ from dataclasses import dataclass, field, replace
 from decimal import Decimal
 from itertools import combinations
 from time import perf_counter
-from typing import Mapping, MutableMapping, Optional
+from typing import Mapping, MutableMapping, Optional, Any
 
 from dg_commons import PlayerName, U, fd
 from dg_commons.sim import CollisionReport, SimTime, logger
@@ -192,23 +192,22 @@ class Simulator:
         for p in sim_context.players:
             p_model = sim_context.models[p]
             p_shape = p_model.get_footprint()
-            items = env_obstacles.query_items(p_shape)
+            items = env_obstacles.query(p_shape, predicate="intersects")
             for idx in items:
-                candidate = sim_context.dg_scenario.static_obstacles[idx]
-                if p_shape.intersects(candidate.shape):
-                    try:
-                        report: Optional[CollisionReport] = resolve_collision_with_environment(
-                            p, p_model, candidate, sim_context.time
-                        )
-                    except CollisionException as e:
-                        logger.warn(f"Failed to resolve collision of {p} with environment because:\n{e.args}")
-                        report = None
-                    if report is not None and not isinstance(p_model, DynObstacleModel):
-                        logger.info(f"Player {p} collided with the environment")
-                        collision = True
-                        sim_context.collision_reports.append(report)
-                        if sim_context.time < sim_context.first_collision_ts:
-                            sim_context.first_collision_ts = sim_context.time
+                sobstacle = sim_context.dg_scenario.static_obstacles[idx]
+                try:
+                    report: Optional[CollisionReport] = resolve_collision_with_environment(
+                        p, p_model, sobstacle, sim_context.time
+                    )
+                except CollisionException as e:
+                    logger.warn(f"Failed to resolve collision of {p} with environment because:\n{e.args}")
+                    report = None
+                if report is not None and not isinstance(p_model, DynObstacleModel):
+                    logger.info(f"Player {p} collided with the environment")
+                    collision = True
+                    sim_context.collision_reports.append(report)
+                    if sim_context.time < sim_context.first_collision_ts:
+                        sim_context.first_collision_ts = sim_context.time
         return collision
 
     @staticmethod

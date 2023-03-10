@@ -77,7 +77,7 @@ class SimRenderer(SimRendererABC):
             self.draw_params.lanelet_network.traffic_light.draw_traffic_lights = True
             self.sim_context.dg_scenario.lanelet_network.draw(self.commonroad_renderer, draw_params=self.draw_params)
             self.commonroad_renderer.render()
-        for s_obstacle in self.sim_context.dg_scenario.static_obstacles.values():
+        for s_obstacle in self.sim_context.dg_scenario.static_obstacles:
             self.shapely_viz.add_shape(s_obstacle.shape, color=s_obstacle.geometry.color, zorder=ZOrders.ENV_OBSTACLE)
         for p, goal in self.sim_context.missions.items():
             goal_color = self.sim_context.models[p].model_geometry.color

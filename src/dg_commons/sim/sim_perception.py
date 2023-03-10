@@ -54,7 +54,7 @@ class FovObsFilter(ObsFilter):
         self.sensor.pose = SE2Transform.from_SE2(extract_pose_from_state(full_obs.players[pov].state))
         # then filter
         if not self._static_obstacles:
-            self._static_obstacles = [sPolygon2crPolygon(o.shape) for o in scenario.static_obstacles.values()]
+            self._static_obstacles = [sPolygon2crPolygon(o.shape) for o in scenario.static_obstacles]
 
         self._tmp_debug += 1
         dynamic_obstacles = [sPolygon2crPolygon(p_obs.occupancy) for p, p_obs in full_obs.players.items() if p != pov]
