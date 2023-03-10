@@ -6,6 +6,7 @@ from shapely.geometry import Point, Polygon
 from dg_commons import SE2Transform, sPolygon2crPolygon
 from dg_commons.maps.shapely_viz import ShapelyViz
 from dg_commons.perception.sensor import VisRangeSensor
+from dg_commons_tests import OUT_TESTS_DIR
 
 
 def test_visibility_filter():
@@ -34,9 +35,4 @@ def test_visibility_filter():
 
     plt.plot(pov_x, pov_y, "r+")
     plt.gca().set_aspect("equal")
-    plt.plot()
-    plt.show()
-
-
-if __name__ == "__main__":
-    test_visibility_filter()
+    plt.savefig(OUT_TESTS_DIR + "/visibility_filter.png")
