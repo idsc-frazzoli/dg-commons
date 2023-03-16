@@ -4,7 +4,7 @@ from typing import FrozenSet
 from dg_commons import PlayerName
 from dg_commons.sim.simulator import SimContext, Simulator
 
-__all__ = ["run_simulation"]
+__all__ = ["run_simulation", "who_collided"]
 
 
 def run_simulation(sim_context: SimContext) -> SimContext:
