@@ -167,7 +167,8 @@ class Simulator:
         _ = self._check_collisions_among_players(sim_context)
         return
 
-    def _maybe_terminate_simulation(self, sim_context: SimContext):
+    @staticmethod
+    def _maybe_terminate_simulation(sim_context: SimContext):
         """Evaluates if the simulation needs to terminate based on the expiration of times.
         The simulation is considered terminated if:
         - the maximum time has expired
