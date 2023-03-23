@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from math import atan2, isclose, pi
-from typing import Sequence
+from typing import Sequence, Optional
 
 import numpy as np
 from cachetools import LRUCache, cached
@@ -140,27 +140,31 @@ class DgLanelet:
 
         return self.lane_pose(along_lane=along_lane, relative_heading=relative_heading, lateral=lateral)
 
-    def find_along_lane_closest_point(self, p: T2value, tol: float = 1e-5) -> tuple[float, SE2value]:
+    def find_along_lane_closest_point(
+        self, p: T2value, tol: float = 1e-5, bracket: Optional[Sequence[float]] = None
+    ) -> tuple[float, SE2value]:
         def get_delta(beta):
             q0 = self.center_point(beta)
             t0, _ = translation_angle_from_SE2(q0)
             d = np.linalg.norm(p - t0)
             return d**2
 
-        bracket = (-1, len(self.control_points))
+        bracket = (-1, len(self.control_points)) if bracket is None else bracket
         res0 = minimize_scalar(get_delta, bracket=bracket, tol=tol)
         beta0 = res0.x
         q = self.center_point(beta0)
         return beta0, q
 
-    def find_along_lane_closest_point_fast(self, p: T2value, tol: float = 1e-5) -> tuple[float, SE2value]:
+    def find_along_lane_closest_point_fast(
+        self, p: T2value, tol: float = 1e-5, bracket: Optional[Sequence[float]] = None
+    ) -> tuple[float, SE2value]:
         def get_delta(beta):
             q0 = self.center_point_fast_SE2Transform(beta).as_SE2()
             t0, _ = translation_angle_from_SE2(q0)
             d = np.linalg.norm(p - t0)
             return d**2
 
-        bracket = (0, len(self.control_points) - 1)
+        bracket = (0, len(self.control_points) - 1) if bracket is None else bracket
         res0 = minimize_scalar(get_delta, bracket=bracket, tol=tol)
         beta0 = res0.x
         q = self.center_point_fast_SE2Transform(beta0).as_SE2()
