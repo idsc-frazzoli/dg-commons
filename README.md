@@ -41,7 +41,7 @@ The simulator builds on a clear distinction between the concept of an "agent" an
 
 An **agent** receives _observations_ and returns _commands_ to the simulator.
 A **model** instead represents the physical instance of the agent in the simulation.
-The received _commands_ from the agent are used tu update its state according to the multi-agent simulation.
+The received _commands_ from the agent are used to update its state according to the multi-agent simulation.
 
 ### Collision resolution
 

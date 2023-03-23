@@ -156,13 +156,15 @@ class Simulator:
         """
         # after all the computations advance simulation time
         sim_context.time += sim_context.param.dt
-        # collision checking
-        collision_enviroment = self._check_collisions_with_environment(sim_context)
-        collision_players = self._check_collisions_among_players(sim_context)
-        # check if the simulation is over
-        self._maybe_terminate_simulation(sim_context)
         # remove finished players
         self._remove_finished_players(sim_context)
+        # check if the simulation is over
+        self._maybe_terminate_simulation(sim_context)
+        if sim_context.sim_terminated:
+            return
+        # collision checking
+        _ = self._check_collisions_with_environment(sim_context)
+        _ = self._check_collisions_among_players(sim_context)
         return
 
     @staticmethod
