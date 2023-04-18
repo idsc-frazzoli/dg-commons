@@ -29,20 +29,20 @@ def infer_model_from_cr_dyn_obstacle(dyn_obs: DynamicObstacle, color: Color) -> 
         l = dyn_obs.obstacle_shape.length * axle_length_ratio
         dtheta = dyn_obs.prediction.trajectory.state_list[0].orientation - dyn_obs.initial_state.orientation
         delta = dtheta / l
-        # x0 = VehicleStateDyn(
-        #     x=dyn_obs.initial_state.position[0],
-        #     y=dyn_obs.initial_state.position[1],
-        #     psi=dyn_obs.initial_state.orientation,
-        #     vx=dyn_obs.initial_state.velocity,
-        #     delta=delta,
-        # )
-        x0 = VehicleState(
+        x0 = VehicleStateDyn(
             x=dyn_obs.initial_state.position[0],
             y=dyn_obs.initial_state.position[1],
             psi=dyn_obs.initial_state.orientation,
             vx=dyn_obs.initial_state.velocity,
             delta=delta,
         )
+        # x0 = VehicleState(
+        #     x=dyn_obs.initial_state.position[0],
+        #     y=dyn_obs.initial_state.position[1],
+        #     psi=dyn_obs.initial_state.orientation,
+        #     vx=dyn_obs.initial_state.velocity,
+        #     delta=delta,
+        # )
         w_half = dyn_obs.obstacle_shape.width / 2 * axle_width_ratio
 
         if dyn_obs.obstacle_type == ObstacleType.BICYCLE:
@@ -66,10 +66,10 @@ def infer_model_from_cr_dyn_obstacle(dyn_obs: DynamicObstacle, color: Color) -> 
                 color=color,
             )
             vp = VehicleParameters.default_car()
-        # model = VehicleModelDyn(
-        #     x0=x0, vg=vg, vp=vp, pacejka_front=Pacejka.default_car_front(), pacejka_rear=Pacejka.default_car_rear()
-        # )
-        model = VehicleModel(x0=x0, vg=vg, vp=vp)
+        model = VehicleModelDyn(
+            x0=x0, vg=vg, vp=vp, pacejka_front=Pacejka.default_car_front(), pacejka_rear=Pacejka.default_car_rear()
+        )
+        # model = VehicleModel(x0=x0, vg=vg, vp=vp)
     elif dyn_obs.obstacle_type == ObstacleType.PEDESTRIAN:
         x0 = PedestrianState(
             x=dyn_obs.initial_state.position[0],
