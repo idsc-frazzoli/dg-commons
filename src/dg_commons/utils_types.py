@@ -1,7 +1,7 @@
-from typing import Tuple, Union
+from typing import Union
 
-Color = Union[Tuple[float, ...], str]
+Color = Union[tuple[float, ...], str]
 """Alias for colors as supported by matplotlib"""
 
-LinSpaceTuple = Tuple[float, float, int]
+LinSpaceTuple = tuple[float, float, int]
 """ [min,max,n samples] """

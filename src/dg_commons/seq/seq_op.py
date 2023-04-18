@@ -1,8 +1,9 @@
 from operator import add
 
+import numpy as np
 from toolz import accumulate
 
-from dg_commons.seq.sequence import DgSampledSequence, iterate_with_dt
+from dg_commons.seq.sequence import DgSampledSequence, iterate_with_dt, Timestamp
 
 __all__ = ["seq_accumulate", "seq_integrate", "seq_differentiate"]
 
@@ -47,3 +48,19 @@ def seq_differentiate(sequence: DgSampledSequence[float]) -> DgSampledSequence[f
 def seq_accumulate(sequence: DgSampledSequence[float]) -> DgSampledSequence[float]:
     cumsum = list(accumulate(add, sequence.values))
     return DgSampledSequence[sequence.XT](sequence.timestamps, cumsum)
+
+
+def find_crossings(sequence: DgSampledSequence[float], threshold: float) -> list[Timestamp]:
+    """Finds the timestamps where the sequence crosses the threshold."""
+    values = np.array(sequence.values) - threshold
+    zero_crossings = np.where(np.diff(np.signbit(values)))[0]
+    crossings: list[Timestamp] = []
+    for i in zero_crossings:
+        i_plus_1 = i + 1
+        t0, t1 = sequence.timestamps[i], sequence.timestamps[i_plus_1]
+        v0, v1 = values[i], values[i_plus_1]
+        dt = t1 - t0
+        # linear interpolation
+        t = t0 + (v0 / (v0 - v1)) * dt
+        crossings.append(t)
+    return crossings

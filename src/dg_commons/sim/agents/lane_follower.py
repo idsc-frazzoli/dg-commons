@@ -11,7 +11,7 @@ from dg_commons.maps import DgLanelet
 from dg_commons.planning.trajectory import Trajectory
 from dg_commons.sim import SimObservations, DrawableTrajectoryType, InitSimObservations
 from dg_commons.sim.agents.agent import Agent
-from dg_commons.sim.models import ModelParameters, ModelGeometry
+from dg_commons.sim.models import ModelParameters
 from dg_commons.sim.models.vehicle import VehicleCommands, VehicleState
 from dg_commons.sim.models.vehicle_ligths import LightsCmd, LightsValues
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry

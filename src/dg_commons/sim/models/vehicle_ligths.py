@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import NewType, AbstractSet, Mapping, Tuple
+from typing import NewType, AbstractSet, Mapping
 
 import numpy as np
 
@@ -77,7 +77,7 @@ phase2colors: Mapping[LightsCmd, LightsColors] = fd(
     }
 )
 
-lightscmd2phases: Mapping[LightsCmd, Tuple[LightsCmd, ...]] = fd(
+lightscmd2phases: Mapping[LightsCmd, tuple[LightsCmd, ...]] = fd(
     {
         NO_LIGHTS: (NO_LIGHTS,),
         LIGHTS_HEADLIGHTS: (LIGHTS_HEADLIGHTS,),

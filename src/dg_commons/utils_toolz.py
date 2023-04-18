@@ -1,5 +1,5 @@
 import itertools
-from typing import Callable, Collection, Dict, FrozenSet, Iterator, Mapping, TypeVar
+from typing import Callable, Collection, FrozenSet, Iterator, Mapping, TypeVar
 
 from cytoolz import keyfilter, valmap as valmap_
 from frozendict import frozendict
@@ -39,7 +39,7 @@ def fvalmap(pred: Callable[[V], W], a: Mapping[K, V]) -> Mapping[K, W]:
     return frozendict(valmap_(pred, a))
 
 
-def valmap(f: Callable[[V], W], d: Mapping[K, V]) -> Dict[K, W]:
+def valmap(f: Callable[[V], W], d: Mapping[K, V]) -> dict[K, W]:
     """Wrapper around `cytoolz.valmap`. Helps with type inference."""
     return valmap_(f, d)
 

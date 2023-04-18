@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from math import pi
-from typing import Optional, Tuple, Dict, Mapping
+from typing import Optional, Mapping
 
 import numpy as np
 from geometry import SE2value
@@ -20,9 +20,9 @@ class SpeedControllerParam(PIDParam):
     kP: float = 4
     kI: float = 0.01
     kD: float = 0.1
-    antiwindup: Tuple[float, float] = (-2, 2)
-    setpoint_minmax: Tuple[float, float] = (-kmh2ms(10), kmh2ms(150))
-    output_minmax: Tuple[float, float] = (-8, 5)  # acc minmax
+    antiwindup: tuple[float, float] = (-2, 2)
+    setpoint_minmax: tuple[float, float] = (-kmh2ms(10), kmh2ms(150))
+    output_minmax: tuple[float, float] = (-8, 5)  # acc minmax
 
     @classmethod
     def from_vehicle_params(cls, model_param: ModelParameters) -> "SpeedControllerParam":
@@ -79,7 +79,7 @@ class SpeedBehavior:
             other_pose: SE2value = extract_pose_from_state(other_obs.state)
             return SE2Transform.from_SE2(relative_pose(mypose, other_pose))
 
-        agents_rel_pose: Dict[PlayerName, SE2Transform] = valmap(rel_pose, self.agents)
+        agents_rel_pose: dict[PlayerName, SE2Transform] = valmap(rel_pose, self.agents)
         yield_to_anyone: bool = self.is_there_anyone_to_yield_to(agents_rel_pose)
         emergency_situation: bool = self.is_emergency_subroutine_needed(agents_rel_pose)
         if yield_to_anyone or emergency_situation:
@@ -88,7 +88,7 @@ class SpeedBehavior:
             self.speed_ref = self.cruise_control(agents_rel_pose)
         return self.speed_ref, emergency_situation
 
-    def is_there_anyone_to_yield_to(self, agents_rel_pose: Dict[PlayerName, SE2Transform]) -> bool:
+    def is_there_anyone_to_yield_to(self, agents_rel_pose: dict[PlayerName, SE2Transform]) -> bool:
         """
         If someone is approaching from the right or someone is in front of us we yield
         """
@@ -107,7 +107,7 @@ class SpeedBehavior:
                 return True
         return False
 
-    def is_emergency_subroutine_needed(self, agents_rel_pose: Dict[PlayerName, SE2Transform]) -> bool:
+    def is_emergency_subroutine_needed(self, agents_rel_pose: dict[PlayerName, SE2Transform]) -> bool:
         myvel = self.agents[self.my_name].state.vx
         for other_name, _ in self.agents.items():
             if other_name == self.my_name:
@@ -126,7 +126,7 @@ class SpeedBehavior:
                 return True
         return False
 
-    def cruise_control(self, agents_rel_pose: Dict[PlayerName, SE2Transform]) -> float:
+    def cruise_control(self, agents_rel_pose: dict[PlayerName, SE2Transform]) -> float:
         """
         If someone is in front of us with lthe same orientation, then apply the two seconds rule to adapt reference velocity
          that allows maintaining a safe distance between the vehicles
