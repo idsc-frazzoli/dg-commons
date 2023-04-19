@@ -8,9 +8,9 @@ tqdm>=4.62.3
 numpy>=1.21.2
 scipy>=1.8.0
 matplotlib>=3.5.0
-shapely>=1.8.3,<2 # compatibility strtree
+shapely>=2.0.0
 zuper-commons-z7>=7
 PyGeometry-z7>=7
 
-commonroad-io==2022.3
+commonroad-io==2023.1
 commonroad-drivability-checker==2022.2.1

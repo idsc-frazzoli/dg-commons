@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
-from random import randint
-from typing import Optional, MutableMapping
+from typing import Optional, Iterable, Sequence
 
 from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.scenario import Scenario
@@ -19,32 +18,32 @@ class DgScenario:
 
     scenario: Optional[Scenario] = None
     """A CommonRoad scenario"""
-    static_obstacles: MutableMapping[int, StaticObstacle] = field(default_factory=dict)
-    """A mapping of indexed static obstacles"""
+    static_obstacles: Sequence[StaticObstacle] = None
+    """Static obstacles of the scenario and/or extra additional ones"""
     use_road_boundaries: bool = False
     """If True the external boundaries of the road are forced to be obstacles """
+    road_boundaries_buffer: float = 0.1
+    """Buffer to be added to the lanelets when building the road boundaries"""
     strtree_obstacles: STRtree = field(init=False)
     """Store the obstacles in a spatial index for fast collision detection"""
 
     def __post_init__(self):
-        if self.scenario:
+        if self.scenario is not None:
             assert isinstance(self.scenario, Scenario), self.scenario
-        for idx, sobstacle in self.static_obstacles.items():
+        static_obstacles = list(self.static_obstacles) if self.static_obstacles is not None else []
+        for sobstacle in static_obstacles:
             assert issubclass(type(sobstacle), StaticObstacle), sobstacle
         # add lane boundaries as obstacles after the static obstacles (since we assign random ids)
         if self.use_road_boundaries and self.scenario is not None:
-            lanelet_bounds, _ = build_road_boundary_obstacle(self.scenario)
+            assert self.road_boundaries_buffer >= 0, self.road_boundaries_buffer
+            lanelet_bounds, _ = build_road_boundary_obstacle(self.scenario, buffer=self.road_boundaries_buffer)
             for lanelet_bound in lanelet_bounds:
-                idx = randint(0, 100000)
-                while idx in self.static_obstacles:
-                    logger.warn(f"While adding lane boundaries obstacles: Idx {idx} already taken, retrying...")
-                    idx = randint(0, 100000)
-                self.static_obstacles[idx] = StaticObstacle(lanelet_bound)
+                static_obstacles.append(StaticObstacle(lanelet_bound))
         elif self.use_road_boundaries and self.scenario is None:
             logger.warn("Road boundaries requested but no scenario provided, ignoring...")
-        obs_shapes = [sobstacle.shape for sobstacle in self.static_obstacles.values()]
-        obs_idx = [idx for idx in self.static_obstacles.keys()]
-        self.strtree_obstacles = STRtree(obs_shapes, obs_idx, node_capacity=3)
+        obs_shapes = [sobstacle.shape for sobstacle in static_obstacles]
+        self.strtree_obstacles = STRtree(obs_shapes, node_capacity=3)
+        self.static_obstacles = tuple(static_obstacles)
 
     @property
     def lanelet_network(self) -> Optional[LaneletNetwork]:

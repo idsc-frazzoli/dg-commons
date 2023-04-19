@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from math import atan, sin
-from typing import Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import scipy.optimize
@@ -15,7 +15,7 @@ __all__ = ["PurePursuit", "PurePursuitParam"]
 
 @dataclass
 class PurePursuitParam:
-    look_ahead_minmax: Tuple[float, float] = (3, 30)
+    look_ahead_minmax: tuple[float, float] = (3, 30)
     """min and max lookahead"""
     k_lookahead: float = 0.8
     """Scaling constant for speed dependent params"""
@@ -65,7 +65,7 @@ class PurePursuit:
     def update_speed(self, speed: float):
         self.speed = speed
 
-    def find_goal_point(self) -> Tuple[float, SE2value]:
+    def find_goal_point(self) -> tuple[float, SE2value]:
         """
         Find goal point along the path
         :return: along_path, SE2value

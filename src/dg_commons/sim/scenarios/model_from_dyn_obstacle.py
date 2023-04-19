@@ -1,5 +1,3 @@
-from typing import Tuple
-
 from commonroad.geometry.shape import Rectangle as crRectangle
 from commonroad.scenario.obstacle import DynamicObstacle, ObstacleType
 
@@ -75,7 +73,7 @@ def infer_model_from_cr_dyn_obstacle(dyn_obs: DynamicObstacle, color: Color) -> 
     return model
 
 
-def _estimate_car_mass_inertia(length: float, width: float) -> Tuple[float, float]:
+def _estimate_car_mass_inertia(length: float, width: float) -> tuple[float, float]:
     """#todo justify and fix this empirical formulas"""
     alpha = 50
     beta = 1.6

@@ -1,7 +1,7 @@
 from bisect import bisect_right, bisect_left
 from dataclasses import dataclass, InitVar, field
 from decimal import Decimal as D
-from typing import Generic, TypeVar, List, Callable, Type, Iterator, Union, get_args, Any, Sequence, Tuple
+from typing import Generic, TypeVar, Callable, Type, Iterator, Union, get_args, Any, Sequence
 
 from zuper_commons.types import ZException, ZValueError
 
@@ -40,8 +40,8 @@ class DgSampledSequence(Generic[X]):
     timestamps: InitVar[Sequence[Timestamp]]
     values: InitVar[Sequence[X]]
 
-    _timestamps: Tuple[Timestamp] = field(default_factory=tuple)
-    _values: Tuple[X] = field(default_factory=tuple)
+    _timestamps: tuple[Timestamp] = field(default_factory=tuple)
+    _values: tuple[X] = field(default_factory=tuple)
 
     def __post_init__(self, timestamps, values):
         if DgCommonsConstants.checks:
@@ -68,7 +68,7 @@ class DgSampledSequence(Generic[X]):
         return get_args(self.__orig_class__)[0]
 
     @property
-    def timestamps(self) -> Tuple[Timestamp]:
+    def timestamps(self) -> tuple[Timestamp]:
         return self._timestamps
 
     @timestamps.setter
@@ -76,7 +76,7 @@ class DgSampledSequence(Generic[X]):
         raise RuntimeError("Cannot set timestamps of SampledSequence directly")
 
     @property
-    def values(self) -> Tuple[X]:
+    def values(self) -> tuple[X]:
         return self._values
 
     @values.setter
@@ -135,7 +135,7 @@ class DgSampledSequence(Generic[X]):
             raise ZValueError("Empty sequence")
         return self._timestamps[-1]
 
-    def get_sampling_points(self) -> Tuple[Timestamp]:
+    def get_sampling_points(self) -> tuple[Timestamp]:
         """
         Redundant with .timestamps
         @:return: The lists of sampled timestamps
@@ -207,8 +207,8 @@ DgSampledSequenceType = TypeVar("DgSampledSequenceType", bound="DgSampledSequenc
 
 @dataclass
 class DgSampledSequenceBuilder(Generic[X]):
-    timestamps: List[Timestamp] = field(default_factory=list)
-    values: List[X] = field(default_factory=list)
+    timestamps: list[Timestamp] = field(default_factory=list)
+    values: list[X] = field(default_factory=list)
     sampled_sequence_type: DgSampledSequenceType = DgSampledSequence
 
     def add(self, t: Timestamp, v: X):

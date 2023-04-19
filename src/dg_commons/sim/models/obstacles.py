@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from math import inf
-from typing import Sequence, Tuple
+from typing import Sequence
 
 from commonroad.scenario.obstacle import ObstacleType
 from shapely.geometry.base import BaseGeometry
@@ -22,7 +22,7 @@ class ObstacleGeometry(ModelGeometry):
     """ Color must be able to be parsed by matplotlib"""
 
     @property
-    def outline(self) -> Sequence[Tuple[float, float]]:
+    def outline(self) -> Sequence[tuple[float, float]]:
         raise NotImplementedError("Outline is not implement for ObstacleGeometry")
 
     @classmethod
@@ -43,9 +43,9 @@ class StaticObstacle:
 
 @dataclass(frozen=True, unsafe_hash=True)
 class DynObstacleParameters(ModelParameters):
-    dpsi_limits: Tuple[float, float] = (-2, 2)
+    dpsi_limits: tuple[float, float] = (-2, 2)
     """ Limits of the rotational speed [rad/s] """
-    ddpsi_limits: Tuple[float, float] = (-1, 1)
+    ddpsi_limits: tuple[float, float] = (-1, 1)
     """ Limits of the rotational acceleration [rad/s^2] """
 
     def __post_init__(self):

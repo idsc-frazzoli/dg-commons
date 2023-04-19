@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from decimal import Decimal
 from itertools import product
-from typing import List, Tuple, Callable, Set, Optional
+from typing import List, Callable, Set, Optional
 
 import numpy as np
 
@@ -106,7 +106,7 @@ class MotionPrimitivesGenerator(TrajGenerator):
         steer_samples = np.linspace(*self.param.steering)
         return v_samples, steer_samples
 
-    def check_input_constraints(self, v_start, v_end, sa_start, sa_end) -> Tuple[bool, float, float]:
+    def check_input_constraints(self, v_start, v_end, sa_start, sa_end) -> tuple[bool, float, float]:
         """
         :param v_start: initial velocity
         :param v_end: ending velocity

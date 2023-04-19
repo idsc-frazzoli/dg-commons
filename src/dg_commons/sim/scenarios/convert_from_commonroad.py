@@ -2,8 +2,6 @@ from commonroad.scenario.lanelet import LaneletNetwork
 from commonroad.scenario.obstacle import DynamicObstacle
 
 from dg_commons import Color
-from dg_commons.controllers.speed import SpeedController
-from dg_commons.controllers.steer import SteerController
 from dg_commons.sim import SimModel
 from dg_commons.sim.agents.agent import Agent
 from dg_commons.sim.agents.lane_follower import LFAgent
