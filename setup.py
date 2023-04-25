@@ -46,7 +46,7 @@ setup(
     package_dir={"": src},
     packages=find_packages("src"),
     version=version,
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
