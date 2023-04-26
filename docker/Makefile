@@ -7,7 +7,7 @@ dockerfile=Dockerfile.base
 
 tag=$(DOCKER_REGISTRY)/$(user)/$(image_name):$(tagname)
 platforms=linux/arm64,linux/amd64
-platforms=linux/amd64
+# platforms=linux/amd64
 build:
 
 	docker buildx build  --platform $(platforms) -f $(dockerfile) -t $(tag) --build-arg PYTHON_VERSION_=${python_version} --progress plain --push .
