@@ -24,4 +24,16 @@ RUN cd commonroad-drivability-checker && bash build.sh -e /usr/local -v ${PYTHON
 # RUN pip install -r tmp_req.txt
 #####
 
+COPY requirements.txt .
+RUN --mount=type=secret,id=PIP_INDEX_URL <<EOF
+    set -eux
+    export PIP_INDEX_URL="$(cat /run/secrets/PIP_INDEX_URL)"
+    python3 --version
+    python3 -m pip install --no-cache-dir -U pip
+    python3 -m pip install --no-cache-dir -r requirements.txt
+    python3 -m pip list --no-cache-dir
+EOF
+
+
+
 LABEL maintainer="A. Zanardi (azanardi@ethz.ch)"
