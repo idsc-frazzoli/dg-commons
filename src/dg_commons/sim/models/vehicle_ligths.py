@@ -56,7 +56,7 @@ green = (0.0, 1.0, 0.0)
 phase2colors: Mapping[LightsCmd, LightsColors] = fd(
     {
         NO_LIGHTS: LightsColors(back_left=red, back_right=red, front_left=white, front_right=white),
-        LIGHTS_HEADLIGHTS: LightsColors(back_left=red, back_right=red, front_left=green, front_right=green),
+        LIGHTS_HEADLIGHTS: LightsColors(back_left=red, back_right=red, front_left=yellow, front_right=yellow),
         LIGHTS_TURN_LEFT: LightsColors(
             back_left=orange,
             back_right=red,
