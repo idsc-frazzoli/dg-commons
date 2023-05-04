@@ -83,9 +83,12 @@ workflows:
       - install_docs_tests:
           name: "DGcommonsCI:3.9"
           version: "3.9"
+          context: zuper
       - install_docs_tests:
           name: "DGcommonsCI:3.10"
           version: "3.10"
+          context: zuper
       - install_docs_tests:
           name: "DGcommonsCI:3.11"
           version: "3.11"
+          context: zuper
