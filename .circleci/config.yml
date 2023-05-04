@@ -35,6 +35,7 @@ jobs:
           name: Install deps
           command: |
             echo PATH=$PATH
+            echo PIP_INDEX_URL=$PIP_INDEX_URL
             pip install -q --user --upgrade -r requirements.txt
             pip install -q --user --upgrade -r requirements-extra.txt
       - run:
