@@ -183,7 +183,7 @@ def plot_trajectories(
     traj_lines: Optional[list[LineCollection]] = None,
     traj_points: Optional[list[PathCollection]] = None,
     colors: Union[list[Color], Color] = None,
-    width: float = 1,
+    width: float = 1.5,
     alpha: float = 1,
 ) -> tuple[list[LineCollection], list[PathCollection]]:
     segments, mcolor = [], []
@@ -198,7 +198,7 @@ def plot_trajectories(
         )
         ax.add_collection(traj_lines)
         size = np.linalg.norm(ax.bbox.size) / 1000
-        traj_points = ax.scatter([], [], s=size, c="r", zorder=ZOrders.TRAJECTORY_MARKER)
+        traj_points = ax.scatter([], [], alpha=0, s=size, c="r", zorder=ZOrders.TRAJECTORY_MARKER)
         ax.add_collection(traj_points)
     traj_lines.set_segments(segments=segments)
     traj_lines.set_color(colors)
