@@ -81,15 +81,27 @@ def create_animation(
             init_log_entry: Mapping[PlayerName, LogEntry] = sim_context.log.at_interp(time_begin)
             for pname, plog in init_log_entry.items():
                 lights_colors: LightsColors = get_lights_colors_from_cmds(init_log_entry[pname].commands, t=0)
-                states[pname], actions[pname] = sim_viz.plot_player(
-                    ax=ax,
-                    state=plog.state,
-                    lights_colors=lights_colors,
-                    player_name=pname,
-                    alpha=0.7,
-                    plot_wheels=plot_wheels,
-                    plot_lights=plot_ligths,
-                )
+                if str(pname).startswith("G"):
+                    if str(pname) == PlayerName("GAV"):
+                        states[pname], actions[pname] = sim_viz.plot_player(
+                            ax=ax,
+                            state=plog.state,
+                            lights_colors=lights_colors,
+                            player_name=pname,
+                            alpha=0.2,
+                            plot_wheels=plot_wheels,
+                            plot_lights=plot_ligths,
+                        )
+                else:
+                    states[pname], actions[pname] = sim_viz.plot_player(
+                        ax=ax,
+                        state=plog.state,
+                        lights_colors=lights_colors,
+                        player_name=pname,
+                        alpha=0.8,
+                        plot_wheels=plot_wheels,
+                        plot_lights=plot_ligths,
+                    )
                 if plog.extra:
                     try:
                         trajectories, tcolors = unzip(plog.extra)
