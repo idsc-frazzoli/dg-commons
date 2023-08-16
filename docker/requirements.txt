@@ -1,0 +1,6 @@
+immutabledict
+zuper-commons-z7
+zuper-typing-z7
+pygeometry-z7
+compmake-z7
+comptests-z7

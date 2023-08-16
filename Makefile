@@ -15,8 +15,8 @@ junit=--junitxml=$(tr)/junit.xml
 parallel=-n auto --dist=loadfile
 coverage=--cov-config=.coveragerc --cov=$(cover_packages) --cov-report html
 extra=--capture=no -v
-
 ################################
+
 clean:
 	coverage erase
 	rm -rf $(out) $(coverage_dir) $(tr)
