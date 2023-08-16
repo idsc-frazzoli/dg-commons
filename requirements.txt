@@ -18,3 +18,4 @@ commonroad-drivability-checker @ git+https://github.com/idsc-frazzoli/commonroad
 zuper-commons-z7==7.2
 PyGeometry-z7==7.2
 pycontracts3==7.2
+xtermcolor
