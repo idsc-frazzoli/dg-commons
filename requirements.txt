@@ -19,3 +19,4 @@ zuper-commons-z7==7.2
 PyGeometry-z7==7.2
 pycontracts3==7.2
 xtermcolor
+pytz
