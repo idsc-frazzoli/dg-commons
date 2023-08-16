@@ -35,7 +35,7 @@ jobs:
           name: Install deps
           command: |
             echo PATH=$PATH
-            PIP_INDEX_URL=$PIP_INDEX_URL pip install -q --user --upgrade -r requirements.txt
+            pip install -q --user --upgrade -r requirements.txt
             pip install -q --user --upgrade -r requirements-extra.txt
       - run:
           name: List deps
@@ -80,15 +80,15 @@ workflows:
 #      - install_docs_tests:
 #          name: "DGcommonsCI:3.8"
 #          version: "3.8"
-#      - install_docs_tests:
-#          name: "DGcommonsCI:3.9"
-#          version: "3.9"
+      - install_docs_tests:
+          name: "DGcommonsCI:3.9"
+          version: "3.9"
 #          context: zuper
       - install_docs_tests:
           name: "DGcommonsCI:3.10"
           version: "3.10"
-          context: zuper
+#          context: zuper
       - install_docs_tests:
           name: "DGcommonsCI:3.11"
           version: "3.11"
-          context: zuper
+#          context: zuper
