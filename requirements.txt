@@ -15,5 +15,5 @@ commonroad-io==2023.1
 commonroad-drivability-checker @ git+https://github.com/idsc-frazzoli/commonroad-drivability-checker.git@feature/311compatibility
 
 # zuper
-zuper-commons-z7
-PyGeometry-z7
+zuper-commons-z7==7.2
+PyGeometry-z7==7.2
