@@ -82,8 +82,8 @@ pre-commit run --all-files
 
 
 ## Compatibility
-
-Currently full compatibility is supported only for python 3.9
+From version 0.30 onwards the package is tested against python 3.9, 3.10, 3.11.
+It might work also for other versions, but it is not tested.
 
 ## Publications
 
@@ -92,6 +92,8 @@ The tools contained in this package have contributed to the following publicatio
 - [**Posetal Games: Efficiency, Existence, and Refinement of Equilibria in Games with Prioritized Metrics**](https://ieeexplore.ieee.org/document/9650727) - _A. Zanardi*, G. Zardini*, S. Srinivasan, S. Bolognani, A. Censi, F. Dörfler, E. Frazzoli_ - IEEE Robotics and Automation Letters, 2022
 - [**Factorization of Dynamic Games over Spatio-Temporal Resources**](https://www.research-collection.ethz.ch/handle/20.500.11850/560629) - _A. Zanardi, S. Bolognani, A. Censi, F. Dörfler, E. Frazzoli_ - Proceedings of the 2022 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS), 2022
 - [**Task-driven Modular Co-design of Vehicle Control Systems**](https://arxiv.org/abs/2203.16640) - _G. Zardini, Z. Suter, A. Censi, E. Frazzoli_ - Proceedings of the 61th IEEE Conference on Decision and Control (CDC), 2022
+- [**Factorization of Multi-Agent Sampling-Based Motion Planning**](https://arxiv.org/abs/2304.00342) - _A. Zanardi, P. Zullo, A. Censi, E. Frazzoli_ - Proceedings of the 62nd IEEE Conference on Decision and Control (IROS), 2023
+- [**A Counterfactual Safety Margin Perspective on the Scoring of Autonomous Vehicles' Riskiness**](https://arxiv.org/abs/2308.01050) - _A. Zanardi, A. Censi, M. Atzei, L. Di Lillo, E. Frazzoli_ - ArXiv preprint, 2023
 
 ## Use and contributions
 If you find some of the tools provided in this repository useful, consider citing it in your research via the provided github citation.
