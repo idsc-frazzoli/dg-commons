@@ -11,7 +11,7 @@ shapely>=2.0.0
 
 # commonroad
 commonroad-io==2023.2
-dg-commonroad-drivability-checker==2023.1
+dg-commonroad-drivability-checker==2023.1b0
 # commonroad-drivability-checker @ git+https://github.com/idsc-frazzoli/commonroad-drivability-checker.git@feature/311compatibility
 
 # zuper
