@@ -21,3 +21,4 @@ pycontracts3==7.2
 xtermcolor
 pytz
 aiofiles
+webcolors

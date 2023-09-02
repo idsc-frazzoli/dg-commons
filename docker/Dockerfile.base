@@ -15,14 +15,8 @@ RUN apt-get update \
     $(awk -F: '/^[^#]/ { print $1 }' /tmp/dependencies-apt.txt | uniq) \
     && rm -rf /var/lib/apt/lists/*
 
-# Install commonroad
-# RUN git clone --branch feature/311compatibility https://github.com/idsc-frazzoli/commonroad-drivability-checker.git
-# RUN cd commonroad-drivability-checker && bash build.sh -e /usr/local -v ${PYTHON_VERSION_} --cgal --serializer -i -j 3 --no-root
-
-#####
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-#####
 
 #COPY requirements.txt .
 #RUN --mount=type=secret,id=PIP_INDEX_URL <<EOF
