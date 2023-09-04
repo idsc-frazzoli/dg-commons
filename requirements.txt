@@ -22,3 +22,4 @@ xtermcolor
 pytz
 aiofiles
 webcolors
+future
