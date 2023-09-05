@@ -1,6 +1,6 @@
 DOCKER_REGISTRY ?= docker.io
-tagname="3.9"
-python_version="3.9"
+tagname="3.11"
+python_version="3.11"
 user=alezana
 image_name=dg_base
 dockerfile=Dockerfile.base
