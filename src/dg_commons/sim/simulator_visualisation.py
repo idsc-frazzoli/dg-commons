@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from dataclasses import asdict
 from enum import IntEnum
 from math import inf
@@ -7,7 +8,6 @@ from typing import Sequence, Generic, Optional, List, Union
 import numpy as np
 from commonroad.visualization.draw_params import MPDrawParams
 from commonroad.visualization.mp_renderer import MPRenderer
-from decorator import contextmanager
 from geometry import SE2_from_xytheta, SE2value
 from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection, PathCollection
