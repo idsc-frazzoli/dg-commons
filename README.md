@@ -3,8 +3,10 @@
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/idsc-frazzoli/dg-commons/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/idsc-frazzoli/dg-commons/tree/master)
 [![codecov](https://codecov.io/gh/idsc-frazzoli/dg-commons/branch/master/graph/badge.svg?token=jqhkIa4fzB)](https://codecov.io/gh/idsc-frazzoli/dg-commons)
 [![PyPI version](https://badge.fury.io/py/dg-commons.svg)](https://badge.fury.io/py/dg-commons)
+![PyPI - Downloads](https://img.shields.io/pypi/dw/dg-commons)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+
 
 
 This package contains common tools that ease the development and quick prototyping of autonomous vehicles with a focus
