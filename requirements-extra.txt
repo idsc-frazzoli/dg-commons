@@ -12,7 +12,7 @@ pytest-cov>=3
 pytest-xdist>=2.5.0
 pytest-sugar==0.9.6
 pytest-mypy>=0.9.1
-reprep-z6>=6.0.3,<7
+reprep-z7>=7
 
 # coverage
 codecov>=2.1.9
@@ -24,3 +24,7 @@ sphinx>=4.2.0
 sphinx-rtd-theme>=1.0.0
 sphinx-autodoc-typehints
 sphinx-autodoc-annotation
+
+# pypi
+bumpversion
+twine
