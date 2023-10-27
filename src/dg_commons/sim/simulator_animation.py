@@ -53,7 +53,7 @@ def create_animation(
         raise ValueError(f"Begin time {time_begin} cannot be greater than end time {time_end}")
     ax: Axes = sim_viz.commonroad_renderer.ax
     fig = ax.figure
-    fig.set_tight_layout(True)
+    fig.set_layout_engine(True)
     ax.set_aspect("equal")
     # dictionaries with the handles of the plotting stuff
     states, actions, extra, texts = {}, {}, {}, {}
@@ -81,27 +81,15 @@ def create_animation(
             init_log_entry: Mapping[PlayerName, LogEntry] = sim_context.log.at_interp(time_begin)
             for pname, plog in init_log_entry.items():
                 lights_colors: LightsColors = get_lights_colors_from_cmds(init_log_entry[pname].commands, t=0)
-                if str(pname).startswith("G"):
-                    if str(pname) == PlayerName("GAV"):
-                        states[pname], actions[pname] = sim_viz.plot_player(
-                            ax=ax,
-                            state=plog.state,
-                            lights_colors=lights_colors,
-                            player_name=pname,
-                            alpha=0.2,
-                            plot_wheels=plot_wheels,
-                            plot_lights=plot_ligths,
-                        )
-                else:
-                    states[pname], actions[pname] = sim_viz.plot_player(
-                        ax=ax,
-                        state=plog.state,
-                        lights_colors=lights_colors,
-                        player_name=pname,
-                        alpha=0.8,
-                        plot_wheels=plot_wheels,
-                        plot_lights=plot_ligths,
-                    )
+                states[pname], actions[pname] = sim_viz.plot_player(
+                    ax=ax,
+                    state=plog.state,
+                    lights_colors=lights_colors,
+                    player_name=pname,
+                    alpha=0.8,
+                    plot_wheels=plot_wheels,
+                    plot_lights=plot_ligths,
+                )
                 if plog.extra:
                     try:
                         trajectories, tcolors = unzip(plog.extra)
