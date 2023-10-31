@@ -56,7 +56,7 @@ class CollisionReport:
 
 
 def combine_collision_reports(r1: CollisionReport, r2: CollisionReport) -> CollisionReport:
-    """This function "sums" collision reports.
+    """This function "sums" collision reports (monoid over the type CollisionReport).
     While the simulation generates a collision report at every simulation step, oftentimes it's convenient to
     reduce them to an "accident" report.
     """

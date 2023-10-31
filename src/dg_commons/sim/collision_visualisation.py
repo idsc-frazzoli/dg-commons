@@ -4,7 +4,7 @@ from typing import Mapping
 import matplotlib.patches as mpatches
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.cm import get_cmap
+from matplotlib import colormaps
 from matplotlib.colors import ListedColormap
 from matplotlib.patches import FancyArrowPatch
 
@@ -37,7 +37,7 @@ def plot_collision(collision_report: CollisionReport, sim_log: SimLog):
     plt.arrow(imp_point[0], imp_point[1], n[0], n[1], ec=n_color, fc=n_color, alpha=0.9, zorder=_Zorders.IMPACT_NORMAL)
     # players
     name = "Dark2"
-    cmap: ListedColormap = get_cmap(name)
+    cmap: ListedColormap = colormaps[name]
     colors = list(cmap.colors)
     col_before, col_after = "darkorange", "seagreen"
     for i, (player, p_report) in enumerate(collision_report.players.items()):
@@ -145,7 +145,7 @@ def plot_collision(collision_report: CollisionReport, sim_log: SimLog):
     after_patch = mpatches.Patch(color=col_after, label="after")
     plt.legend(handles=[before_patch, after_patch])
 
-    fig.set_tight_layout(True)
+    fig.set_layout_engine("tight")
     plt.axis("equal")
     plt.draw()
     return

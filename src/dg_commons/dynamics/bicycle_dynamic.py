@@ -28,16 +28,12 @@ class BicycleDynamics:
     def all_actions(self) -> FrozenSet[U]:
         pass
 
-    def successors(
-        self, x: VehicleState, u0: VehicleCommands, dt: D = None
-    ) -> Mapping[VehicleCommands, VehicleState]:
+    def successors(self, x: VehicleState, u0: VehicleCommands, dt: D = None) -> Mapping[VehicleCommands, VehicleState]:
         """For each state, returns a dictionary U -> Possible Xs"""
         # todo
         pass
 
-    def successor(
-        self, x0: VehicleState, u: VehicleCommands, dt: Timestamp
-    ) -> VehicleState:
+    def successor(self, x0: VehicleState, u: VehicleCommands, dt: Timestamp) -> VehicleState:
         """Perform Euler forward integration to propagate state using actions for time dt.
         This method is very inaccurate for integration steps above 0.1[s]"""
         dt = float(dt)
@@ -55,14 +51,12 @@ class BicycleDynamics:
         new_state = replace(x0, vx=vx, delta=delta)
         return new_state
 
-    def successor_ivp(
-        self, x0: VehicleState, u: VehicleCommands, dt: Timestamp
-    ) -> VehicleState:
+    def successor_ivp(self, x0: VehicleState, u: VehicleCommands, dt: Timestamp) -> VehicleState:
         """
         Perform initial value problem integration to propagate state using actions for time dt
         """
 
-        def _stateactions_from_array(y: np.ndarray) -> [VehicleState, VehicleCommands]:
+        def _stateactions_from_array(y: np.ndarray) -> tuple[VehicleState, VehicleCommands]:
             n_states = VehicleState.get_n_states()
             state = VehicleState.from_array(y[0:n_states])
             actions = VehicleCommands(

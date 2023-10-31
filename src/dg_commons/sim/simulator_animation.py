@@ -53,7 +53,7 @@ def create_animation(
         raise ValueError(f"Begin time {time_begin} cannot be greater than end time {time_end}")
     ax: Axes = sim_viz.commonroad_renderer.ax
     fig = ax.figure
-    fig.set_tight_layout(True)
+    fig.tight_layout()
     ax.set_aspect("equal")
     # dictionaries with the handles of the plotting stuff
     states, actions, extra, texts = {}, {}, {}, {}
@@ -86,7 +86,7 @@ def create_animation(
                     state=plog.state,
                     lights_colors=lights_colors,
                     player_name=pname,
-                    alpha=0.7,
+                    alpha=0.8,
                     plot_wheels=plot_wheels,
                     plot_lights=plot_ligths,
                 )

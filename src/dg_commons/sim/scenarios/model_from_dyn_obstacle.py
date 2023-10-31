@@ -5,6 +5,7 @@ from dg_commons import Color
 from dg_commons.sim import SimModel
 from dg_commons.sim.models import Pacejka
 from dg_commons.sim.models.pedestrian import PedestrianModel, PedestrianState
+from dg_commons.sim.models.vehicle import VehicleModel, VehicleState
 from dg_commons.sim.models.vehicle_dynamic import VehicleModelDyn, VehicleStateDyn
 from dg_commons.sim.models.vehicle_structures import VehicleGeometry
 from dg_commons.sim.models.vehicle_utils import VehicleParameters
@@ -15,7 +16,12 @@ __all__ = ["infer_model_from_cr_dyn_obstacle"]
 
 def infer_model_from_cr_dyn_obstacle(dyn_obs: DynamicObstacle, color: Color) -> SimModel:
     """Recover a simulation model form a Commonroad dynamic obstacle"""
-    if dyn_obs.obstacle_type in [ObstacleType.CAR, ObstacleType.BICYCLE, ObstacleType.TRUCK, ObstacleType.BUS]:
+    if dyn_obs.obstacle_type in [
+        ObstacleType.CAR,
+        ObstacleType.BICYCLE,
+        ObstacleType.TRUCK,
+        ObstacleType.BUS,
+    ]:
         axle_length_ratio = 0.7  # the distance between wheels is less than the car body
         axle_width_ratio = 0.95  # the distance between wheels is less than the car body
 
@@ -23,7 +29,14 @@ def infer_model_from_cr_dyn_obstacle(dyn_obs: DynamicObstacle, color: Color) -> 
         l = dyn_obs.obstacle_shape.length * axle_length_ratio
         dtheta = dyn_obs.prediction.trajectory.state_list[0].orientation - dyn_obs.initial_state.orientation
         delta = dtheta / l
-        x0 = VehicleStateDyn(
+        # x0 = VehicleStateDyn(
+        #     x=dyn_obs.initial_state.position[0],
+        #     y=dyn_obs.initial_state.position[1],
+        #     psi=dyn_obs.initial_state.orientation,
+        #     vx=dyn_obs.initial_state.velocity,
+        #     delta=delta,
+        # )
+        x0 = VehicleState(
             x=dyn_obs.initial_state.position[0],
             y=dyn_obs.initial_state.position[1],
             psi=dyn_obs.initial_state.orientation,
@@ -53,9 +66,10 @@ def infer_model_from_cr_dyn_obstacle(dyn_obs: DynamicObstacle, color: Color) -> 
                 color=color,
             )
             vp = VehicleParameters.default_car()
-        model = VehicleModelDyn(
-            x0=x0, vg=vg, vp=vp, pacejka_front=Pacejka.default_car_front(), pacejka_rear=Pacejka.default_car_rear()
-        )
+        # model = VehicleModelDyn(
+        #     x0=x0, vg=vg, vp=vp, pacejka_front=Pacejka.default_car_front(), pacejka_rear=Pacejka.default_car_rear()
+        # )
+        model = VehicleModel(x0=x0, vg=vg, vp=vp)
     elif dyn_obs.obstacle_type == ObstacleType.PEDESTRIAN:
         x0 = PedestrianState(
             x=dyn_obs.initial_state.position[0],
