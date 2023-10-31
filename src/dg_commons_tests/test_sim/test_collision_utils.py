@@ -1,9 +1,8 @@
 import pytest
-
-from shapely.geometry import Polygon, LinearRing, LineString
+from shapely.geometry import Polygon, LineString
 from shapely.geometry.base import BaseGeometry
 
-from dg_commons.sim.collision_utils import _find_intersection_points, compute_impact_geometry
+from dg_commons.sim.collision_utils import compute_impact_geometry
 
 # Create two intersecting rectangles
 rect1 = Polygon([(0, 0), (0, 2), (2, 2), (2, 0)])
