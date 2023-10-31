@@ -53,7 +53,7 @@ def create_animation(
         raise ValueError(f"Begin time {time_begin} cannot be greater than end time {time_end}")
     ax: Axes = sim_viz.commonroad_renderer.ax
     fig = ax.figure
-    fig.set_layout_engine(True)
+    fig.tight_layout()
     ax.set_aspect("equal")
     # dictionaries with the handles of the plotting stuff
     states, actions, extra, texts = {}, {}, {}, {}

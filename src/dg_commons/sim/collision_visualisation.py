@@ -145,7 +145,7 @@ def plot_collision(collision_report: CollisionReport, sim_log: SimLog):
     after_patch = mpatches.Patch(color=col_after, label="after")
     plt.legend(handles=[before_patch, after_patch])
 
-    fig.set_layout_engine(True)
+    fig.set_layout_engine("tight")
     plt.axis("equal")
     plt.draw()
     return
