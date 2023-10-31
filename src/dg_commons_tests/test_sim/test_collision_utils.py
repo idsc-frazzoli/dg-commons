@@ -28,11 +28,6 @@ pairs_to_test: list[tuple[BaseGeometry, BaseGeometry]] = [
 
 
 @pytest.mark.parametrize("a, b", pairs_to_test)
-def test__find_intersection_points(a: BaseGeometry, b: BaseGeometry):
-    _find_intersection_points(a, b)
-
-
-@pytest.mark.parametrize("a, b", pairs_to_test)
 def test_compute_impact_geometry(a: BaseGeometry, b: BaseGeometry):
     norm, impact_p = compute_impact_geometry(a, b)
     print(norm, impact_p)
