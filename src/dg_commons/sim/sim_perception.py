@@ -4,11 +4,15 @@ from dataclasses import replace
 
 import numpy as np
 from commonroad_dc.pycrcc import Polygon as crPolygon
+from shapely.validation import make_valid
 
-from dg_commons import PlayerName, SE2Transform, sPolygon2crPolygon, fd
+from dg_commons import PlayerName, SE2Transform, fd, sPolygon2crPolygon
 from dg_commons.perception.sensor import Sensor
-from dg_commons.sim import SimObservations, PlayerObservations, SimTime
-from dg_commons.sim.models import extract_pose_from_state, extract_2d_position_from_state
+from dg_commons.sim import PlayerObservations, SimObservations, SimTime, logger
+from dg_commons.sim.models import (
+    extract_2d_position_from_state,
+    extract_pose_from_state,
+)
 from dg_commons.sim.scenarios import DgScenario
 
 
@@ -67,8 +71,23 @@ class FovObsFilter(ObsFilter):
             if p == pov:
                 continue
 
-            if fov_poly.intersects(p_obs.occupancy):
-                new_players[p] = p_obs
+            try:
+                player_seen = fov_poly.intersects(p_obs.occupancy)
+            except Exception:
+                logger.info(f"FOV polygon is valid: {fov_poly.is_valid}")
+                logger.info(f"{p}'s polygon is valid: {p_obs.occupancy.is_valid}")
+                if not fov_poly.is_valid:
+                    fov_poly = make_valid(fov_poly)
+                if not p_obs.occupancy.is_valid:
+                    new_occupancy = make_valid(p_obs.occupancy)
+                    p_obs = replace(p_obs, occupancy=new_occupancy)
+                player_seen = fov_poly.intersects(p_obs.occupancy)
+            finally:
+                if player_seen:
+                    new_players[p] = p_obs
+
+            # if fov_poly.intersects(p_obs.occupancy):
+            #     new_players[p] = p_obs
 
         return replace(full_obs, players=fd(new_players))
 
