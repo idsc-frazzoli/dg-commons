@@ -10,6 +10,7 @@ from shapely.geometry.base import BaseGeometry
 
 from dg_commons import SE2Transform, X, SE2_apply_T2, apply_SE2_to_shapely_geo
 from dg_commons.maps import DgLanelet
+from dg_commons.sim import SimTime
 from dg_commons.sim.models import extract_pose_from_state
 
 __all__ = ["PlanningGoal", "TPlanningGoal", "RefLaneGoal", "PolygonGoal", "PoseGoal"]
@@ -18,7 +19,7 @@ __all__ = ["PlanningGoal", "TPlanningGoal", "RefLaneGoal", "PolygonGoal", "PoseG
 @dataclass(frozen=True)
 class PlanningGoal(ABC):
     @abstractmethod
-    def is_fulfilled(self, state: X) -> bool:
+    def is_fulfilled(self, state: X, at: SimTime = 0) -> bool:
         pass
 
     @abstractmethod

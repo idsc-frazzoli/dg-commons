@@ -22,10 +22,13 @@ from dg_commons.sim.simulator_structures import SimModel
 
 @dataclass(unsafe_hash=True, eq=True, order=True)
 class RocketCommands:
-    acc_left: float
-    """ linear acceleration [m/s^2] """
-    acc_right: float
-    """ linear acceleration [m/s^2]"""
+    F_left: float
+    """  """
+    F_right: float
+    """ """
+    dphi: float
+    """ velocity of nozzle angle [rad/s]"""
+
     idx = frozendict({"acc_left": 0, "acc_right": 1})
     """ Dictionary to get correct values from numpy arrays"""
 
@@ -190,19 +193,9 @@ class RocketModel(SimModel[RocketState, RocketCommands]):
         """Returns state derivative for given control inputs"""
         acc_lx = apply_acceleration_limits(u.acc_left, self.sp)
         acc_rx = apply_acceleration_limits(u.acc_right, self.sp)
-        acc_sum = acc_lx + acc_rx
-        acc_diff = acc_rx - acc_lx
 
-        vx = x0.vx
-        vy = x0.vy
-        costh = math.cos(x0.psi)
-        sinth = math.sin(x0.psi)
-        dx = vx * costh - vy * sinth
-        dy = vx * sinth + vy * costh
+        # todo
 
-        ax = acc_sum + x0.vy * x0.dpsi
-        ay = -x0.vx * x0.dpsi
-        ddpsi = self.sg.w_half * self.sg.m / self.sg.Iz * acc_diff  # need to be saturated first
         ddpsi = apply_rot_speed_constraint(x0.dpsi, ddpsi, self.sp)
         return RocketState(x=dx, y=dy, psi=x0.dpsi, vx=ax, vy=ay, dpsi=ddpsi)
 

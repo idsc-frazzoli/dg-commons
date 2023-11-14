@@ -27,7 +27,7 @@ P1, P2, P3, P4 = (
 
 def get_rocket_simcontext() -> SimContext:
     x0_p1 = RocketState(x=5, y=5, psi=deg2rad(45), vx=kmh2ms(50), vy=kmh2ms(0), dpsi=0)
-    x0_p2 = DynObstacleState(x=25, y=10, psi=deg2rad(90), vx=kmh2ms(0), vy=kmh2ms(10), dpsi=0)
+    x0_p2 = DynObstacleState(x=25, y=10, psi=deg2rad(90), vx=kmh2ms(10), vy=kmh2ms(0), dpsi=0)
     satellite_shape = Point(0, 0).buffer(4)
 
     models = {
@@ -82,5 +82,5 @@ def test_rocket_n_planet_sim():
     run_simulation(sim_context)
     report = generate_report(sim_context)
     # save report
-    report_file = os.path.join(OUT_TESTS_DIR, "vehicle_dyn.html")
+    report_file = os.path.join(OUT_TESTS_DIR, "rocket.html")
     report.to_html(report_file)
