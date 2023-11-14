@@ -1,4 +1,5 @@
 import math
+import numpy as np
 from dataclasses import dataclass
 from functools import cached_property
 
@@ -12,7 +13,7 @@ from dg_commons.sim.models import kmh2ms
 from dg_commons.sim.models.model_structures import (
     ModelGeometry,
     ModelParameters,
-    SPACECRAFT,
+    ROCKET,
     ModelType,
 )
 
@@ -27,32 +28,49 @@ class RocketGeometry(ModelGeometry):
     """Geometry parameters of the rocket (and colour)"""
 
     w_half: float
-    """ Half width of the rocket - half width of the rocket [m] """
-    lf: float
+    """ half width of the rocket - half width of the rocket [m] """
+    l_f: float
     """ Front length of rocket - dist from CoG to front axle [m] """
-    lr: float
-    """ Rear length of rocket - dist from CoG to back axle [m] """
-    model_type: ModelType = SPACECRAFT
+    l_m: float
+    """ Middle length of rocket - dist from CoG to thruster location [m] """
+    l_r: float
+    """ Rear length of rocket - dist from thruster location to rear axle [m] """
+    l: float
+    """ Total length of rocket - dist from front axle to rear axle [m] """
+    r: float
+    """ Safety radius of the rocket - radius of the rocket [m] """
+    l_t_half: float
+    """ Half Length of the thruster [m] """
+    w_t_half: float
+    """ Half Width of the thruster [m] """
 
-    def __post_init__(self):
-        assert self.lr > self.lf
+    model_type: ModelType = ROCKET
 
     @classmethod
     def default(
         cls,
         color: Color = "royalblue",
-        m=50,  # MASS TO BE INTENDED AS MASS OF THE ROCKET WITHOUT FUEL
-        Iz=100,
-        w_half=1,
-        lf=2,
-        lr=3,
+        m=2.0,  # MASS TO BE INTENDED AS MASS OF THE ROCKET WITHOUT FUEL
+        Iz=1e-00,
+        w_half=0.1,
+        l_f=0.3,
+        l_m=0.15,
+        l_r=0.15,
+        l=0.6,
+        l_t_half=0.1,
+        w_t_half=0.05,
     ) -> "RocketGeometry":
         return RocketGeometry(
             m=m,
             Iz=Iz,
             w_half=w_half,
-            lf=lf,
-            lr=lr,
+            l_f=l_f,
+            l_m=l_m,
+            l_r=l_r,
+            l=l_r + l_m + l_f,
+            r=max(l-l_f, l_f)*1.25,
+            l_t_half=l_t_half,
+            w_t_half=w_t_half,
             e=0.7,
             color=color,
         )
@@ -64,21 +82,27 @@ class RocketGeometry(ModelGeometry):
     @cached_property
     def outline(self) -> tuple[tuple[float, float], ...]:
         """
-        Outline of the rocket. The outline is made by the union of an ellipse and a rectangle.
+        Outline of the rocket. The outline is made up of a rectangle and a triangle.
         The cog is at the end of the rectangle (circle center).
         """
-        circle = Point(0, 0).buffer(self.w_half)
-        ellipse = affinity.scale(circle, self.lf / self.w_half, 1)
-        rect = Polygon(
+        body = Polygon(
             [
-                (-self.lr, self.w_half),
-                (-self.lr, -self.w_half),
-                (1e-3, -self.w_half),
-                (1e-3, self.w_half),
-                (-self.lr, self.w_half),
+                (-self.l_f, self.w_half, 1),
+                (self.l_m+self.l_r, self.w_half, 1),
+                (self.l_m+self.l_r, -self.w_half, 1),
+                (-self.l_f, -self.w_half, 1),
+                (-self.l_f, self.w_half, 1),
             ]
         )
-        rocket_poly = unary_union([ellipse, rect])
+        header = Polygon(
+            [
+                (self.l_m+self.l_r, self.w_half, 1),
+                (self.l, 0, 1),
+                (self.l_m+self.l_r, -self.w_half, 1),
+                (self.l_m+self.l_r, self.w_half, 1),
+            ]
+        )
+        rocket_poly = unary_union([body, header])
         return tuple(rocket_poly.exterior.coords)
 
     @cached_property
@@ -91,7 +115,7 @@ class RocketGeometry(ModelGeometry):
 
     @property
     def thruster_shape(self):
-        w_half, l_half = 0.15, 0.5
+        w_half, l_half = self.w_t_half, self.l_t_half
         return w_half, l_half
 
     @property
@@ -101,7 +125,7 @@ class RocketGeometry(ModelGeometry):
 
     @property
     def thrusters_position(self) -> list[SE2value]:
-        positions = [SE2_from_xytheta((-self.lr, -self.w_half, 0)), SE2_from_xytheta((-self.lr, self.w_half, 0))]
+        positions = [SE2_from_xytheta((-self.l_m, -self.w_half, 0)), SE2_from_xytheta((-self.l_m, self.w_half, 0))]
         return positions
 
     @cached_property
@@ -112,15 +136,41 @@ class RocketGeometry(ModelGeometry):
 
 @dataclass(frozen=True, unsafe_hash=True)
 class RocketParameters(ModelParameters):
-    dpsi_limits: tuple[float, float]
-    """ Maximum yaw rate [rad/s] """
+    m_fuel: float
+    """ Mass of the fuel [kg] """
+    C_T: float
+    """ Thrust coefficient [1/(I_sp) I_sp: specific impulse] [N] """
+    F_limits: tuple[float, float]
+    """ Maximum thrust [N] """
+    phi_limits: tuple[float, float]
+    """ Maximum nozzle angle [rad] """
+    dphi_limits: tuple[float, float]
+    """ Maximum nozzle angular velocity [rad/s] """
 
     @classmethod
-    def default(cls) -> "RocketParameters":
+    def default(
+        cls,
+        m_fuel=0.1,
+        C_T=0.01,
+        vx_limits=(kmh2ms(-7.2), kmh2ms(7.2)),
+        acc_limits=(-1.0, 1.0),
+        F_limits=(0.0, 2.0),
+        phi_limits=(-np.deg2rad(60), np.deg2rad(60)),
+        dphi_limits=(-np.deg2rad(20), np.deg2rad(20))
+    ) -> "RocketParameters":
         return RocketParameters(
-            vx_limits=(kmh2ms(-50), kmh2ms(50)), acc_limits=(-10, 10), dpsi_limits=(-2 * math.pi, 2 * math.pi)
+            m_fuel=m_fuel,
+            C_T=C_T,
+            vx_limits=vx_limits,
+            acc_limits=acc_limits,
+            F_limits=F_limits,
+            phi_limits=phi_limits,
+            dphi_limits=dphi_limits,
         )
 
     def __post_init__(self):
         super(RocketParameters, self).__post_init__()
-        assert self.dpsi_limits[0] < self.dpsi_limits[1]
+        assert self.dphi_limits[0] < self.dphi_limits[1]
+        assert self.phi_limits[0] < self.phi_limits[1]
+        assert self.F_limits[0] < self.F_limits[1]
+
