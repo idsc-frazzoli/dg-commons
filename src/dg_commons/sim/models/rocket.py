@@ -70,7 +70,7 @@ class RocketState:
     """ CoG x location [m] """
     y: float
     """ CoG y location [m] """
-    theta: float
+    psi: float
     """ Heading (yaw) [rad] """
     m: float
     """ Mass (dry + fuel) [kg] """
@@ -78,11 +78,11 @@ class RocketState:
     """ CoG longitudinal velocity [m/s] """
     vy: float
     """ CoG longitudinal velocity [m/s] """
-    dtheta: float
+    dpsi: float
     """ Heading (yaw) rate [rad/s] """
     phi: float
     """ Nozzle direction [rad] """
-    idx = frozendict({"x": 0, "y": 1, "theta": 2, "m": 3, "vx": 4, "vy": 5, "dtheta": 6, "phi": 7})
+    idx = frozendict({"x": 0, "y": 1, "psi": 2, "m": 3, "vx": 4, "vy": 5, "dpsi": 6, "phi": 7})
     """ Dictionary to get correct values from numpy arrays"""
 
     @classmethod
@@ -95,11 +95,11 @@ class RocketState:
                 self,
                 x=self.x + other.x,
                 y=self.y + other.y,
-                theta=self.theta + other.theta,
+                psi=self.psi + other.psi,
                 m=self.m + other.m,
                 vx=self.vx + other.vx,
                 vy=self.vy + other.vy,
-                dtheta=self.dtheta + other.dtheta,
+                dpsi=self.dpsi + other.dpsi,
                 phi=self.phi + other.phi,
             )
         else:
@@ -115,11 +115,11 @@ class RocketState:
             self,
             x=self.x * val,
             y=self.y * val,
-            theta=self.theta * val,
+            psi=self.psi * val,
             m=self.m * val,
             vx=self.vx * val,
             vy=self.vy * val,
-            dtheta=self.dtheta * val,
+            dpsi=self.dpsi * val,
             phi=self.phi * val,
         )
 
@@ -132,7 +132,7 @@ class RocketState:
         return str({k: round(float(v), 2) for k, v in self.__dict__.items() if not k.startswith("idx")})
 
     def as_ndarray(self) -> np.ndarray:
-        return np.array([self.x, self.y, self.theta, self.m, self.vx, self.vy, self.dtheta, self.phi])
+        return np.array([self.x, self.y, self.psi, self.m, self.vx, self.vy, self.dpsi, self.phi])
 
     @classmethod
     def from_array(cls, z: np.ndarray):
@@ -140,29 +140,29 @@ class RocketState:
         return RocketState(
             x=z[cls.idx["x"]],
             y=z[cls.idx["y"]],
-            theta=z[cls.idx["theta"]],
+            psi=z[cls.idx["psi"]],
             m=z[cls.idx["m"]],
             vx=z[cls.idx["vx"]],
             vy=z[cls.idx["vy"]],
-            dtheta=z[cls.idx["dtheta"]],
+            dpsi=z[cls.idx["dpsi"]],
             phi=z[cls.idx["phi"]],
         )
 
 
 class RocketModel(SimModel[RocketState, RocketCommands]):
-    def __init__(self, x0: RocketState, sg: RocketGeometry, sp: RocketParameters):
+    def __init__(self, x0: RocketState, rg: RocketGeometry, rp: RocketParameters):
         self._state: RocketState = x0
         """ Current state of the model"""
         self.XT: Type[RocketState] = type(x0)
         """ State type"""
-        self.sg: RocketGeometry = sg
+        self.rg: RocketGeometry = rg
         """ The vehicle's geometry parameters"""
-        self.sp: RocketParameters = sp
+        self.rp: RocketParameters = rp
         """ The vehicle parameters"""
 
     @classmethod
     def default(cls, x0: RocketState):
-        return RocketModel(x0=x0, sg=RocketGeometry.default(), sp=RocketParameters.default())
+        return RocketModel(x0=x0, rg=RocketGeometry.default(), rp=RocketParameters.default())
 
     def update(self, commands: RocketCommands, dt: Decimal):
         """
@@ -215,13 +215,13 @@ class RocketModel(SimModel[RocketState, RocketCommands]):
         dphi/dt = vphi
         
         """
-        F_lx = apply_force_limits(u.F_left, self.sp)
-        F_rx = apply_force_limits(u.F_right, self.sp)
-        dphi = apply_full_ang_vel_limits(u.dphi, self.sp)
+        F_lx = apply_force_limits(u.F_left, self.rp)
+        F_rx = apply_force_limits(u.F_right, self.rp)
+        dphi = apply_full_ang_vel_limits(x0.phi, u.dphi, self.rp)
 
         
-        theta = x0.theta
-        dtheta = x0.dtheta
+        psi = x0.psi
+        dpsi = x0.dpsi
         m = x0.m
         vx = x0.vx
         vy = x0.vy
@@ -229,18 +229,18 @@ class RocketModel(SimModel[RocketState, RocketCommands]):
 
         dx = vx
         dy = vy
-        dvtheta = dtheta
-        dm = -self.sp.C_T*(F_lx+F_rx)
-        dvx = 1/m * (math.sin(phi+theta)*F_lx + math.sin(phi-theta)*F_rx)
-        dvy = 1/m * (-math.cos(phi+theta)*F_lx + math.cos(phi-theta)*F_rx)
-        dvtheta = 1/self.sg.Iz * self.sg.l_m * math.cos(phi) * (F_rx-F_lx)
+        dvpsi = dpsi
+        dm = -self.rp.C_T*(F_lx+F_rx)
+        dvx = 1/m * (math.sin(phi+psi)*F_lx + math.sin(phi-psi)*F_rx)
+        dvy = 1/m * (-math.cos(phi+psi)*F_lx + math.cos(phi-psi)*F_rx)
+        dvpsi = 1/self.rg.Iz * self.rg.l_m * math.cos(phi) * (F_rx-F_lx)
         dphi = dphi
 
-        return RocketState(x=dx, y=dy, theta=dtheta, m=dm, vx=dvx, vy=dvy, dtheta=dvtheta, phi=dphi)
+        return RocketState(x=dx, y=dy, psi=dpsi, m=dm, vx=dvx, vy=dvy, dpsi=dvpsi, phi=dphi)
 
     def get_footprint(self) -> Polygon:
         """Returns current footprint of the rocket (mainly for collision checking)"""
-        footprint = self.sg.outline_as_polygon
+        footprint = self.rg.outline_as_polygon
         transform = self.get_pose()
         matrix_coeff = transform[0, :2].tolist() + transform[1, :2].tolist() + transform[:2, 2].tolist()
         footprint = affine_transform(footprint, matrix_coeff)
@@ -257,39 +257,39 @@ class RocketModel(SimModel[RocketState, RocketCommands]):
         return impact_locations
 
     def get_pose(self) -> SE2value:
-        return SE2_from_xytheta([self._state.x, self._state.y, self._state.theta])
+        return SE2_from_xytheta([self._state.x, self._state.y, self._state.psi])
 
     @property
     def model_geometry(self) -> RocketGeometry:
-        return self.sg
+        return self.rg
 
     def get_velocity(self, in_model_frame: bool) -> (T2value, float):
         """Returns velocity at COG"""
         vx = self._state.vx
         vy = self._state.vy
-        dtheta = self._state.dtheta
+        dpsi = self._state.dpsi
         v_l = np.array([vx, vy])
         if in_model_frame:
-            return v_l, dtheta
-        rot: SO2value = SO2_from_angle(self._state.theta)
+            return v_l, dpsi
+        rot: SO2value = SO2_from_angle(self._state.psi)
         v_g = rot @ v_l
-        return v_g, dtheta
+        return v_g, dpsi
 
-    def set_velocity(self, vel: T2value, dtheta: float, in_model_frame: bool):
+    def set_velocity(self, vel: T2value, dpsi: float, in_model_frame: bool):
         if not in_model_frame:
-            rot: SO2value = SO2_from_angle(-self._state.theta)
+            rot: SO2value = SO2_from_angle(-self._state.psi)
             vel = rot @ vel
         self._state.vx = vel[0]
         self._state.vy = vel[1]
-        self._state.dtheta = dtheta
+        self._state.dpsi = dpsi
 
     @property
     def model_type(self) -> ModelType:
-        return self.sg.model_type
+        return self.rg.model_type
 
     @property
     def model_params(self) -> ModelParameters:
-        return self.sp
+        return self.rp
 
     def get_extra_collision_friction_acc(self):
         # this model is not dynamic
