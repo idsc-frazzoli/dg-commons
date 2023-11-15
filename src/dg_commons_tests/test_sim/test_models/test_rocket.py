@@ -74,10 +74,8 @@ def get_planet_and_satellite_simcontext() -> SimContext:
 
     # some static circular obstacles
     planet1 = Point(5, 4).buffer(3)
-    # planet2 = Point(5, -4).buffer(3)
-    # planet3 = Point(0, 0).buffer(2)
 
-    # add some satellites to specific planets ->  TODO: add a class with planets and their respective satellite kids
+    # TODO: add a class with planets and their respective satellite kids
     # for a circular orbit with radius r and angular velocity w --> v=w*r
     mother_planet = planet1
     d_to_planet = 5
@@ -88,7 +86,7 @@ def get_planet_and_satellite_simcontext() -> SimContext:
     v = d_to_planet * omega
     vx = v * math.cos(curr_psi)
     vy = v * math.sin(curr_psi)
-    
+
     satellite_1 = DynObstacleState(x=x, y=y, psi=curr_psi, vx=vx, vy=vy, dpsi=omega)
     satellite_1_shape = Point(0, 0).buffer(1)
 
@@ -123,7 +121,6 @@ def get_planet_and_satellite_simcontext() -> SimContext:
 
     # some boundaries
     boundaries = LineString([(-100, -100), (-100, 100), (100, 100), (100, -100), (-100, -100)])
-    
 
     static_obstacles: list[StaticObstacle] = [StaticObstacle(shape=s) for s in [boundaries, planet1]]
 
