@@ -7,9 +7,9 @@ import numpy as np
 from frozendict import frozendict
 from geometry import SE2value, SE2_from_xytheta, SO2_from_angle, SO2value, T2value
 from scipy.integrate import solve_ivp
-from shapely.affinity import affine_transform
 from shapely.geometry import Polygon
 
+from dg_commons import apply_SE2_to_shapely_geo
 from dg_commons.sim import ImpactLocation, IMPACT_EVERYWHERE
 from dg_commons.sim.models import ModelType, ModelParameters
 from dg_commons.sim.models.model_utils import apply_acceleration_limits, apply_rot_speed_constraint
@@ -207,8 +207,7 @@ class SpacecraftModel(SimModel[SpacecraftState, SpacecraftCommands]):
         """Returns current footprint of the spacecraft (mainly for collision checking)"""
         footprint = self.sg.outline_as_polygon
         transform = self.get_pose()
-        matrix_coeff = transform[0, :2].tolist() + transform[1, :2].tolist() + transform[:2, 2].tolist()
-        footprint = affine_transform(footprint, matrix_coeff)
+        footprint: Polygon = apply_SE2_to_shapely_geo(footprint, transform)
         assert footprint.is_valid
         return footprint
 

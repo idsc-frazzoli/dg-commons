@@ -1,15 +1,15 @@
-from math import sin, cos
 from dataclasses import dataclass, replace
 from decimal import Decimal
+from math import sin, cos
 from typing import Type, Mapping
 
 import numpy as np
 from frozendict import frozendict
 from geometry import SE2value, SE2_from_xytheta, SO2_from_angle, SO2value, T2value
 from scipy.integrate import solve_ivp
-from shapely.affinity import affine_transform
 from shapely.geometry import Polygon
 
+from dg_commons import apply_SE2_to_shapely_geo
 from dg_commons.sim import ImpactLocation, IMPACT_EVERYWHERE
 from dg_commons.sim.models import ModelType, ModelParameters
 from dg_commons.sim.models.model_utils import apply_force_limits, apply_full_ang_vel_limits
@@ -98,11 +98,11 @@ class RocketState:
                 x=self.x + other.x,
                 y=self.y + other.y,
                 psi=self.psi + other.psi,
-                m=self.m + other.m,
                 vx=self.vx + other.vx,
                 vy=self.vy + other.vy,
                 dpsi=self.dpsi + other.dpsi,
                 phi=self.phi + other.phi,
+                m=self.m + other.m,
             )
         else:
             raise NotImplementedError
@@ -134,7 +134,7 @@ class RocketState:
         return str({k: round(float(v), 2) for k, v in self.__dict__.items() if not k.startswith("idx")})
 
     def as_ndarray(self) -> np.ndarray:
-        return np.array([self.x, self.y, self.psi, self.m, self.vx, self.vy, self.dpsi, self.phi])
+        return np.array([self.x, self.y, self.psi, self.vx, self.vy, self.dpsi, self.phi, self.m])
 
     @classmethod
     def from_array(cls, z: np.ndarray):
@@ -179,9 +179,9 @@ class RocketModel(SimModel[RocketState, RocketCommands]):
                 actions = RocketCommands(F_left=0, F_right=0, dphi=0)
             else:
                 actions = RocketCommands(
-                    F_left=y[RocketCommands.idx["F_left"] + n_states],
-                    F_right=y[RocketCommands.idx["F_right"] + n_states],
-                    dphi=y[RocketCommands.idx["dphi"] + n_states],
+                    F_left=float(y[RocketCommands.idx["F_left"] + n_states]),
+                    F_right=float(y[RocketCommands.idx["F_right"] + n_states]),
+                    dphi=float(y[RocketCommands.idx["dphi"] + n_states]),
                 )
             return state, actions
 
@@ -242,8 +242,7 @@ class RocketModel(SimModel[RocketState, RocketCommands]):
         """Returns current footprint of the rocket (mainly for collision checking)"""
         footprint = self.rg.outline_as_polygon
         transform = self.get_pose()
-        matrix_coeff = transform[0, :2].tolist() + transform[1, :2].tolist() + transform[:2, 2].tolist()
-        footprint = affine_transform(footprint, matrix_coeff)
+        footprint: Polygon = apply_SE2_to_shapely_geo(footprint, transform)
         assert footprint.is_valid
         return footprint
 

@@ -70,7 +70,7 @@ def get_planet_simcontext() -> SimContext:
 
 
 def get_planet_and_satellite_simcontext() -> SimContext:
-    x0_p1 = RocketState(x=-8, y=-8, psi=pi, m=2.1, vx=0, vy=0, dpsi=0.0, phi=0.0)
+    x0_p1 = RocketState(x=-8, y=-8, psi=pi, vx=0, vy=0, dpsi=0.0, phi=0.0, m=2.1)
 
     # some static circular obstacles
     planet1 = Point(5, 5).buffer(3)
@@ -142,4 +142,5 @@ def test_rocket_n_planet_sim():
     report.to_html(report_file)
 
 
-test_rocket_n_planet_sim()
+if __name__ == "__main__":
+    test_rocket_n_planet_sim()

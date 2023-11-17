@@ -212,7 +212,8 @@ class VehicleModel(SimModel[TVehicleState, VehicleCommands]):
         """Returns current footprint of the vehicle (mainly for collision checking)"""
         footprint = self.vg.outline_as_polygon
         transform = self.get_pose()
-        return apply_SE2_to_shapely_geo(footprint, transform)
+        footprint: Polygon = apply_SE2_to_shapely_geo(footprint, transform)
+        return footprint
 
     def get_mesh(self) -> Mapping[ImpactLocation, Polygon]:
         footprint = self.get_footprint()
