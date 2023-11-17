@@ -1,4 +1,4 @@
-from typing import Union, Dict, Optional
+from typing import Union, Dict, Optional, Any
 
 import matplotlib.patches as mpatches
 from matplotlib import pyplot as plt
@@ -28,7 +28,7 @@ class ShapelyViz:
         self.ax = plt.gca() if ax is None else ax
         # self.fig = self.ax.figure
 
-    def add_shape(self, shape: BaseGeometry, **style_kwargs: Dict):
+    def add_shape(self, shape: BaseGeometry, **style_kwargs: Any):
         """Plot a given shapely object.
         Shapely geometries currently supported are: `GeometryCollection`, `LineString`,
         `LinearRing`, `MultiLineString`, `MultiPoint`, `MultiPolygon`, `Point`, and `Polygon`.

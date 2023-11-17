@@ -205,7 +205,7 @@ class Simulator:
                     logger.warn(f"Failed to resolve collision of {p} with environment because:\n{e.args}")
                     report = None
                 if report is not None and not isinstance(p_model, DynObstacleModel):
-                    logger.info(f"Player {p} collided with the environment")
+                    logger.debug(f"Player {p} collided with the environment")
                     collision = True
                     sim_context.collision_reports.append(report)
                     if sim_context.time < sim_context.first_collision_ts:
@@ -234,7 +234,7 @@ class Simulator:
                     logger.warn(f"Failed to resolve collision between {p1} and {p2} because:\n{e.args}")
                     report = None
                 if report is not None:
-                    logger.info(f"Detected a collision between {p1} and {p2}")
+                    logger.debug(f"Detected a collision between {p1} and {p2}")
                     collision = True
                     if report.at_time < sim_context.first_collision_ts:
                         sim_context.first_collision_ts = report.at_time

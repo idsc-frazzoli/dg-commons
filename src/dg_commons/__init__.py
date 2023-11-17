@@ -1,6 +1,6 @@
-__version__ = "0.0.29"
+__version__ = "0.0.34"
 
-from logging import INFO
+from logging import INFO, DEBUG
 from typing import ClassVar
 
 import contracts
@@ -8,7 +8,7 @@ from zuper_commons.logs import ZLogger
 
 logger = ZLogger(__name__)
 
-logger.setLevel(level=INFO)
+logger.setLevel(INFO)
 
 contracts.disable_all()
 

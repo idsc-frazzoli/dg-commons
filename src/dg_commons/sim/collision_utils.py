@@ -6,6 +6,7 @@ from typing import Mapping
 import numpy as np
 from commonroad.scenario.lanelet import LaneletNetwork
 from geometry import T2value, SO2value, SO2_from_angle, SE2value
+from shapely import GeometryCollection, MultiPoint, MultiLineString
 from shapely.geometry import Polygon, Point, LineString, MultiPolygon
 from shapely.geometry.base import BaseGeometry
 from toolz import remove
@@ -29,21 +30,24 @@ def velocity_of_P_given_A(vel: T2value, omega: float, vec_ap: T2value) -> T2valu
 
 
 def _find_intersection_points(a_shape: Polygon, b_shape: BaseGeometry) -> list[tuple[float, float]]:
-    """#todo"""
+    """Returns a list of points"""
     int_shape = a_shape.intersection(b_shape)
     if isinstance(int_shape, Polygon):
         points = list(int_shape.exterior.coords[:-1])
-    elif isinstance(int_shape, MultiPolygon):
+    elif isinstance(int_shape, LineString):
+        points = list(int_shape.coords)
+    elif any(
+        isinstance(int_shape, shape_t) for shape_t in [MultiPolygon, MultiLineString, MultiPoint, GeometryCollection]
+    ):
         int_shape: Polygon = int_shape.minimum_rotated_rectangle
         logger.warn(
             f"Found multiple contact points between two geometries, collision resolution might not be accurate. "
-            f"Use a smaller physics step for improved accuracy."
+            f"Try a smaller physics step for improved accuracy."
         )
+        # this could still lead to some ill-posed cases
         points = list(int_shape.exterior.coords[:-1])
-    elif isinstance(int_shape, LineString):
-        points = list(int_shape.coords)
     else:
-        raise CollisionException(f"Intersection shape is not a polygon: {int_shape}")
+        raise CollisionException(f"Unable to handle intersection shape: {int_shape}")
 
     def is_contained_in_aorb(p) -> bool:
         shapely_point = Point(p).buffer(1.0e-9)
@@ -51,7 +55,7 @@ def _find_intersection_points(a_shape: Polygon, b_shape: BaseGeometry) -> list[t
 
     points = list(remove(is_contained_in_aorb, points))
     if not len(points) == 2:
-        if logger.logger.getEffectiveLevel() < logging.INFO:
+        if logger.level < logging.INFO:
             from matplotlib import pyplot as plt
 
             plt.figure()
@@ -77,19 +81,32 @@ def get_impact_point_direction(state: X, impact_point: Point) -> float:
 
 def compute_impact_geometry(a: Polygon, b: BaseGeometry) -> (np.ndarray, Point):
     """
-    This computes the normal of impact between models a and b
-    :param a: Polygon object
-    :param b: Polygon object
+    This computes the normal of impact between models a and b.
+    The following cases are covered:
+        - b is contained in a (rare, but sometimes a small obstacle can end up being entirely inside a.
+            This happens mainly with large physic's steps or very small obstacles)
+        - "standard intersections", partial overlap of bodies, we distinguish 2 cases:
+            - single-body intersection
+            - multi-body intersection (more rare, happens usually with non-convex/weird shapes)
+    The following cases are *not covered*
+        - a is contained in b (very unlikely between vehicle-vehicle and between vehicle-obstacle)
+    :param a: Polygon
+    :param b: Base Geometry
     :return: normal of impact and the impact point
     """
     assert not a.touches(b)
-    intersecting_points = _find_intersection_points(a, b)
-    impact_point = LineString(intersecting_points).interpolate(0.5, normalized=True)
-    first, second = intersecting_points
-    dxdy_surface = (second[0] - first[0], second[1] - first[1])
-    normal = np.array([-dxdy_surface[1], dxdy_surface[0]])
-    normal /= np.linalg.norm(normal)
-    r_ap = np.array(impact_point.coords[0]) - np.array(a.centroid.coords[0])
+    if a.contains(b):
+        impact_point = b.centroid
+        r_ap = np.array(impact_point.coords[0]) - np.array(a.centroid.coords[0])
+        normal = r_ap / np.linalg.norm(r_ap)
+    else:
+        intersecting_points = _find_intersection_points(a, b)
+        impact_point = LineString(intersecting_points).interpolate(0.5, normalized=True)
+        first, second = intersecting_points
+        dxdy_surface = (second[0] - first[0], second[1] - first[1])
+        normal = np.array([-dxdy_surface[1], dxdy_surface[0]])
+        normal /= np.linalg.norm(normal)
+        r_ap = np.array(impact_point.coords[0]) - np.array(a.centroid.coords[0])
     if np.dot(r_ap, normal) < 0:
         # rotate by 180 if pointing into the inwards of A
         normal *= -1
