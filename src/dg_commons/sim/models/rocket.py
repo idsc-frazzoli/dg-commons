@@ -3,6 +3,8 @@ from decimal import Decimal
 from math import sin, cos
 from typing import Type, Mapping
 
+from dg_commons import logger
+
 import numpy as np
 from frozendict import frozendict
 from geometry import SE2value, SE2_from_xytheta, SO2_from_angle, SO2value, T2value
@@ -220,6 +222,12 @@ class RocketModel(SimModel[RocketState, RocketCommands]):
         F_lx = apply_force_limits(u.F_left, self.rp)
         F_rx = apply_force_limits(u.F_right, self.rp)
         dphi = apply_full_ang_vel_limits(x0.phi, u.dphi, self.rp)
+
+        # set actions to zero if vehicle has no more fuel
+        if x0.m <= self.rp.m_v:
+            F_lx = 0
+            F_rx = 0
+            logger.warning("Vehicle has no more fuel!")
 
         psi = x0.psi
         dpsi = x0.dpsi

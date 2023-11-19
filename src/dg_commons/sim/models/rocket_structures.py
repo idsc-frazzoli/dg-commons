@@ -177,8 +177,8 @@ class RocketGeometry(ModelGeometry):
 
 @dataclass(frozen=True, unsafe_hash=True)
 class RocketParameters(ModelParameters):
-    m_fuel: float
-    """ Mass of the fuel [kg] """
+    m_v: float
+    """ Mass of the vehicle [kg] """
     C_T: float
     """ Thrust coefficient [1/(I_sp) I_sp: specific impulse] [N] """
     F_limits: tuple[float, float]
@@ -191,7 +191,7 @@ class RocketParameters(ModelParameters):
     @classmethod
     def default(
         cls,
-        m_fuel=0.1,
+        m_v=2.0,
         C_T=0.01,
         vx_limits=(kmh2ms(-7.2), kmh2ms(7.2)),
         acc_limits=(-1.0, 1.0),
@@ -200,7 +200,7 @@ class RocketParameters(ModelParameters):
         dphi_limits=(-np.deg2rad(20), np.deg2rad(20)),
     ) -> "RocketParameters":
         return RocketParameters(
-            m_fuel=m_fuel,
+            m_v=m_v,
             C_T=C_T,
             vx_limits=vx_limits,
             acc_limits=acc_limits,
