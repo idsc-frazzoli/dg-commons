@@ -78,14 +78,14 @@ def get_planet_and_satellite_simcontext() -> SimContext:
     # TODO: add a class with planets and their respective satellite kids
     # for a circular orbit with radius r and angular velocity w --> v=w*r
     mother_planet = planet1
-    d_to_planet = 5
+    orbit_r = 5
     omega = 1
-    theta_planet = -pi / 2
-    x = mother_planet.centroid.x + d_to_planet * cos(theta_planet)
-    y = mother_planet.centroid.y + d_to_planet * sin(theta_planet)
+    tau = -pi / 2   # initial angle of satellite w.r.t. mother planet
+    x = mother_planet.centroid.x + orbit_r * cos(tau)
+    y = mother_planet.centroid.y + orbit_r * sin(tau)
     curr_psi = pi / 2 + arctan2(y - mother_planet.centroid.y, x - mother_planet.centroid.x)
 
-    satellite_1 = DynObstacleState(x=x, y=y, psi=curr_psi, vx=omega * d_to_planet, vy=0, dpsi=omega)
+    satellite_1 = DynObstacleState(x=x, y=y, psi=curr_psi, vx=omega * orbit_r, vy=0, dpsi=omega)
     satellite_1_shape = Point(0, 0).buffer(1)
 
     models = {
