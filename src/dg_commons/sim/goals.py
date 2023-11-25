@@ -10,6 +10,7 @@ from shapely.geometry.base import BaseGeometry
 
 from dg_commons import SE2Transform, X, SE2_apply_T2, apply_SE2_to_shapely_geo
 from dg_commons.maps import DgLanelet
+from dg_commons.sim import SimTime
 from dg_commons.sim.models import extract_pose_from_state
 
 __all__ = ["PlanningGoal", "TPlanningGoal", "RefLaneGoal", "PolygonGoal", "PoseGoal"]
@@ -18,7 +19,7 @@ __all__ = ["PlanningGoal", "TPlanningGoal", "RefLaneGoal", "PolygonGoal", "PoseG
 @dataclass(frozen=True)
 class PlanningGoal(ABC):
     @abstractmethod
-    def is_fulfilled(self, state: X) -> bool:
+    def is_fulfilled(self, state: X, at: SimTime = 0) -> bool:
         pass
 
     @abstractmethod
@@ -37,7 +38,7 @@ class RefLaneGoal(PlanningGoal):
     goal_progress: float
     """Parametrized in along_lane [meters], need to convert from beta if using control points parametrization"""
 
-    def is_fulfilled(self, state: X) -> bool:
+    def is_fulfilled(self, state: X, at: SimTime = 0) -> bool:
         pose = extract_pose_from_state(state)
         xy = translation_from_SE2(pose)
         if self.goal_polygon.contains(Point(xy)):
@@ -81,7 +82,7 @@ class PolygonGoal(PlanningGoal):
         end_goal_segment = _polygon_at_along_lane(lanelet, inflation_radius=inflation_radius)
         return cls(end_goal_segment)
 
-    def is_fulfilled(self, state: X) -> bool:
+    def is_fulfilled(self, state: X, at: SimTime = 0) -> bool:
         pose = extract_pose_from_state(state)
         xy = translation_from_SE2(pose)
         return self.goal.contains(Point(xy))
@@ -94,7 +95,7 @@ class PolygonGoal(PlanningGoal):
 class PoseGoal(PlanningGoal):
     goal_pose: SE2Transform
 
-    def is_fulfilled(self, state: X, tol: float = 1e-7) -> bool:
+    def is_fulfilled(self, state: X, at: SimTime = 0, tol: float = 1e-7) -> bool:
         pose = extract_pose_from_state(state)
         goal_pose = self.goal_pose.as_SE2()
         return np.linalg.norm(pose - goal_pose) <= tol

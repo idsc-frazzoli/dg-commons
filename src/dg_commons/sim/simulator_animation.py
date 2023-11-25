@@ -84,6 +84,7 @@ def create_animation(
                 states[pname], actions[pname] = sim_viz.plot_player(
                     ax=ax,
                     state=plog.state,
+                    command=plog.commands,
                     lights_colors=lights_colors,
                     player_name=pname,
                     alpha=0.8,
@@ -122,6 +123,7 @@ def create_animation(
                 ax=ax,
                 player_name=pname,
                 state=log_at_t[pname].state,
+                command=log_at_t[pname].commands,
                 lights_colors=lights_colors,
                 model_poly=box_handle,
                 lights_patches=actions[pname],

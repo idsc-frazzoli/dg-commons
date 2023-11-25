@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Sequence, Union
+from typing import Sequence, Union, TypeVar
 
 import numpy as np
 from commonroad_dc.pycrcc import Polygon as CommonRoadPolygon
@@ -93,7 +93,10 @@ class SE2Transform:
         return M
 
 
-def apply_SE2_to_shapely_geo(shapely_geometry: BaseGeometry, se2_value: SE2value) -> BaseGeometry:
+TBaseGeometry = TypeVar("TBaseGeometry", bound=BaseGeometry)
+
+
+def apply_SE2_to_shapely_geo(shapely_geometry: BaseGeometry, se2_value: SE2value) -> TBaseGeometry:
     """Apply SE2 transform to shapely geometry"""
     coeffs = [se2_value[0, 0], se2_value[0, 1], se2_value[1, 0], se2_value[1, 1], se2_value[0, 2], se2_value[1, 2]]
     return affine_transform(shapely_geometry, coeffs)

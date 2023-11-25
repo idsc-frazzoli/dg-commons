@@ -104,5 +104,5 @@ def test_simple_simulation():
     sim.run(sim_context)
     report = generate_report(sim_context)
     # save report
-    report_file = os.path.join(OUT_TESTS_DIR, f"simple_sim.html")
+    report_file = os.path.join(OUT_TESTS_DIR, f"sim_simple.html")
     report.to_html(report_file)

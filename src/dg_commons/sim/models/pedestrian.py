@@ -11,7 +11,7 @@ from shapely import affinity
 from shapely.affinity import affine_transform
 from shapely.geometry import Point, Polygon
 
-from dg_commons import PoseState
+from dg_commons import PoseState, apply_SE2_to_shapely_geo
 from dg_commons.sim import SimModel, SimTime, ImpactLocation, IMPACT_EVERYWHERE
 from dg_commons.sim.models import ModelParameters
 from dg_commons.sim.models.model_structures import ModelGeometry, PEDESTRIAN, ModelType
@@ -222,8 +222,7 @@ class PedestrianModel(SimModel[SE2value, float]):
     def get_footprint(self) -> Polygon:
         footprint = self.pg.outline_as_polygon
         transform = self.get_pose()
-        matrix_coeff = transform[0, :2].tolist() + transform[1, :2].tolist() + transform[:2, 2].tolist()
-        footprint = affine_transform(footprint, matrix_coeff)
+        footprint: Polygon = apply_SE2_to_shapely_geo(footprint, transform)
         assert footprint.is_valid
         return footprint
 
