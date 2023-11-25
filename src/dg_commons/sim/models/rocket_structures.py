@@ -210,7 +210,7 @@ class RocketParameters(ModelParameters):
         )
 
     def __post_init__(self):
-        super(RocketParameters, self).__post_init__()
+        super().__post_init__()
         assert self.dphi_limits[0] < self.dphi_limits[1]
         assert self.phi_limits[0] < self.phi_limits[1]
         assert self.F_limits[0] < self.F_limits[1]
