@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
 from functools import cached_property
@@ -19,13 +21,17 @@ __all__ = ["PlanningGoal", "TPlanningGoal", "RefLaneGoal", "PolygonGoal", "PoseG
 @dataclass(frozen=True)
 class PlanningGoal(ABC):
     @abstractmethod
-    def is_fulfilled(self, state: X, at: SimTime = 0) -> bool:
+    def is_fulfilled(self, state: X, at: SimTime | float = 0) -> bool:
         pass
 
     @abstractmethod
-    def get_plottable_geometry(self) -> BaseGeometry:
+    def get_plottable_geometry(self, at: SimTime | float = 0) -> BaseGeometry:
         # convert to use commonroad IDrawable
         pass
+
+    @property
+    def is_static(self) -> bool:
+        return True
 
 
 # from 3.11 can switch to Self
@@ -38,7 +44,7 @@ class RefLaneGoal(PlanningGoal):
     goal_progress: float
     """Parametrized in along_lane [meters], need to convert from beta if using control points parametrization"""
 
-    def is_fulfilled(self, state: X, at: SimTime = 0) -> bool:
+    def is_fulfilled(self, state: X, at: SimTime | float = 0) -> bool:
         pose = extract_pose_from_state(state)
         xy = translation_from_SE2(pose)
         if self.goal_polygon.contains(Point(xy)):
@@ -47,7 +53,7 @@ class RefLaneGoal(PlanningGoal):
         else:
             return False
 
-    def get_plottable_geometry(self) -> BaseGeometry:
+    def get_plottable_geometry(self, at: SimTime | float = 0) -> BaseGeometry:
         return self.goal_polygon
 
     @cached_property
@@ -82,29 +88,30 @@ class PolygonGoal(PlanningGoal):
         end_goal_segment = _polygon_at_along_lane(lanelet, inflation_radius=inflation_radius)
         return cls(end_goal_segment)
 
-    def is_fulfilled(self, state: X, at: SimTime = 0) -> bool:
+    def is_fulfilled(self, state: X, at: SimTime | float = 0) -> bool:
         pose = extract_pose_from_state(state)
         xy = translation_from_SE2(pose)
         return self.goal.contains(Point(xy))
 
-    def get_plottable_geometry(self) -> Polygon:
+    def get_plottable_geometry(self, at: SimTime | float = 0) -> Polygon:
         return self.goal
 
 
 @dataclass(frozen=True)
 class PoseGoal(PlanningGoal):
     goal_pose: SE2Transform
+    _tol: float = 1e-7
 
-    def is_fulfilled(self, state: X, at: SimTime = 0, tol: float = 1e-7) -> bool:
+    def is_fulfilled(self, state: X, at: SimTime | float = 0) -> bool:
         pose = extract_pose_from_state(state)
         goal_pose = self.goal_pose.as_SE2()
-        return np.linalg.norm(pose - goal_pose) <= tol
+        return np.linalg.norm(pose - goal_pose) <= self._tol
 
-    def get_plottable_geometry(self) -> BaseGeometry:
-        raise self.goal_pose
+    def get_plottable_geometry(self, at: SimTime | float = 0) -> BaseGeometry:
+        raise self.goal_pose_poly
 
     @cached_property
-    def goal_pose(self) -> Polygon:
+    def goal_pose_poly(self) -> Polygon:
         goal_shape = Polygon([(-0.2, 0.5), (0, 0), (-0.2, -0.5), (0.8, 0)])
         goal = apply_SE2_to_shapely_geo(goal_shape, self.goal_pose.as_SE2())
         return goal

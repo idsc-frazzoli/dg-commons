@@ -143,6 +143,7 @@ def create_animation(
                     )
                 except:
                     pass
+        sim_viz.plot_timevarying_goals(ax=ax, t=t)
         adjust_axes_limits(
             ax=ax, plot_limits=plot_limits, players_states={p: log_entry.state for p, log_entry in log_at_t.items()}
         )

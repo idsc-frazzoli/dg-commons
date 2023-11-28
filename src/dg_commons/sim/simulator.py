@@ -247,7 +247,7 @@ class Simulator:
             # if p is still active
             if p in sim_context.players:
                 p_state = sim_context.models[p].get_state()
-                if m.is_fulfilled(p_state):
+                if m.is_fulfilled(p_state, sim_context.time):
                     t = sim_context.time
                     self.simlogger[p].states.add(t=t, v=p_state)
                     sim_context.players.pop(p)
