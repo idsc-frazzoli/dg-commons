@@ -3,6 +3,7 @@ from functools import cached_property
 from typing import Self
 
 import numpy as np
+from geometry import SE2_from_xytheta
 from shapely import Point
 from shapely.geometry import Polygon
 
@@ -38,7 +39,7 @@ class DiffDriveGeometry(ModelGeometry):
         m: float = 3,
         Iz: float = 5,
         wheelbase: float = 1,
-        wheelradius: float = 0.1,
+        wheelradius: float = 0.2,
         radius: float = 0.6,
     ) -> Self:
         return DiffDriveGeometry(
@@ -64,7 +65,7 @@ class DiffDriveGeometry(ModelGeometry):
     def outline(self) -> tuple[tuple[float, float], ...]:
         """Outline of the vehicle intended as the whole car body."""
         poly = self.outline_as_polygon
-        return poly.exterior.coords.xy
+        return tuple(zip(poly.exterior.coords.xy[0], poly.exterior.coords.xy[1]))
 
     @cached_property
     def outline_as_polygon(self) -> Polygon:
@@ -82,24 +83,35 @@ class DiffDriveGeometry(ModelGeometry):
 
     @cached_property
     def wheel_outline(self):
-        halfwidth, radius = self.wheel_shape
+        half_width, r = self.wheel_shape
         # fixme uniform points handling to native list of tuples
         return np.array(
             [
-                [radius, -radius, -radius, radius, radius],
-                [-halfwidth, -halfwidth, halfwidth, halfwidth, -halfwidth],
+                [r, -r, -r, r, r],
+                [-half_width, -half_width, half_width, half_width, -half_width],
                 [1, 1, 1, 1, 1],
             ]
         )
 
     @cached_property
     def wheels_position(self) -> np.ndarray:
-        positions = np.array([[-self.wheelbase / 2, self.wheelbase / 2], [0, 0], [1, 1]])
+        positions = np.array([[0, 0], [-self.wheelbase / 2, self.wheelbase / 2], [1, 1]])
         return positions
 
     @cached_property
     def n_wheels(self) -> int:
         return self.wheels_position.shape[1]
+
+    @cached_property
+    def wheels_outlines(self) -> list[np.ndarray]:
+        """Returns a list of wheel outlines in the model frame"""
+        wheels_position = self.wheels_position
+        assert self.n_wheels == 2
+        transformed_wheels_outlines = []
+        for i in range(self.n_wheels):
+            transform = SE2_from_xytheta((wheels_position[0, i], wheels_position[1, i], 0))
+            transformed_wheels_outlines.append(transform @ self.wheel_outline)
+        return transformed_wheels_outlines
 
 
 @dataclass(frozen=True, unsafe_hash=True)
