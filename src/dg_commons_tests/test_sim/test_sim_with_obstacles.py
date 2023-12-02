@@ -22,6 +22,7 @@ from dg_commons_tests import OUT_TESTS_DIR
 from dg_commons_tests.test_sim.test_sim import generate_report
 
 Ego = PlayerName("ego")
+Ego2 = PlayerName("ego2")
 DObs1 = PlayerName("DObs1")
 
 
@@ -30,6 +31,7 @@ def get_simple_scenario() -> SimContext:
 
     dobs_shape = Polygon([[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]])
     x0_dobs1: DynObstacleState = DynObstacleState(x=7, y=11, psi=deg2rad(0), vx=3, vy=-1, dpsi=1)
+    DiffDriveState
     og_dobs1: ObstacleGeometry = ObstacleGeometry(m=1000, Iz=1000, e=0.2)
     op_dops1: DynObstacleParameters = DynObstacleParameters(vx_limits=(-10, 10), acc_limits=(-1, 1))
 
