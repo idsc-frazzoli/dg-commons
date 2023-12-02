@@ -19,6 +19,8 @@ from zuper_commons.types import ZValueError
 from dg_commons import Color, transform_xy, apply_SE2_to_shapely_geo, PlayerName, X, U
 from dg_commons.maps.shapely_viz import ShapelyViz
 from dg_commons.planning.trajectory import Trajectory
+from dg_commons.sim.models.diff_drive import DiffDriveState
+from dg_commons.sim.models.diff_drive_structures import DiffDriveGeometry
 from dg_commons.sim.models.obstacles_dyn import DynObstacleState, DynObstacleModel
 from dg_commons.sim.models.pedestrian import PedestrianState, PedestrianGeometry
 from dg_commons.sim.models.spacecraft import SpacecraftState
@@ -176,6 +178,18 @@ class SimRenderer(SimRendererABC):
             transformed_shape = apply_SE2_to_shapely_geo(shape, q)
             model_poly[0].set_xy(np.array(transformed_shape.exterior.xy).T)
             return model_poly, []
+        elif issubclass(type(state), DiffDriveState):
+            diff_drive_poly = plot_diffdrive(
+                ax=ax,
+                player_name=player_name,
+                state=state,
+                # command=command,
+                vg=mg,
+                alpha=alpha,
+                diff_drive_poly=model_poly,
+                plot_wheels=plot_wheels,
+            )
+            return diff_drive_poly, []
         else:
             raise ZValueError(msg=f"Unknown state type, {type(state)}", state=state)
 
@@ -483,6 +497,53 @@ def plot_rocket(
         xy_poly = flames_outline[f_idx]
         flame.set_xy(xy_poly)
     return rocket_poly
+
+
+def plot_diffdrive(
+    ax: Axes,
+    player_name: PlayerName,
+    state: DiffDriveState,
+    vg: DiffDriveGeometry,
+    alpha: float,
+    diff_drive_poly: Optional[list[Polygon]] = None,
+    plot_wheels: bool = False,
+    **style_kwargs,
+) -> list[Polygon]:
+    """"""
+    diffdrive_outline: Sequence[tuple[float, float], ...] = vg.outline
+    diffdrive_color: Color = vg.color
+    q = SE2_from_xytheta((state.x, state.y, state.psi))
+    x4, y4 = transform_xy(q, ((0, 0),))[0]
+    if diff_drive_poly is None:
+        diffdrive_box = ax.fill([], [], color=diffdrive_color, alpha=alpha, zorder=ZOrders.MODEL, **style_kwargs)[0]
+        text: Text = ax.text(
+            x4,
+            y4,
+            player_name,
+            zorder=ZOrders.PLAYER_NAME,
+            horizontalalignment="center",
+            verticalalignment="center",
+            clip_on=True,
+        )
+        diff_drive_poly = [diffdrive_box, text]
+        if plot_wheels:
+            wheels_boxes = [
+                ax.fill([], [], color="k", alpha=alpha, zorder=ZOrders.MODEL)[0] for _ in range(vg.n_wheels)
+            ]
+            diff_drive_poly.extend(wheels_boxes)
+
+    outline = transform_xy(q, diffdrive_outline)
+    diff_drive_poly[0].set_xy(outline)
+    diff_drive_poly[1].set_position((x4, y4))
+
+    if plot_wheels:
+        wheels_outlines = vg.wheels_outlines
+        wheels_outlines = [q @ w_outline for w_outline in wheels_outlines]
+        for w_idx, wheel in enumerate(diff_drive_poly[2:]):
+            xy_poly = wheels_outlines[w_idx][:2, :].T
+            wheel.set_xy(xy_poly)
+
+    return diff_drive_poly
 
 
 def approximate_bounding_box_players(obj_list: Sequence[X]) -> Union[Sequence[List], None]:

@@ -35,7 +35,6 @@ class PlanningGoal(ABC):
         return True
 
 
-# from 3.11 can switch to Self
 TPlanningGoal = TypeVar("TPlanningGoal", bound=PlanningGoal)
 
 
