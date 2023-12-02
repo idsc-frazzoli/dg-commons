@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Self
 
 import numpy as np
 from geometry import SE2_from_xytheta
@@ -41,7 +40,7 @@ class DiffDriveGeometry(ModelGeometry):
         wheelbase: float = 1,
         wheelradius: float = 0.2,
         radius: float = 0.6,
-    ) -> Self:
+    ) -> "DiffDriveGeometry":
         return DiffDriveGeometry(
             vehicle_type=DIFF_DRIVE,
             m=m,
@@ -120,7 +119,7 @@ class DiffDriveParameters(ModelParameters):
     """ min/max acceleration """
 
     @classmethod
-    def default(cls) -> Self:
+    def default(cls) -> "DiffDriveParameters":
         return cls(
             vx_limits=(kmh2ms(-10), kmh2ms(10)),
             acc_limits=(-5, 5),

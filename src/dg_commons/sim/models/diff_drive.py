@@ -1,7 +1,7 @@
 from dataclasses import dataclass, replace
 from decimal import Decimal
 from math import cos, sin
-from typing import Type, Mapping, Self
+from typing import Type, Mapping
 
 import numpy as np
 from frozendict import frozendict
@@ -117,7 +117,7 @@ class DiffDriveModel(SimModel[DiffDriveState, DiffDriveCommands]):
         """ The vehicle parameters"""
 
     @classmethod
-    def default(cls, x0: DiffDriveState) -> Self:
+    def default(cls, x0: DiffDriveState) -> "DiffDriveModel":
         return DiffDriveModel(x0=x0, vg=DiffDriveGeometry.default(), vp=DiffDriveParameters.default())
 
     def update(self, commands: DiffDriveCommands, dt: Decimal):
