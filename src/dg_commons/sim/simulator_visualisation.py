@@ -383,6 +383,53 @@ def plot_spacecraft(
         thruster.set_xy(xy_poly)
     return scraft_poly
 
+def plot_rocket(
+    ax: Axes,
+    player_name: PlayerName,
+    state:  RocketState,
+    command: RocketCommands,
+    rg: RocketGeometry,
+    alpha: float,
+    rocket_poly: Optional[list[Polygon]],
+) -> list[Polygon]:
+    q  = SE2_from_xytheta((state.x, state.y, state.psi))
+    x4, y4 = transform_xy(q, ((0, 0),))[0]
+    if rocket_poly is None:
+        rocket_box = ax.fill([], [], color=rg.color, alpha=alpha, zorder=ZOrders.MODEL)[0]
+        text: Text = ax.text(
+            x4,
+            y4,
+            player_name,
+            zorder=ZOrders.PLAYER_NAME,
+            horizontalalignment="center",
+            verticalalignment="center",
+            clip_on=True,
+        )
+        rocket_poly = [rocket_box, text]
+        thrusters_boxes = [
+            ax.fill([], [], color="k", alpha=alpha, zorder=ZOrders.MODEL)[0] for _ in range(rg.n_thrusters)
+        ]
+        flames_boxes = [
+            ax.fill([], [], color="r", alpha=alpha, zorder=ZOrders.MODEL)[0] for _ in range(rg.n_thrusters)
+        ]
+        rocket_poly.extend(thrusters_boxes)
+        rocket_poly.extend(flames_boxes)
+    # body
+    rocket_outline: Sequence[tuple[float, float], ...] = rg.outline
+    outline_xy = transform_xy(q, rocket_outline)
+    rocket_poly[0].set_xy(outline_xy)
+    rocket_poly[1].set_position((x4, y4))
+    # thrusters
+    thrusters_outline = np.array([transform_xy(q, t_outline) for t_outline in rg.thrusters_outline_in_body_frame(state.phi)])
+    for t_idx, thruster in enumerate(rocket_poly[2:2+rg.n_thrusters]):
+        xy_poly = thrusters_outline[t_idx]
+        thruster.set_xy(xy_poly)
+    # flames
+    flames_outline = np.array([transform_xy(q, f_outline) for f_outline in rg.flames_outline_in_body_frame(state.phi, [command.F_left,command.F_right])])
+    for f_idx, flame in enumerate(rocket_poly[2+rg.n_thrusters:]):
+        xy_poly = flames_outline[f_idx]
+        flame.set_xy(xy_poly)
+    return rocket_poly
 
 def plot_rocket(
     ax: Axes,

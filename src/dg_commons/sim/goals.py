@@ -21,6 +21,7 @@ __all__ = ["PlanningGoal", "TPlanningGoal", "RefLaneGoal", "PolygonGoal", "PoseG
 @dataclass(frozen=True)
 class PlanningGoal(ABC):
     @abstractmethod
+
     def is_fulfilled(self, state: X, at: SimTime | float = 0) -> bool:
         pass
 
@@ -100,12 +101,12 @@ class PolygonGoal(PlanningGoal):
 @dataclass(frozen=True)
 class PoseGoal(PlanningGoal):
     goal_pose: SE2Transform
-    _tol: float = 1e-7
+    tol: float = 1e-7
 
     def is_fulfilled(self, state: X, at: SimTime | float = 0) -> bool:
         pose = extract_pose_from_state(state)
         goal_pose = self.goal_pose.as_SE2()
-        return np.linalg.norm(pose - goal_pose) <= self._tol
+        return np.linalg.norm(pose - goal_pose) <= self.tol
 
     def get_plottable_geometry(self, at: SimTime | float = 0) -> BaseGeometry:
         raise self.goal_pose_poly
