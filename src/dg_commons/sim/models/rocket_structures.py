@@ -63,7 +63,7 @@ class RocketGeometry(ModelGeometry):
         l=1.2,
         l_t_half=0.1,
         w_t_half=0.05,
-        F_max=0.5,
+        F_max=0.01,
     ) -> "RocketGeometry":
         return RocketGeometry(
             m=m,
