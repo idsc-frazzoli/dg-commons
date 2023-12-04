@@ -1,14 +1,20 @@
+from __future__ import annotations
+
 import os
+from dataclasses import dataclass
 from decimal import Decimal as D
+from typing import Sequence
 
 from numpy import deg2rad
 from reprep import Report, MIME_GIF
+from shapely import Point
 from shapely.geometry import Polygon
+from shapely.geometry.base import BaseGeometry
 
-from dg_commons import PlayerName, DgSampledSequence, fd
-from dg_commons.sim import SimParameters
+from dg_commons import PlayerName, DgSampledSequence, fd, X
+from dg_commons.sim import SimParameters, SimTime
 from dg_commons.sim.agents import NPAgent
-from dg_commons.sim.goals import PolygonGoal
+from dg_commons.sim.goals import PolygonGoal, PlanningGoal
 from dg_commons.sim.log_visualisation import plot_player_log
 from dg_commons.sim.models.spacecraft import SpacecraftState, SpacecraftModel, SpacecraftCommands
 from dg_commons.sim.models.vehicle import VehicleCommands
@@ -17,6 +23,7 @@ from dg_commons.sim.scenarios import load_commonroad_scenario
 from dg_commons.sim.scenarios.structures import DgScenario
 from dg_commons.sim.simulator import SimContext, Simulator
 from dg_commons.sim.simulator_animation import create_animation
+from dg_commons.sim.utils import run_simulation
 from dg_commons_tests import OUT_TESTS_DIR
 
 P1, P2, P3 = (
@@ -105,4 +112,40 @@ def test_simple_simulation():
     report = generate_report(sim_context)
     # save report
     report_file = os.path.join(OUT_TESTS_DIR, f"sim_simple.html")
+    report.to_html(report_file)
+
+
+@dataclass(frozen=True)
+class TVgoal(PlanningGoal):
+    x0: Sequence[float, float]
+    v0: Sequence[float, float]
+    is_static: bool = False
+
+    def is_fulfilled(self, state: X, at: SimTime | float = 0) -> bool:
+        p_pos = Point(state.x, state.y)
+        return self.get_plottable_geometry(at).contains(p_pos)
+
+    def get_plottable_geometry(self, at: SimTime | float = 0) -> BaseGeometry:
+        x1, y1 = self._get_position_at(at)
+        return Point(x1, y1).buffer(0.5)
+
+    def _get_position_at(self, at: SimTime | float = 0) -> Sequence[float, float]:
+        x1 = self.x0[0] + self.v0[0] * float(at)
+        y1 = self.x0[1] + self.v0[1] * float(at)
+        return x1, y1
+
+
+def test_simulation_tvgoal():
+    # Testing time-varying goals
+    sim_context = get_simple_scenario()
+    sim_params2 = SimParameters(dt=D("0.01"), dt_commands=D("0.1"), sim_time_after_collision=D(1), max_sim_time=D(3))
+    sim_context.param = sim_params2
+    tv_goal1 = TVgoal(x0=(15, 5), v0=(3, 3))
+    tv_goal2 = TVgoal(x0=(3, 3), v0=(-3, 4))
+    missions = {P1: tv_goal1, P2: tv_goal2}
+    sim_context.missions = fd(missions)
+    sim_context = run_simulation(sim_context)
+    report = generate_report(sim_context)
+    # save report
+    report_file = os.path.join(OUT_TESTS_DIR, "sim_tvgoals.html")
     report.to_html(report_file)

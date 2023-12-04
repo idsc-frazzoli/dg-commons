@@ -14,7 +14,7 @@ from shapely.geometry import Polygon
 from dg_commons import apply_SE2_to_shapely_geo
 from dg_commons.sim import ImpactLocation, IMPACT_EVERYWHERE
 from dg_commons.sim.models import ModelType, ModelParameters
-from dg_commons.sim.models.model_utils import apply_force_limits, apply_full_ang_vel_limits
+from dg_commons.sim.models.model_utils import apply_force_limits, apply_full_ang_vel_limits  # , apply_speed_limits
 from dg_commons.sim.models.rocket_structures import RocketGeometry, RocketParameters
 from dg_commons.sim.simulator_structures import SimModel
 
@@ -238,7 +238,7 @@ class RocketModel(SimModel[RocketState, RocketCommands]):
 
         dx = vx
         dy = vy
-        dm = -self.rp.C_T * (F_lx + F_rx)
+        dm = -self.rp.C_T / 2 * (F_lx + F_rx)
         dvx = 1 / m * (sin(phi + psi) * F_lx + sin(phi - psi) * F_rx)
         dvy = 1 / m * (-cos(phi + psi) * F_lx + cos(phi - psi) * F_rx)
         dvpsi = 1 / self.rg.Iz * self.rg.l_m * cos(phi) * (F_rx - F_lx)

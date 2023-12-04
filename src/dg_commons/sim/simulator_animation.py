@@ -56,7 +56,7 @@ def create_animation(
     fig.tight_layout()
     ax.set_aspect("equal")
     # dictionaries with the handles of the plotting stuff
-    states, actions, extra, texts = {}, {}, {}, {}
+    states, actions, extra, texts, goals = {}, {}, {}, {}, {}
     traj_lines, traj_points = {}, {}
     history = {}
     # some parameters
@@ -143,6 +143,11 @@ def create_animation(
                     )
                 except:
                     pass
+
+            if pname in sim_context.missions:
+                goal_box = goals[pname] if pname in goals else None
+                goals[pname] = sim_viz.plot_timevarying_goals(ax=ax, player_name=pname, goal_box=goal_box, t=t)
+
         adjust_axes_limits(
             ax=ax, plot_limits=plot_limits, players_states={p: log_entry.state for p, log_entry in log_at_t.items()}
         )

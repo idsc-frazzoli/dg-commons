@@ -47,7 +47,6 @@ class RocketGeometry(ModelGeometry):
     """ Half Width of the thruster [m] """
     F_max: float
     """ Maximum thrust for plotting[N] """
-
     model_type: ModelType = ROCKET
 
     @classmethod
@@ -59,12 +58,12 @@ class RocketGeometry(ModelGeometry):
         w_half=0.2,
         l_c=0.4,
         l_f=0.2,
-        l_m=0.3,
+        l_m=0.15,
         l_r=0.3,
         l=1.2,
         l_t_half=0.1,
         w_t_half=0.05,
-        F_max=2.0,
+        F_max=0.01,
     ) -> "RocketGeometry":
         return RocketGeometry(
             m=m,
