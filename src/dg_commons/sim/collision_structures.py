@@ -1,5 +1,5 @@
 from dataclasses import dataclass, replace
-from typing import Mapping
+from typing import Mapping, Optional
 
 import numpy as np
 from geometry import T2value
@@ -45,14 +45,18 @@ class CollisionReportPlayer:
 
 @dataclass(frozen=True, unsafe_hash=True)
 class CollisionReport:
-    players: Mapping[PlayerName, CollisionReportPlayer]
+    players: Mapping[PlayerName, Optional[CollisionReportPlayer]]
     """ Relative velocity defined as v_a-v_b in global RF [m/s] """
-    impact_point: Point
+    impact_point: Optional[Point]
     """Point of impact"""
-    impact_normal: np.ndarray
+    impact_normal: Optional[np.ndarray]
     """Normal of impact"""
     at_time: SimTime
     """ Sim time at which the collision occurred"""
+
+    @classmethod
+    def get_empty(cls, players: Mapping[PlayerName, Optional[CollisionReportPlayer]], at_time) -> "CollisionReport":
+        return cls(players=players, impact_point=None, impact_normal=None, at_time=at_time)
 
 
 def combine_collision_reports(r1: CollisionReport, r2: CollisionReport) -> CollisionReport:
@@ -61,7 +65,11 @@ def combine_collision_reports(r1: CollisionReport, r2: CollisionReport) -> Colli
     reduce them to an "accident" report.
     """
     if r1.players.keys() != r2.players.keys():
-        raise ZValueError("Cannot combine collision reports with different players", report1=r1, report2=r2)
+        raise ZValueError(
+            "Cannot combine collision reports with different players",
+            report1=r1,
+            report2=r2,
+        )
     # impact point, normal are propagated according to the first report
     first_report, second_report = (r1, r2) if r1.at_time <= r2.at_time else (r2, r1)
     combined_players_report: dict[PlayerName, CollisionReportPlayer] = {}

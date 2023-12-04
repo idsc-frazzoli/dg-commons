@@ -4,7 +4,7 @@ from dataclasses import dataclass, field, replace
 from decimal import Decimal
 from itertools import combinations
 from time import perf_counter
-from typing import Mapping, MutableMapping, Optional, Any
+from typing import Mapping, MutableMapping, Optional
 
 from dg_commons import PlayerName, U, fd
 from dg_commons.sim import CollisionReport, SimTime, logger
@@ -46,7 +46,7 @@ class SimContext:
     "The seed for reproducible randomness"
     sim_terminated: bool = False
     "Whether the simulation has terminated"
-    collision_reports: list[Optional[CollisionReport]] = field(default_factory=list)
+    collision_reports: list[CollisionReport] = field(default_factory=list)
     "The log of collision reports"
     first_collision_ts: SimTime = SimTime("Infinity")
     "The first collision time"
@@ -175,11 +175,19 @@ class Simulator:
         - the minimum time after the first collision has expired
         - all missions have been fulfilled (i.e. there are no players left)
         """
+        # check timers expired
         termination_condition: bool = (
             sim_context.time > sim_context.param.max_sim_time
             or sim_context.time > sim_context.first_collision_ts + sim_context.param.sim_time_after_collision
             or not sim_context.players
         )
+        # if no timers expired, and we still have players we check if all the ones with a goal have terminated
+        if not termination_condition:
+            # if none has a mission we keep running otherwise we stop if all the ones with one have completed it
+            if sim_context.missions:
+                all_done: bool = all(pn not in sim_context.players for pn in sim_context.missions)
+                termination_condition = all_done
+
         sim_context.sim_terminated = termination_condition
 
     @staticmethod
@@ -203,7 +211,7 @@ class Simulator:
                     )
                 except CollisionException as e:
                     logger.warn(f"Failed to resolve collision of {p} with environment because:\n{e.args}")
-                    report = None
+                    report = CollisionReport.get_empty(players={p: None}, at_time=sim_context.time)
                 if not isinstance(p_model, DynObstacleModel):
                     logger.debug(f"Player {p} collided with the environment")
                     collision = True
@@ -232,13 +240,12 @@ class Simulator:
                     report: Optional[CollisionReport] = resolve_collision(p1, p2, sim_context)
                 except CollisionException as e:
                     logger.warn(f"Failed to resolve collision between {p1} and {p2} because:\n{e.args}")
-                    report = None
-                if report is not None:
-                    logger.debug(f"Detected a collision between {p1} and {p2}")
-                    collision = True
-                    if report.at_time < sim_context.first_collision_ts:
-                        sim_context.first_collision_ts = report.at_time
-                    sim_context.collision_reports.append(report)
+                    report = CollisionReport.get_empty(players={p1: None, p2: None}, at_time=sim_context.time)
+                logger.debug(f"Detected a collision between {p1} and {p2}")
+                collision = True
+                if report.at_time < sim_context.first_collision_ts:
+                    sim_context.first_collision_ts = report.at_time
+                sim_context.collision_reports.append(report)
         return collision
 
     def _remove_finished_players(self, sim_context: SimContext):
