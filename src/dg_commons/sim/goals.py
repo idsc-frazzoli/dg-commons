@@ -29,9 +29,9 @@ class PlanningGoal(ABC):
         # convert to use commonroad IDrawable
         pass
 
-    @abstractmethod
     @property
     def is_static(self) -> bool:
+        # Override this method for time varying goals
         return True
 
 
