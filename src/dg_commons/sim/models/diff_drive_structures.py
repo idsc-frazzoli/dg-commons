@@ -124,7 +124,7 @@ class DiffDriveParameters(ModelParameters):
     ) -> "DiffDriveParameters":
         """vx, and acc are irrelevant for the diff drive model"""
 
-        return cls(omega_limits=omega_limits, vx_limits=(0, 0), acc_limits=(0, 0))
+        return cls(omega_limits=omega_limits, vx_limits=(0, 1), acc_limits=(0, 1))
 
     def __post_init__(self):
         super().__post_init__()
