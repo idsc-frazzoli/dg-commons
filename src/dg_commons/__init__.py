@@ -1,4 +1,4 @@
-__version__ = "0.0.38"
+__version__ = "0.0.39"
 
 from logging import INFO, DEBUG
 from typing import ClassVar

@@ -46,7 +46,7 @@ class SimContext:
     "The seed for reproducible randomness"
     sim_terminated: bool = False
     "Whether the simulation has terminated"
-    collision_reports: list[CollisionReport] = field(default_factory=list)
+    collision_reports: list[Optional[CollisionReport]] = field(default_factory=list)
     "The log of collision reports"
     first_collision_ts: SimTime = SimTime("Infinity")
     "The first collision time"
@@ -212,7 +212,7 @@ class Simulator:
                 except CollisionException as e:
                     logger.warn(f"Failed to resolve collision of {p} with environment because:\n{e.args}")
                     report = None
-                if report is not None and not isinstance(p_model, DynObstacleModel):
+                if not isinstance(p_model, DynObstacleModel):
                     logger.debug(f"Player {p} collided with the environment")
                     collision = True
                     sim_context.collision_reports.append(report)

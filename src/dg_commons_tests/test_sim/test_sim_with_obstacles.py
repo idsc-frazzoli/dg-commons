@@ -109,7 +109,8 @@ def get_simple_scenario() -> SimContext:
 
 def get_collisions_report(sim_context: SimContext) -> Report:
     r = Report("AccidentsReport")
-    for i, col_report in enumerate(sim_context.collision_reports):
+    collisions_reports = [r for r in sim_context.collision_reports if r is not None]
+    for i, col_report in enumerate(collisions_reports):
         acc_id = "-".join(list(col_report.players.keys()))
         r.text(f"Accident-{acc_id}-{i}-report", text=pretty_msg(col_report.__str__()))
         coll_fig = r.figure(cols=5)
