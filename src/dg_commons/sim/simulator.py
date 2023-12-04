@@ -241,12 +241,11 @@ class Simulator:
                 except CollisionException as e:
                     logger.warn(f"Failed to resolve collision between {p1} and {p2} because:\n{e.args}")
                     report = None
-                if report is not None:
-                    logger.debug(f"Detected a collision between {p1} and {p2}")
-                    collision = True
-                    if report.at_time < sim_context.first_collision_ts:
-                        sim_context.first_collision_ts = report.at_time
-                    sim_context.collision_reports.append(report)
+                logger.debug(f"Detected a collision between {p1} and {p2}")
+                collision = True
+                if report.at_time < sim_context.first_collision_ts:
+                    sim_context.first_collision_ts = report.at_time
+                sim_context.collision_reports.append(report)
         return collision
 
     def _remove_finished_players(self, sim_context: SimContext):
