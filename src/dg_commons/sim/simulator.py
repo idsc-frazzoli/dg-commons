@@ -46,7 +46,7 @@ class SimContext:
     "The seed for reproducible randomness"
     sim_terminated: bool = False
     "Whether the simulation has terminated"
-    collision_reports: list[Optional[CollisionReport]] = field(default_factory=list)
+    collision_reports: list[CollisionReport] = field(default_factory=list)
     "The log of collision reports"
     first_collision_ts: SimTime = SimTime("Infinity")
     "The first collision time"
@@ -211,7 +211,7 @@ class Simulator:
                     )
                 except CollisionException as e:
                     logger.warn(f"Failed to resolve collision of {p} with environment because:\n{e.args}")
-                    report = None
+                    report = CollisionReport.get_empty(players={p: None}, at_time=sim_context.time)
                 if not isinstance(p_model, DynObstacleModel):
                     logger.debug(f"Player {p} collided with the environment")
                     collision = True
@@ -240,7 +240,7 @@ class Simulator:
                     report: Optional[CollisionReport] = resolve_collision(p1, p2, sim_context)
                 except CollisionException as e:
                     logger.warn(f"Failed to resolve collision between {p1} and {p2} because:\n{e.args}")
-                    report = None
+                    report = CollisionReport.get_empty(players={p1: None, p2: None}, at_time=sim_context.time)
                 logger.debug(f"Detected a collision between {p1} and {p2}")
                 collision = True
                 if report.at_time < sim_context.first_collision_ts:
