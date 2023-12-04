@@ -7,7 +7,6 @@ from shapely import Point
 from shapely.geometry import Polygon
 
 from dg_commons import Color
-from dg_commons.sim import kmh2ms
 from dg_commons.sim.models.model_structures import (
     ModelGeometry,
     ModelType,
@@ -116,20 +115,16 @@ class DiffDriveGeometry(ModelGeometry):
 @dataclass(frozen=True, unsafe_hash=True)
 class DiffDriveParameters(ModelParameters):
     omega_limits: tuple[float, float]
-    """ min/max acceleration """
+    """ min/max rotational velocity of wheels [rad/s] """
 
     @classmethod
     def default(
         cls,
-        vx_limits: tuple[float, float] = (kmh2ms(-36), kmh2ms(36)),
-        acc_limits: tuple[float, float] = (-5, 5),
         omega_limits: tuple[float, float] = (-5, 5),
     ) -> "DiffDriveParameters":
-        return cls(
-            vx_limits=vx_limits,
-            acc_limits=acc_limits,
-            omega_limits=omega_limits,
-        )
+        """vx, and acc are irrelevant for the diff drive model"""
+
+        return cls(omega_limits=omega_limits, vx_limits=(0, 0), acc_limits=(0, 0))
 
     def __post_init__(self):
         super().__post_init__()
