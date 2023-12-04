@@ -185,7 +185,7 @@ class Simulator:
         if not termination_condition:
             # if none has a mission we keep running otherwise we stop if all the ones with one have completed it
             if sim_context.missions:
-                all_done: bool = all([pn not in sim_context.players for pn in sim_context.missions])
+                all_done: bool = all(pn not in sim_context.players for pn in sim_context.missions)
                 termination_condition = all_done
 
         sim_context.sim_terminated = termination_condition
