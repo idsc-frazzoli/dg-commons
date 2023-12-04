@@ -21,7 +21,6 @@ __all__ = ["PlanningGoal", "TPlanningGoal", "RefLaneGoal", "PolygonGoal", "PoseG
 @dataclass(frozen=True)
 class PlanningGoal(ABC):
     @abstractmethod
-
     def is_fulfilled(self, state: X, at: SimTime | float = 0) -> bool:
         pass
 
@@ -30,6 +29,7 @@ class PlanningGoal(ABC):
         # convert to use commonroad IDrawable
         pass
 
+    @abstractmethod
     @property
     def is_static(self) -> bool:
         return True

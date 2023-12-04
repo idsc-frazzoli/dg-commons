@@ -119,11 +119,16 @@ class DiffDriveParameters(ModelParameters):
     """ min/max acceleration """
 
     @classmethod
-    def default(cls) -> "DiffDriveParameters":
+    def default(
+        cls,
+        vx_limits: tuple[float, float] = (kmh2ms(-36), kmh2ms(36)),
+        acc_limits: tuple[float, float] = (-5, 5),
+        omega_limits: tuple[float, float] = (-5, 5),
+    ) -> "DiffDriveParameters":
         return cls(
-            vx_limits=(kmh2ms(-10), kmh2ms(10)),
-            acc_limits=(-5, 5),
-            omega_limits=(-5, 5),
+            vx_limits=vx_limits,
+            acc_limits=acc_limits,
+            omega_limits=omega_limits,
         )
 
     def __post_init__(self):

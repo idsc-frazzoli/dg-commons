@@ -119,7 +119,6 @@ def test_simple_simulation():
 class TVgoal(PlanningGoal):
     x0: Sequence[float, float]
     v0: Sequence[float, float]
-    is_static: bool = False
 
     def is_fulfilled(self, state: X, at: SimTime | float = 0) -> bool:
         p_pos = Point(state.x, state.y)
@@ -128,6 +127,10 @@ class TVgoal(PlanningGoal):
     def get_plottable_geometry(self, at: SimTime | float = 0) -> BaseGeometry:
         x1, y1 = self._get_position_at(at)
         return Point(x1, y1).buffer(0.5)
+
+    @property
+    def is_static(self) -> bool:
+        return False
 
     def _get_position_at(self, at: SimTime | float = 0) -> Sequence[float, float]:
         x1 = self.x0[0] + self.v0[0] * float(at)

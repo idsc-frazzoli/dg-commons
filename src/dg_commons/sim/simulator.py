@@ -4,7 +4,7 @@ from dataclasses import dataclass, field, replace
 from decimal import Decimal
 from itertools import combinations
 from time import perf_counter
-from typing import Mapping, MutableMapping, Optional, Any
+from typing import Mapping, MutableMapping, Optional
 
 from dg_commons import PlayerName, U, fd
 from dg_commons.sim import CollisionReport, SimTime, logger
@@ -175,11 +175,19 @@ class Simulator:
         - the minimum time after the first collision has expired
         - all missions have been fulfilled (i.e. there are no players left)
         """
+        # check timers expired
         termination_condition: bool = (
             sim_context.time > sim_context.param.max_sim_time
             or sim_context.time > sim_context.first_collision_ts + sim_context.param.sim_time_after_collision
             or not sim_context.players
         )
+        # if no timers expired, and we still have players we check if all the ones with a goal have terminated
+        if not termination_condition:
+            # if none has a mission we keep running otherwise we stop if all the ones with one have completed it
+            if sim_context.missions:
+                all_done: bool = all([pn not in sim_context.players for pn in sim_context.missions])
+                termination_condition = all_done
+
         sim_context.sim_terminated = termination_condition
 
     @staticmethod
