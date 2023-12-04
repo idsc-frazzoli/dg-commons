@@ -147,5 +147,5 @@ def test_simulation_tvgoal():
     sim_context = run_simulation(sim_context)
     report = generate_report(sim_context)
     # save report
-    report_file = os.path.join(OUT_TESTS_DIR, f"sim_tvgoals.html")
+    report_file = os.path.join(OUT_TESTS_DIR, "sim_tvgoals.html")
     report.to_html(report_file)
