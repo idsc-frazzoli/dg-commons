@@ -19,9 +19,9 @@ from dg_commons.sim.simulator_structures import SimModel
 @dataclass(unsafe_hash=True, eq=True, order=True)
 class DiffDriveCommands:
     omega_l: float
-    """ left wheel spinning rate [rad/s] """
+    """ left wheel spinning rate [rad/s]. Positive is forward."""
     omega_r: float
-    """ right wheel spinning rate [rad/s] """
+    """ right wheel spinning rate [rad/s]. Positive is forward. """
     idx = frozendict({"omega_l": 0, "omega_r": 1})
     """ Dictionary to get correct values from numpy arrays"""
 
@@ -164,7 +164,7 @@ class DiffDriveModel(SimModel[DiffDriveState, DiffDriveCommands]):
         sinth = sin(x0.psi)
         xdot = costh * omega_sum / 2
         ydot = sinth * omega_sum / 2
-        dpsi = (omega_l - omega_r) / self.vg.wheelbase
+        dpsi = (omega_r - omega_l) / self.vg.wheelbase
 
         return DiffDriveState(x=xdot, y=ydot, psi=dpsi) * self.vg.wheelradius
 
