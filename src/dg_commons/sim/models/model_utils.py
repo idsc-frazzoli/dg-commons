@@ -48,7 +48,7 @@ def apply_force_limits(force: float, p: RocketParameters):
     """Enforces force limits"""
 
     if not (p.F_limits[0] < force < p.F_limits[1]):
-        force1 = max(p.F_limits[0], min(force, p.F_limits[0]))
+        force1 = max(p.F_limits[0], min(force, p.F_limits[1]))
         logger.debug(
             f"Reached force limits, force set to {force1:.2f}: \n"
             f"requested force {force:.2f}\toutside limits [{p.F_limits[0]:.2f},{p.F_limits[1]:.2f}]"
