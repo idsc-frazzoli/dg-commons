@@ -214,7 +214,7 @@ class RocketModel(SimModel[RocketState, RocketCommands]):
         dθ/dt = vθ
         dm/dt = -k_l*(F_l+F_r)
         dvx/dt = 1/m*(sin(phi+θ)*F_l + sin(phi-θ)*F_r)
-        dvy/dt = 1/m*(-cos(phi_l+θ)*F_l + cos(phi-θ)*F_r)
+        dvy/dt = 1/m*(-cos(phi+θ)*F_l + cos(phi-θ)*F_r)
         dvθ/dt = 1/I*l2*cos(phi)*(F_r-F_l)
         dphi/dt = vphi
 

@@ -32,15 +32,13 @@ class RocketGeometry(ModelGeometry):
     l_c: float
     """ Length of nose cone [m] """
     l_f: float
-    """ Front length of rocket - dist from CoG to the nose [m] """
+    """ Front length of rocket - dist from thruster location to the nose [m] """
     l_m: float
     """ Middle length of rocket - dist from CoG to thruster location [m] """
     l_r: float
-    """ Rear length of rocket - dist from thruster location to back [m] """
+    """ Rear length of rocket - dist from CoG to back [m] """
     l: float
     """ Total length of rocket - dist from nosecone tip to the back [m] """
-    r: float
-    """ Safety radius of the rocket - radius of the rocket [m] """
     l_t_half: float
     """ Half Length of the thruster [m] """
     w_t_half: float
@@ -60,10 +58,10 @@ class RocketGeometry(ModelGeometry):
         l_f=0.2,
         l_m=0.15,
         l_r=0.3,
-        l=1.2,
+        l=1.0,
         l_t_half=0.1,
         w_t_half=0.05,
-        F_max=0.01,
+        F_max=0.5,
     ) -> "RocketGeometry":
         return RocketGeometry(
             m=m,
@@ -74,7 +72,6 @@ class RocketGeometry(ModelGeometry):
             l_m=l_m,
             l_r=l_r,
             l=l_r + l_m + l_f + l_c,
-            r=max(l_m + l_r, l_f + l_c) * 1.2,
             l_t_half=l_t_half,
             w_t_half=w_t_half,
             F_max=F_max,
@@ -94,19 +91,19 @@ class RocketGeometry(ModelGeometry):
         """
         body = Polygon(
             [
-                (-self.l_r - self.l_m, self.w_half),
-                (self.l_f, self.w_half),
-                (self.l_f, -self.w_half),
-                (-self.l_r - self.l_m, -self.w_half),
-                (-self.l_r - self.l_m, self.w_half),
+                (-self.l_r, self.w_half),
+                (self.l_f + self.l_m, self.w_half),
+                (self.l_f + self.l_m, -self.w_half),
+                (-self.l_r, -self.w_half),
+                (-self.l_r, self.w_half),
             ]
         )
         header = Polygon(
             [
-                (self.l_f, self.w_half),
-                (self.l_f + self.l_c, 0),
-                (self.l_f, -self.w_half),
-                (self.l_f, self.w_half),
+                (self.l_f + self.l_m, self.w_half),
+                (self.l_f + self.l_m + self.l_c, 0),
+                (self.l_f + self.l_m, -self.w_half),
+                (self.l_f + self.l_m, self.w_half),
             ]
         )
         rocket_poly = unary_union([body, header])
@@ -136,7 +133,8 @@ class RocketGeometry(ModelGeometry):
         return tuple(thruster.exterior.coords)
 
     def thrusters_position(self, phi: float) -> list[SE2value]:
-        positions = [SE2_from_xytheta((-self.l_m, self.w_half, phi)), SE2_from_xytheta((-self.l_m, -self.w_half, -phi))]
+        # positions = [SE2_from_xytheta((-self.l_m, self.w_half, phi)), SE2_from_xytheta((-self.l_m, -self.w_half, -phi))]
+        positions = [SE2_from_xytheta((self.l_m, 0.0, phi)), SE2_from_xytheta((self.l_m, 0.0, -phi))]
         return positions
 
     def thrusters_outline_in_body_frame(self, phi: float) -> list[tuple[tuple[float, float], ...]]:
@@ -161,7 +159,8 @@ class RocketGeometry(ModelGeometry):
         return tuple(flame.exterior.coords)
 
     def flame_position(self, phi: float) -> list[SE2value]:
-        positions = [SE2_from_xytheta((-self.l_m, self.w_half, phi)), SE2_from_xytheta((-self.l_m, -self.w_half, -phi))]
+        # positions = [SE2_from_xytheta((-self.l_m, self.w_half, phi)), SE2_from_xytheta((-self.l_m, -self.w_half, -phi))]
+        positions = [SE2_from_xytheta((self.l_m, 0.0, phi)), SE2_from_xytheta((self.l_m, 0.0, -phi))]
         return positions
 
     def flames_outline_in_body_frame(
