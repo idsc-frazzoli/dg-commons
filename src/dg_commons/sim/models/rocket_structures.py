@@ -54,14 +54,14 @@ class RocketGeometry(ModelGeometry):
         m=2.0,  # MASS TO BE INTENDED AS MASS OF THE ROCKET WITHOUT FUEL
         Iz=1e-00,
         w_half=0.2,
-        l_c=0.4,
-        l_f=0.2,
-        l_m=0.15,
+        l_c=0.3,
+        l_f=0.05,
+        l_m=0.25,
         l_r=0.3,
-        l=1.0,
-        l_t_half=0.1,
-        w_t_half=0.05,
-        F_max=0.5,
+        l=0.9,
+        l_t_half=0.2,
+        w_t_half=0.01,
+        F_max=2.0,
     ) -> "RocketGeometry":
         return RocketGeometry(
             m=m,
@@ -134,20 +134,18 @@ class RocketGeometry(ModelGeometry):
 
     def thrusters_position(self, phi: float) -> list[SE2value]:
         # positions = [SE2_from_xytheta((-self.l_m, self.w_half, phi)), SE2_from_xytheta((-self.l_m, -self.w_half, -phi))]
-        positions = [SE2_from_xytheta((self.l_m, 0.0, phi)), SE2_from_xytheta((self.l_m, 0.0, -phi))]
+        positions = [SE2_from_xytheta((self.l_m, -self.w_half/10, -phi + math.pi / 2)), SE2_from_xytheta((self.l_m, self.w_half/10, phi - math.pi / 2))]
         return positions
 
     def thrusters_outline_in_body_frame(self, phi: float) -> list[tuple[tuple[float, float], ...]]:
         """Takes phi angle of nozzle w.r.t. body frame"""
-        thrusters_outline = [transform_xy(q, self.thruster_outline) for q in self.thrusters_position(phi + math.pi / 2)]
+        thrusters_outline = [transform_xy(q, self.thruster_outline) for q in self.thrusters_position(phi)]
         return thrusters_outline
 
     def flame_outline(self, F: float) -> tuple[tuple[float, float], ...]:
         w_half, l_half = self.w_t_half, self.l_t_half
 
-        l_flame = F / self.F_max * l_half
-        l_flame = max(l_flame, 0)
-        l_flame = min(l_flame, 2 * l_half)
+        l_flame = F / self.F_max / 2
         flame = Polygon(
             [
                 (l_half, -w_half),
@@ -160,14 +158,14 @@ class RocketGeometry(ModelGeometry):
 
     def flame_position(self, phi: float) -> list[SE2value]:
         # positions = [SE2_from_xytheta((-self.l_m, self.w_half, phi)), SE2_from_xytheta((-self.l_m, -self.w_half, -phi))]
-        positions = [SE2_from_xytheta((self.l_m, 0.0, phi)), SE2_from_xytheta((self.l_m, 0.0, -phi))]
+        positions = [SE2_from_xytheta((self.l_m, -self.w_half/10, -phi + math.pi / 2)), SE2_from_xytheta((self.l_m, self.w_half/10, phi - math.pi / 2))]
         return positions
 
     def flames_outline_in_body_frame(
         self, phi: float, command: [float, float]
     ) -> list[tuple[tuple[float, float], ...]]:
         """Takes phi angle of nozzle w.r.t. body frame"""
-        flame_pos = self.flame_position(phi + math.pi / 2)
+        flame_pos = self.flame_position(phi)
         flame_outline = [self.flame_outline(command[0]), self.flame_outline(command[1])]
         flame_outline = [transform_xy(q, flame_outline[i]) for i, q in enumerate(flame_pos)]
         return flame_outline
