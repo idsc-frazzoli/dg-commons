@@ -12,6 +12,7 @@ from geometry import (
     SE2_from_translation_angle,
     linear_angular_from_se2,
 )
+from shapely import LinearRing
 from shapely.affinity import affine_transform
 from shapely.geometry import Polygon, LineString
 from shapely.geometry.base import BaseGeometry
@@ -111,7 +112,7 @@ def transform_xy(q: np.ndarray, points: Sequence[tuple[float, float]]) -> tuple[
     return tuple(zip(x, y))
 
 
-def sPolygon2crPolygon(shapely_polygon: Union[Polygon, LineString]) -> CommonRoadPolygon:
+def sPolygon2crPolygon(shapely_polygon: Polygon) -> CommonRoadPolygon:
     """Convert a shapely polygon to a CommonRoad polygon
     Interface available at
         https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker/-/blob/master/cpp/collision/src/narrowphase/polygon.cc
@@ -121,11 +122,30 @@ def sPolygon2crPolygon(shapely_polygon: Union[Polygon, LineString]) -> CommonRoa
         https://github.com/drufat/triangle/issues/2#issuecomment-583812662 and comment here:
         https://gitlab.lrz.de/tum-cps/commonroad-drivability-checker/-/blob/master/commonroad_dc/collision/collision_detection/scenario.py
     """
-    if isinstance(shapely_polygon, LineString):
-        shapely_polygon = shapely_polygon.buffer(0.01)
     vertices = np.array(list(zip(*shapely_polygon.exterior.xy)))
     if all(np.equal(vertices[0], vertices[-1])):
         vertices = vertices[:-1]
-    # cr_poly = CommonRoadPolygon(vertices, 0.125, 5)
     cr_poly = CommonRoadPolygon(vertices, [])
     return cr_poly
+
+
+def sLine2crPolygon(shapely_line: Union[LinearRing, LineString]) -> list[CommonRoadPolygon]:
+    """decompose lines into segments and create a polygon for each segment
+    # this is needed because the collision checker only supports polygons"""
+    crpolys = []
+    vertices = list(zip(*shapely_line.xy))
+    for segment in zip(vertices[:-1], vertices[1:]):
+        segment_poly = LineString(segment).buffer(0.01)
+        crpolys.append(sPolygon2crPolygon(segment_poly))
+
+    return crpolys
+
+
+def shapely2crPolygons(shapely: Union[LinearRing, LineString, Polygon]) -> list[CommonRoadPolygon]:
+    """convert shapely geometry to a list of CommonRoad polygons"""
+    if isinstance(shapely, Polygon):
+        return [sPolygon2crPolygon(shapely)]
+    elif isinstance(shapely, LineString) or isinstance(shapely, LinearRing):
+        return sLine2crPolygon(shapely)
+    else:
+        raise ValueError(f"cannot convert {shapely} to CommonRoad polygon")
