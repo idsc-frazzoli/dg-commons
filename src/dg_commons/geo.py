@@ -145,7 +145,7 @@ def shapely2crPolygons(shapely: Union[LinearRing, LineString, Polygon]) -> list[
     """convert shapely geometry to a list of CommonRoad polygons"""
     if isinstance(shapely, Polygon):
         return [sPolygon2crPolygon(shapely)]
-    elif isinstance(shapely, LineString) or isinstance(shapely, LinearRing):
+    if isinstance(shapely, (LineString, LinearRing)):
         return sLine2crPolygon(shapely)
     else:
         raise ValueError(f"cannot convert {shapely} to CommonRoad polygon")
