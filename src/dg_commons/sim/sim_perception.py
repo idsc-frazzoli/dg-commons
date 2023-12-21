@@ -4,9 +4,10 @@ from dataclasses import replace
 
 import numpy as np
 from commonroad_dc.pycrcc import Polygon as crPolygon
+from cytoolz import interleave
 from shapely.validation import make_valid
 
-from dg_commons import PlayerName, SE2Transform, fd, sPolygon2crPolygon
+from dg_commons import PlayerName, SE2Transform, fd, shapely2crPolygons
 from dg_commons.perception.sensor import Sensor
 from dg_commons.sim import PlayerObservations, SimObservations, SimTime, logger
 from dg_commons.sim.models import (
@@ -58,10 +59,12 @@ class FovObsFilter(ObsFilter):
         self.sensor.pose = SE2Transform.from_SE2(extract_pose_from_state(full_obs.players[pov].state))
         # then filter
         if not self._static_obstacles:
-            self._static_obstacles = [sPolygon2crPolygon(o.shape) for o in scenario.static_obstacles]
+            self._static_obstacles = list(interleave([shapely2crPolygons(o.shape) for o in scenario.static_obstacles]))
 
         self._tmp_debug += 1
-        dynamic_obstacles = [sPolygon2crPolygon(p_obs.occupancy) for p, p_obs in full_obs.players.items() if p != pov]
+        dynamic_obstacles = list(
+            interleave([shapely2crPolygons(p_obs.occupancy) for p, p_obs in full_obs.players.items() if p != pov])
+        )
 
         all_obstacles = self._static_obstacles + dynamic_obstacles
 
