@@ -1,9 +1,11 @@
 from math import pi
 
 import matplotlib.pyplot as plt
+from cytoolz import interleave
+from shapely import LineString, LinearRing
 from shapely.geometry import Point, Polygon
 
-from dg_commons import SE2Transform, sPolygon2crPolygon
+from dg_commons import SE2Transform, shapely2crPolygons
 from dg_commons.maps.shapely_viz import ShapelyViz
 from dg_commons.perception.sensor import VisRangeSensor
 from dg_commons_tests import OUT_TESTS_DIR
@@ -17,13 +19,17 @@ def test_visibility_filter():
     obs1 = Polygon([(10, 10), (10, 15), (15, 15), (15, 10)])
     obs2 = Polygon([(-3, -3), (-3, -7), (-8, -10), (-12, -9), (-12, -3)])
     obs3 = Polygon([(-3, 3), (-3, 7), (-8, 10), (-12, 9), (-12, 3)])
+    obs4 = LinearRing(
+        [[-20, -20], [-20, 20], [20, 20], [20, -20], [-20, -20]]
+    )  # [-20, -20]])  # [20, -20], [-20, -20]])
 
     vis.add_shape(obs1, color="black")
     vis.add_shape(obs2, color="black")
     vis.add_shape(obs3, color="black")
+    vis.add_shape(obs4, color="black")
     pov_x, pov_y = lidar_fov.centroid.xy
 
-    obs = [sPolygon2crPolygon(o) for o in [obs1, obs2, obs3]]
+    obs = list(interleave([shapely2crPolygons(o) for o in [obs1, obs2, obs3, obs4]]))
     lidar2d = VisRangeSensor(field_of_view=2 * pi)
     lidar2d.pose = sensor_pose
     sensor_view: Polygon = lidar2d.fov_as_polygon(obs)
