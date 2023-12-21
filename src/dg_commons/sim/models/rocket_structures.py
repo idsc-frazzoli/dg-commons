@@ -134,7 +134,7 @@ class RocketGeometry(ModelGeometry):
 
     def thrusters_position(self, phi: float) -> list[SE2value]:
         # positions = [SE2_from_xytheta((-self.l_m, self.w_half, phi)), SE2_from_xytheta((-self.l_m, -self.w_half, -phi))]
-        positions = [SE2_from_xytheta((self.l_m, -self.w_half/10, -phi + math.pi / 2)), SE2_from_xytheta((self.l_m, self.w_half/10, phi - math.pi / 2))]
+        positions = [SE2_from_xytheta((self.l_m, -self.w_half/10, phi + math.pi / 2)), SE2_from_xytheta((self.l_m, self.w_half/10, -phi - math.pi / 2))]
         return positions
 
     def thrusters_outline_in_body_frame(self, phi: float) -> list[tuple[tuple[float, float], ...]]:
@@ -158,7 +158,7 @@ class RocketGeometry(ModelGeometry):
 
     def flame_position(self, phi: float) -> list[SE2value]:
         # positions = [SE2_from_xytheta((-self.l_m, self.w_half, phi)), SE2_from_xytheta((-self.l_m, -self.w_half, -phi))]
-        positions = [SE2_from_xytheta((self.l_m, -self.w_half/10, -phi + math.pi / 2)), SE2_from_xytheta((self.l_m, self.w_half/10, phi - math.pi / 2))]
+        positions = [SE2_from_xytheta((self.l_m, -self.w_half/10, phi + math.pi / 2)), SE2_from_xytheta((self.l_m, self.w_half/10, -phi - math.pi / 2))]
         return positions
 
     def flames_outline_in_body_frame(

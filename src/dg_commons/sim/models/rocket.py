@@ -239,10 +239,8 @@ class RocketModel(SimModel[RocketState, RocketCommands]):
         dx = vx
         dy = vy
         dm = -self.rp.C_T * (F_lx + F_rx)
-        # dvx = 1 / m * (-sin(phi + psi) * F_rx + sin(psi-phi) * F_lx)
-        # dvy = 1 / m * (cos(phi + psi) * F_rx - cos(psi-phi) * F_lx)
-        dvx = 1 / m * (sin(phi - psi) * F_rx + sin(psi+phi) * F_lx)
-        dvy = 1 / m * (cos(phi - psi) * F_rx - cos(psi+phi) * F_lx)
+        dvx = 1 / m * (sin(psi+phi) * F_lx + sin(phi - psi) * F_rx)
+        dvy = 1 / m * (-cos(psi+phi) * F_lx + cos(phi - psi) * F_rx)
         dvpsi = 1 / self.rg.Iz * self.rg.l_m * (cos(phi)*F_rx - cos(phi)*F_lx)
         dphi = dphi
 
