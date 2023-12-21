@@ -20,7 +20,6 @@ from shapely import Polygon as SPolygon
 from dg_commons import Color, transform_xy, apply_SE2_to_shapely_geo, PlayerName, X, U
 from dg_commons.maps.shapely_viz import ShapelyViz
 from dg_commons.planning.trajectory import Trajectory
-from dg_commons.sim.goals import TPlanningGoal
 from dg_commons.sim.models.diff_drive import DiffDriveState
 from dg_commons.sim.models.diff_drive_structures import DiffDriveGeometry
 from dg_commons.sim.models.obstacles_dyn import DynObstacleState, DynObstacleModel
@@ -176,7 +175,7 @@ class SimRenderer(SimRendererABC):
                 state=state,
                 command=command,
                 rg=mg,
-                rp=RocketParameters.default(),
+                rp=self.sim_context.models[player_name].model_params,
                 alpha=alpha,
                 rocket_poly=model_poly,
             )
