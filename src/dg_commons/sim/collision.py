@@ -133,6 +133,14 @@ EnvPlayer = PlayerName("Env")
 def resolve_collision_with_environment(
     a: PlayerName, a_model: SimModel, b_obstacle: StaticObstacle, time: SimTime
 ) -> Optional[CollisionReport]:
+    """
+    Resolves the collision between A and the environment using the impulse method.
+    :param a:
+    :param a_model:
+    :param b_obstacle:
+    :param time:
+    :return: A CollisionReport or None if the collision does not need to be solved (the two bodies are already separating)
+    """
     a_shape = a_model.get_footprint()
     b_shape = b_obstacle.shape
     # Compute collision geometry

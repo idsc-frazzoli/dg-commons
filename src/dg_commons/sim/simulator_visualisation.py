@@ -20,7 +20,6 @@ from shapely import Polygon as SPolygon
 from dg_commons import Color, transform_xy, apply_SE2_to_shapely_geo, PlayerName, X, U
 from dg_commons.maps.shapely_viz import ShapelyViz
 from dg_commons.planning.trajectory import Trajectory
-from dg_commons.sim.goals import TPlanningGoal
 from dg_commons.sim.models.diff_drive import DiffDriveState
 from dg_commons.sim.models.diff_drive_structures import DiffDriveGeometry
 from dg_commons.sim.models.obstacles_dyn import DynObstacleState, DynObstacleModel
@@ -28,7 +27,7 @@ from dg_commons.sim.models.pedestrian import PedestrianState, PedestrianGeometry
 from dg_commons.sim.models.spacecraft import SpacecraftState
 from dg_commons.sim.models.spacecraft_structures import SpacecraftGeometry
 from dg_commons.sim.models.rocket import RocketState, RocketCommands
-from dg_commons.sim.models.rocket_structures import RocketGeometry
+from dg_commons.sim.models.rocket_structures import RocketGeometry, RocketParameters
 from dg_commons.sim.models.vehicle import VehicleState, VehicleGeometry
 from dg_commons.sim.models.vehicle_ligths import LightsColors
 from dg_commons.sim.simulator import SimContext
@@ -176,6 +175,7 @@ class SimRenderer(SimRendererABC):
                 state=state,
                 command=command,
                 rg=mg,
+                rp=self.sim_context.models[player_name].model_params,
                 alpha=alpha,
                 rocket_poly=model_poly,
             )
@@ -417,6 +417,7 @@ def plot_rocket(
     state: RocketState,
     command: RocketCommands,
     rg: RocketGeometry,
+    rp: RocketParameters,
     alpha: float,
     rocket_poly: Optional[list[Polygon]],
 ) -> list[Polygon]:
@@ -452,16 +453,20 @@ def plot_rocket(
     for t_idx, thruster in enumerate(rocket_poly[2 : 2 + rg.n_thrusters]):
         xy_poly = thrusters_outline[t_idx]
         thruster.set_xy(xy_poly)
-    # flames
-    flames_outline = np.array(
-        [
-            transform_xy(q, f_outline)
-            for f_outline in rg.flames_outline_in_body_frame(state.phi, [command.F_left, command.F_right])
-        ]
-    )
-    for f_idx, flame in enumerate(rocket_poly[2 + rg.n_thrusters :]):
-        xy_poly = flames_outline[f_idx]
-        flame.set_xy(xy_poly)
+    # flames if fuel is not zero
+    if state.m > rp.m_v:
+        flames_outline = np.array(
+            [
+                transform_xy(q, f_outline)
+                for f_outline in rg.flames_outline_in_body_frame(state.phi, [command.F_left, command.F_right])
+            ]
+        )
+        for f_idx, flame in enumerate(rocket_poly[2 + rg.n_thrusters :]):
+            xy_poly = flames_outline[f_idx]
+            flame.set_xy(xy_poly)
+    else:
+        for f_idx, flame in enumerate(rocket_poly[2 + rg.n_thrusters :]):
+            flame.set_xy(np.array([[0.0,0.0]]))
     return rocket_poly
 
 

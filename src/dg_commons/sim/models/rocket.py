@@ -214,7 +214,7 @@ class RocketModel(SimModel[RocketState, RocketCommands]):
         dθ/dt = vθ
         dm/dt = -k_l*(F_l+F_r)
         dvx/dt = 1/m*(sin(phi+θ)*F_l + sin(phi-θ)*F_r)
-        dvy/dt = 1/m*(-cos(phi_l+θ)*F_l + cos(phi-θ)*F_r)
+        dvy/dt = 1/m*(-cos(phi+θ)*F_l + cos(phi-θ)*F_r)
         dvθ/dt = 1/I*l2*cos(phi)*(F_r-F_l)
         dphi/dt = vphi
 
@@ -238,10 +238,10 @@ class RocketModel(SimModel[RocketState, RocketCommands]):
 
         dx = vx
         dy = vy
-        dm = -self.rp.C_T / 2 * (F_lx + F_rx)
-        dvx = 1 / m * (sin(phi + psi) * F_lx + sin(phi - psi) * F_rx)
-        dvy = 1 / m * (-cos(phi + psi) * F_lx + cos(phi - psi) * F_rx)
-        dvpsi = 1 / self.rg.Iz * self.rg.l_m * cos(phi) * (F_rx - F_lx)
+        dm = -self.rp.C_T * (F_lx + F_rx)
+        dvx = 1 / m * (sin(psi + phi) * F_lx + sin(phi - psi) * F_rx)
+        dvy = 1 / m * (-cos(psi + phi) * F_lx + cos(phi - psi) * F_rx)
+        dvpsi = 1 / self.rg.Iz * self.rg.l_m * (cos(phi) * F_rx - cos(phi) * F_lx)
         dphi = dphi
 
         return RocketState(x=dx, y=dy, psi=dpsi, vx=dvx, vy=dvy, dpsi=dvpsi, phi=dphi, m=dm)
