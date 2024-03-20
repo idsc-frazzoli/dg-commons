@@ -42,7 +42,7 @@ aiofiles = "*"
 webcolors = "*"
 future = "*"
 
-[tool.poetry.dev.dependencies]
+[tool.poetry.dev-dependencies]
 pre-commit = "^3.6.2"
 jupyter = "*"
 pipdeptree = "^2.2.1"
