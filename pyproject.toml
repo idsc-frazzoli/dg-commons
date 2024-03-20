@@ -10,6 +10,10 @@ authors = ["Alessandro Zanardi <azanardi@ethz.ch>"]
 readme = "README.md"
 license = "LICENSE"
 include = ["LICENSE"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+]
 packages = [
     { include = "dg_commons", from = "src" },
 ]
