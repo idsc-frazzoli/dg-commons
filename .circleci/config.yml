@@ -39,6 +39,7 @@ jobs:
           command: |
             echo PATH=$PATH
             poetry install
+          no_output_timeout: 30m
       - run:
           name: List deps
           command: |
