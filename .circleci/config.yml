@@ -31,23 +31,23 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install poetry
+          command: |
+            curl -sSL https://install.python-poetry.org | python -
+      - run:
           name: Install deps
           command: |
             echo PATH=$PATH
-            pip install -q --user --upgrade -r requirements.txt
-            pip install -q --user --upgrade -r requirements-extra.txt
+            poetry install
       - run:
           name: List deps
           command: |
             mkdir -p artifacts
-            pip list | tee artifacts/pip-list.txt
-            pipdeptree | tee artifacts/pipdeptree.txt
-      - store_artifacts:
-          path: artifacts
+            poetry show | tee artifacts/poetry-show.txt
       - run:
           name: setup.py develop
           command: |
-            python setup.py develop --prefix ~/.local --no-deps
+            poetry run python setup.py develop --prefix ~/.local --no-deps
       - run:
           name: Make docs
           command: |
