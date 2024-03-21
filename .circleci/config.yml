@@ -45,10 +45,10 @@ jobs:
           command: |
             mkdir -p artifacts
             poetry show | tee artifacts/poetry-show.txt
-      - run:
-          name: setup.py develop
-          command: |
-            poetry run python setup.py develop --prefix ~/.local --no-deps
+#      - run:
+#          name: setup.py develop
+#          command: |
+#            poetry run python setup.py develop --prefix ~/.local --no-deps
       - run:
           name: Make docs
           command: |
@@ -78,11 +78,11 @@ workflows:
   dg_commons_ci:
     jobs:
       - install_docs_tests:
-          name: "DGcommonsCI:3.9"
-          version: "3.9"
-      - install_docs_tests:
           name: "DGcommonsCI:3.10"
           version: "3.10"
       - install_docs_tests:
           name: "DGcommonsCI:3.11"
           version: "3.11"
+      - install_docs_tests:
+          name: "DGcommonsCI:3.12"
+          version: "3.12"
