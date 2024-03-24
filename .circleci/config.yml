@@ -78,6 +78,9 @@ workflows:
   dg_commons_ci:
     jobs:
       - install_docs_tests:
+          name: "DGcommonsCI:3.09"
+          version: "3.9"
+      - install_docs_tests:
           name: "DGcommonsCI:3.10"
           version: "3.10"
       - install_docs_tests:
