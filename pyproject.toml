@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "dg-commons"
-version = "0.0.45"
+version = "0.0.46"
 description = "Common tools and utilities related to Driving Games"
 authors = ["Alessandro Zanardi <azanardi@ethz.ch>"]
 readme = "README.md"

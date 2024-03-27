@@ -1,15 +1,14 @@
 
-bump-upload:
-	$(MAKE) bump
-	$(MAKE) upload
+version-publish:
+	$(MAKE) version
+	$(MAKE) build
+	$(MAKE) publish
 
-bump:
-	bumpversion patch
-
-upload:
-	git push --tags
-	git push
+version:
+	poetry version patch
+build:
 	rm -f dist/*
 	rm -rf src/*.egg-info
-	python setup.py sdist
-	twine upload dist/*
+	poetry build
+publish:
+	poetry publish
