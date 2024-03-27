@@ -37,8 +37,8 @@ jobs:
       - run:
           name: Install deps
           command: |
-            echo PATH=$PATH
-            poetry install
+            poetry config virtualenvs.create false
+            poetry install -n
           no_output_timeout: 30m
       - run:
           name: List deps
@@ -60,7 +60,7 @@ jobs:
           name: Run tests
           command: |
             make test
-      - store_artifacts:
+      - store_test_results:
           path: out/test-results
       - store_artifacts:
           path: out/coverage
