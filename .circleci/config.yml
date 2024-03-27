@@ -38,17 +38,13 @@ jobs:
           name: Install deps
           command: |
             poetry config virtualenvs.create false
-            poetry install -n
+            poetry install --no-interaction
           no_output_timeout: 30m
       - run:
           name: List deps
           command: |
             mkdir -p artifacts
             poetry show | tee artifacts/poetry-show.txt
-#      - run:
-#          name: setup.py develop
-#          command: |
-#            poetry run python setup.py develop --prefix ~/.local --no-deps
       - run:
           name: Make docs
           command: |
@@ -60,7 +56,7 @@ jobs:
           name: Run tests
           command: |
             make test
-      - store_test_results:
+      - store_artifacts: # store_test_results does not work
           path: out/test-results
       - store_artifacts:
           path: out/coverage
