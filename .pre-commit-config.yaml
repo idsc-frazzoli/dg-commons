@@ -8,13 +8,12 @@ repos:
     -   id: end-of-file-fixer
     -   id: check-yaml
 -   repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 24.3.0
     hooks:
     - id: black
-      language_version: python3.11
-      args: ["-l", '120']
--   repo: https://github.com/pycqa/isort
-    rev: 5.6.4
-    hooks:
-    - id: isort
-      args: ["--profile", "black", "--filter-files"]
+      args: [--config, pyproject.toml]
+#-   repo: https://github.com/pycqa/isort
+#    rev: 5.6.4
+#    hooks:
+#    - id: isort
+#      args: [--settings-path, pyproject.toml]

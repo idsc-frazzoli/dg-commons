@@ -78,8 +78,8 @@ class MotionPrimitivesGenerator(TrajGenerator):
 
         n = len(v_samples) * len(steer_samples) * len(v_samples_init) * len(s_samples_init)
         logger.debug(f"Attempting to generate {n} motion primitives")
-        for (v_start, sa_start) in product(v_samples_init, s_samples_init):
-            for (v_end, sa_end) in product(v_samples, steer_samples):
+        for v_start, sa_start in product(v_samples_init, s_samples_init):
+            for v_end, sa_end in product(v_samples, steer_samples):
                 is_valid, input_a, input_sa_rate = self.check_input_constraints(v_start, v_end, sa_start, sa_end)
                 if not is_valid:
                     continue

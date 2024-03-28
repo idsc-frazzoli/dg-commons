@@ -466,7 +466,7 @@ def plot_rocket(
             flame.set_xy(xy_poly)
     else:
         for f_idx, flame in enumerate(rocket_poly[2 + rg.n_thrusters :]):
-            flame.set_xy(np.array([[0.0,0.0]]))
+            flame.set_xy(np.array([[0.0, 0.0]]))
     return rocket_poly
 
 
