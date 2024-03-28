@@ -13,7 +13,7 @@ cover_packages=dg_commons
 
 junit=--junitxml=$(tr)/junit.xml
 parallel=-n auto --dist=loadfile
-coverage=--cov-config=.coveragerc --cov=$(cover_packages) --cov-report html
+coverage=--cov-config=pyproject.toml --cov=$(cover_packages) --cov-report html
 extra=--capture=no -v
 ################################
 
@@ -23,11 +23,11 @@ clean:
 
 test: clean
 	mkdir -p  $(tr)
-	DISABLE_CONTRACTS=1 pytest $(coverage) $(extra) $(junit) src
+	DISABLE_CONTRACTS=1 poetry run pytest $(coverage) $(extra) $(junit) src
 
 test-parallel: clean
 	mkdir -p  $(tr)
-	DISABLE_CONTRACTS=1 pytest $(coverage) $(extra) $(junit) $(parallel) src
+	DISABLE_CONTRACTS=1 poetry run pytest $(coverage) $(extra) $(junit) $(parallel) src
 
 #test-parallel-circle:
 #	DISABLE_CONTRACTS=1 \
@@ -42,7 +42,7 @@ coverage-report:
 	coverage html -d $(coverage_dir)
 
 black:
-	black -l 120 --target-version py38 src
+	black -l 120 --target-version py311 src
 
 ### Docs ###
 docs:

@@ -54,7 +54,7 @@ pytest-sugar = "^1.0.0"
 pytest-mypy = "^0.10.1"
 reprep-z7 = "7.2"
 codecov = "^2.1.9"
-coverage = "^6.4"
+coverage = { version = "^7.2", extras = ["toml"] }
 sphinx = "^7.2.0"
 sphinx-rtd-theme = "^2.0.0"
 sphinx-autodoc-typehints = "*"
@@ -69,3 +69,31 @@ testpaths = [
 
 [tool.isort]
 profile = "black"
+src_paths = ["src"]
+
+[tool.coverage.run]
+branch = true
+# concurrency = "multiprocessing"
+parallel = true
+source = [
+    "src/dg_commons",
+]
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_also = [
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if False:",
+    "if __name__ == .__main__.:",
+    # Don't complain about abstract methods, they aren't run:
+    "@(abc\\.)?abstractmethod",
+]
+sort = "Miss"
+ignore_errors = true
+
+[tool.coverage.html]
+directory = "out/coverage"
