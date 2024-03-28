@@ -6,6 +6,9 @@ ARG PYTHON_VERSION_
 # upgrade pip
 RUN pip install --upgrade pip
 
+# Install poetry
+RUN curl -sSL https://install.python-poetry.org | python -
+
 # Copy dependencies file
 COPY dependencies-apt.txt /tmp/
 

@@ -1,2 +1,71 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "dg-commons"
+version = "0.0.46"
+description = "Common tools and utilities related to Driving Games"
+authors = ["Alessandro Zanardi <azanardi@ethz.ch>"]
+readme = "README.md"
+license = "LICENSE"
+include = ["LICENSE"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+]
+packages = [
+    { include = "dg_commons", from = "src" },
+]
+repository = "https://github.com/idsc-frazzoli/dg-commons"
+exclude = ["src/dg_commons_tests/**"]
+
+
+[tool.poetry.dependencies]
+python = "^3.9"
+dg-commonroad-drivability-checker = "2023.11"
+frozendict = "^2.3.4"
+cytoolz = "^0.12.0"
+cachetools = "^5.0.0"
+tqdm = "^4.62.3"
+numpy = "^1.21.2"
+scipy = "^1.8.0"
+matplotlib = "^3.5.0"
+shapely = "^2.0.0"
+commonroad-io = "2023.3"
+zuper-commons-z7 = "7.2"
+PyGeometry-z7 = "7.2"
+pycontracts3 = "7.2"
+xtermcolor = "*"
+pytz = "*"
+aiofiles = "*"
+webcolors = "*"
+future = "*"
+
+[tool.poetry.dev-dependencies]
+pre-commit = "^3.6.2"
+jupyter = "*"
+pipdeptree = "^2.2.1"
+setuptools = ">=62.1.0"
+pytest = "^8"
+pytest-cov = "^4"
+pytest-xdist = "^3.5.0"
+pytest-sugar = "^1.0.0"
+pytest-mypy = "^0.10.1"
+reprep-z7 = "7.2"
+codecov = "^2.1.9"
+coverage = "^6.4"
+sphinx = "^7.2.0"
+sphinx-rtd-theme = "^2.0.0"
+sphinx-autodoc-typehints = "*"
+sphinx-autodoc-annotation = "*"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --pyargs"
+testpaths = [
+    "src/dg_commons_tests",
+]
+
 [tool.isort]
 profile = "black"

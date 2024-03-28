@@ -1,2 +1,2 @@
 
-# Builds a base image for testing in the cloud.
+# Builds base image for testing in the cloud.

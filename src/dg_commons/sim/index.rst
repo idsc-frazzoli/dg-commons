@@ -7,10 +7,10 @@ todo
 Basic structures
 -----------------
 
-.. automodule:: sim.agents
+.. automodule:: dg_commons.sim.agents
    :members:
    :undoc-members:
 
-.. automodule:: sim.models
+.. automodule:: dg_commons.sim.models
    :members:
    :undoc-members:

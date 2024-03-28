@@ -46,7 +46,7 @@ black:
 
 ### Docs ###
 docs:
-	sphinx-build src $(out)/docs
+	python -m sphinx.cmd.build src $(out)/docs
 
 docs-docker: build
 	mkdir -p $(out-docker)/docs
