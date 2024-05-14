@@ -1,3 +1,4 @@
+import pytest
 from commonroad.visualization.draw_params import MPDrawParams
 from commonroad.visualization.mp_renderer import MPRenderer
 from matplotlib import pyplot as plt
@@ -10,9 +11,11 @@ from dg_commons.sim.scenarios import load_commonroad_scenario
 from dg_commons.sim.scenarios.structures import DgScenario
 from dg_commons_tests import OUT_TESTS_DIR
 
+test_scenarios = ["USA_Lanker-1_1_T-1", "ESP_Barcelona-20_23_T-1", "USA_Phoenix-51_10_T-1"]
 
-def test_build_road_bounds():
-    scenario_name = "USA_Lanker-1_1_T-1"
+
+@pytest.mark.parametrize("scenario_name", test_scenarios)
+def test_build_road_bounds(scenario_name: str):
     scenario, planning_problem_set = load_commonroad_scenario(scenario_name)
     lane_boundaries, gates = build_road_boundary_obstacle(scenario)
     rnd = MPRenderer(figsize=(20, 20))

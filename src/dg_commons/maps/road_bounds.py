@@ -1,4 +1,5 @@
 from commonroad.scenario.scenario import Scenario
+from shapely import MultiPolygon
 from shapely.geometry import LineString, Polygon
 from shapely.ops import unary_union
 
@@ -28,11 +29,20 @@ def build_road_boundary_obstacle(scenario: Scenario, buffer: float = 0.1) -> tup
             entrance_exit_gates.append(LineString([pt1, pt2]).buffer(buffer * 2))
 
     overall_poly = unary_union(lane_polygons)
-    for interior in overall_poly.interiors:
-        scenario_bounds.append(interior)
+    # if the overall_poly is a Polygon, convert it to a MultiPolygon
+    if isinstance(overall_poly, Polygon):
+        overall_poly = MultiPolygon(
+            [
+                overall_poly,
+            ]
+        )
 
-    ext_bounds = overall_poly.exterior
-    for eeg in entrance_exit_gates:
-        ext_bounds = ext_bounds.difference(eeg)
-    scenario_bounds += [g for g in ext_bounds.geoms]
+    for geo in overall_poly.geoms:
+        for interior in geo.interiors:
+            scenario_bounds.append(interior)
+
+        ext_bounds = geo.exterior
+        for eeg in entrance_exit_gates:
+            ext_bounds = ext_bounds.difference(eeg)
+        scenario_bounds += [g for g in ext_bounds.geoms]
     return scenario_bounds, entrance_exit_gates
