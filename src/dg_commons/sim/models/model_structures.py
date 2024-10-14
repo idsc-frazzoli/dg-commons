@@ -13,7 +13,7 @@ __all__ = [
     "PEDESTRIAN",
     "TRUCK",
     "SPACECRAFT",
-    "DIFF_DRIVE",
+    "SPACESHIP" "DIFF_DRIVE",
     "DYNAMIC_OBSTACLE",
     "ModelGeometry",
     "ModelParameters",
@@ -30,6 +30,7 @@ MOTORCYCLE = ModelType("motorcycle")
 BICYCLE = ModelType("bicycle")
 PEDESTRIAN = ModelType("pedestrian")
 SPACECRAFT = ModelType("spacecraft")
+SPACESHIP = ModelType("spaceship")
 DIFF_DRIVE = ModelType("differential_drive")
 ROCKET = ModelType("rocket")
 DYNAMIC_OBSTACLE = ModelType("dynamic_obstacle")
