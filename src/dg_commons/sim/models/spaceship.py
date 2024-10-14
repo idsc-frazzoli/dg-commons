@@ -26,7 +26,7 @@ class SpaceshipCommands:
     ddelta: float
     """ Angular velocity of nozzle direction change [rad/s]"""
 
-    idx = frozendict({"F_left": 0, "F_right": 1, "ddelta": 2})
+    idx = frozendict({"thrust": 0, "ddelta": 1})
     """ Dictionary to get correct values from numpy arrays"""
 
     @classmethod
@@ -208,7 +208,7 @@ class SpaceshipModel(SimModel[SpaceshipState, SpaceshipCommands]):
         dx/dt = vx
         dy/dt = vy
         dθ/dt = vθ
-        dm/dt = -k_l*(F_l+F_r)
+        dm/dt = -k_l*thrust
         dvx/dt = 1/m*(sin(delta+θ)*F_l + sin(delta-θ)*F_r)
         dvy/dt = 1/m*(-cos(delta+θ)*F_l + cos(delta-θ)*F_r)
         dvθ/dt = 1/I*l2*cos(delta)*(F_r-F_l)
