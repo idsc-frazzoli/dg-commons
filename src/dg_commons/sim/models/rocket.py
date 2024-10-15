@@ -219,8 +219,8 @@ class RocketModel(SimModel[RocketState, RocketCommands]):
         dphi/dt = vphi
 
         """
-        F_lx = apply_force_limits(u.F_left, self.rp)
-        F_rx = apply_force_limits(u.F_right, self.rp)
+        F_lx = apply_force_limits(u.F_left, self.rp.F_limits)
+        F_rx = apply_force_limits(u.F_right, self.rp.F_limits)
         dphi = apply_full_ang_vel_limits(x0.phi, u.dphi, self.rp)
 
         # set actions to zero if vehicle has no more fuel

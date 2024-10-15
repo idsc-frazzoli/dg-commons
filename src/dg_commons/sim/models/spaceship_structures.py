@@ -129,7 +129,7 @@ class SpaceshipGeometry(ModelGeometry):
     def thrusters_position(self, phi: float) -> list[SE2value]:
         """Takes phi orientation (yaw angle) of the spaceship"""
         positions = [
-            SE2_from_xytheta((-self.l_r, 0, phi)),
+            SE2_from_xytheta((-self.l_r, 0, phi + math.pi)),
         ]
         return positions
 
@@ -155,7 +155,7 @@ class SpaceshipGeometry(ModelGeometry):
     def flame_position(self, phi: float) -> list[SE2value]:
         # positions = [SE2_from_xytheta((-self.l_m, self.w_half, phi)), SE2_from_xytheta((-self.l_m, -self.w_half, -phi))]
         positions = [
-            SE2_from_xytheta((-self.l_r - self.l_t_half, 0, phi)),
+            SE2_from_xytheta((-self.l_r, 0, phi + math.pi)),
         ]
         return positions
 
@@ -164,7 +164,7 @@ class SpaceshipGeometry(ModelGeometry):
     ) -> list[tuple[tuple[float, float], ...]]:
         """Takes phi angle of nozzle w.r.t. body frame"""
         flame_pos = self.flame_position(phi)
-        flame_outline = [self.flame_outline(command[0]), self.flame_outline(command[1])]
+        flame_outline = [self.flame_outline(command)]
         flame_outline = [transform_xy(q, flame_outline[i]) for i, q in enumerate(flame_pos)]
         return flame_outline
 
@@ -175,7 +175,7 @@ class SpaceshipParameters(ModelParameters):
     """ Mass of the Spaceship [kg] """
     C_T: float
     """ Thrust coefficient [1/(I_sp) I_sp: specific impulse] [N] """
-    F_limits: tuple[float, float]
+    thrust_limits: tuple[float, float]
     """ Maximum thrust [N] """
     phi_limits: tuple[float, float]
     """ Maximum nozzle angle [rad] """
@@ -189,7 +189,7 @@ class SpaceshipParameters(ModelParameters):
         C_T=0.01,
         vx_limits=(kmh2ms(-7.2), kmh2ms(7.2)),
         acc_limits=(-1.0, 1.0),
-        F_limits=(0.0, 2.0),
+        thrust_limits=(0.0, 2.0),
         phi_limits=(-np.deg2rad(60), np.deg2rad(60)),
         dphi_limits=(-np.deg2rad(20), np.deg2rad(20)),
     ) -> "SpaceshipParameters":
@@ -198,7 +198,7 @@ class SpaceshipParameters(ModelParameters):
             C_T=C_T,
             vx_limits=vx_limits,
             acc_limits=acc_limits,
-            F_limits=F_limits,
+            thrust_limits=thrust_limits,
             phi_limits=phi_limits,
             dphi_limits=dphi_limits,
         )
@@ -207,4 +207,4 @@ class SpaceshipParameters(ModelParameters):
         super().__post_init__()
         assert self.dphi_limits[0] < self.dphi_limits[1]
         assert self.phi_limits[0] < self.phi_limits[1]
-        assert self.F_limits[0] < self.F_limits[1]
+        assert self.thrust_limits[0] < self.thrust_limits[1]

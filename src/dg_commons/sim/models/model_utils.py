@@ -2,6 +2,7 @@ from dg_commons.sim import logger
 from dg_commons.sim.models.model_structures import ModelParameters
 from dg_commons.sim.models.spacecraft_structures import SpacecraftParameters
 from dg_commons.sim.models.rocket_structures import RocketParameters
+from dg_commons.sim.models.spaceship_structures import SpaceshipParameters
 
 
 def apply_speed_constraint(speed: float, acceleration: float, p: ModelParameters):
@@ -43,15 +44,28 @@ def apply_rot_speed_constraint(omega: float, domega: float, p: SpacecraftParamet
     return domega
 
 
-# todo make it more generic also for the other models
-def apply_force_limits(force: float, p: RocketParameters):
+# # todo make it more generic also for the other models
+# def apply_force_limits(force: float, p: RocketParameters):
+#     """Enforces force limits"""
+
+#     if not (p.F_limits[0] < force < p.F_limits[1]):
+#         force1 = max(p.F_limits[0], min(force, p.F_limits[1]))
+#         logger.debug(
+#             f"Reached force limits, force set to {force1:.2f}: \n"
+#             f"requested force {force:.2f}\toutside limits [{p.F_limits[0]:.2f},{p.F_limits[1]:.2f}]"
+#         )
+#         force = force1
+#     return force
+
+
+def apply_force_limits(force: float, F_limits: tuple):
     """Enforces force limits"""
 
-    if not (p.F_limits[0] < force < p.F_limits[1]):
-        force1 = max(p.F_limits[0], min(force, p.F_limits[1]))
+    if not (F_limits[0] < force < F_limits[1]):
+        force1 = max(F_limits[0], min(force, F_limits[1]))
         logger.debug(
             f"Reached force limits, force set to {force1:.2f}: \n"
-            f"requested force {force:.2f}\toutside limits [{p.F_limits[0]:.2f},{p.F_limits[1]:.2f}]"
+            f"requested force {force:.2f}\toutside limits [{F_limits[0]:.2f},{F_limits[1]:.2f}]"
         )
         force = force1
     return force

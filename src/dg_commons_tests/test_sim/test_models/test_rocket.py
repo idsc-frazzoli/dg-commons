@@ -94,5 +94,5 @@ def test_rocket_n_planet_sim():
     report.to_html(report_file)
 
 
-# if __name__ == "__main__":
-#     test_rocket_n_planet_sim()
+if __name__ == "__main__":
+    test_rocket_n_planet_sim()

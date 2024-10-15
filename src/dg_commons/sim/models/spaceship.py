@@ -151,19 +151,19 @@ class SpaceshipState:
 
 
 class SpaceshipModel(SimModel[SpaceshipState, SpaceshipCommands]):
-    def __init__(self, x0: SpaceshipState, rg: SpaceshipGeometry, rp: SpaceshipParameters):
+    def __init__(self, x0: SpaceshipState, rg: SpaceshipGeometry, sp: SpaceshipParameters):
         self._state: SpaceshipState = x0
         """ Current state of the model"""
         self.XT: Type[SpaceshipState] = type(x0)
         """ State type"""
         self.rg: SpaceshipGeometry = rg
         """ The vehicle's geometry parameters"""
-        self.rp: SpaceshipParameters = rp
+        self.sp: SpaceshipParameters = sp
         """ The vehicle parameters"""
 
     @classmethod
     def default(cls, x0: SpaceshipState):
-        return SpaceshipModel(x0=x0, rg=SpaceshipGeometry.default(), rp=SpaceshipParameters.default())
+        return SpaceshipModel(x0=x0, rg=SpaceshipGeometry.default(), sp=SpaceshipParameters.default())
 
     def update(self, commands: SpaceshipCommands, dt: Decimal):
         """
@@ -209,21 +209,19 @@ class SpaceshipModel(SimModel[SpaceshipState, SpaceshipCommands]):
         dy/dt = vy
         dθ/dt = vθ
         dm/dt = -k_l*thrust
-        dvx/dt = 1/m*(sin(delta+θ)*F_l + sin(delta-θ)*F_r)
-        dvy/dt = 1/m*(-cos(delta+θ)*F_l + cos(delta-θ)*F_r)
-        dvθ/dt = 1/I*l2*cos(delta)*(F_r-F_l)
+        dvx/dt = 1/m*cos(delta+θ)*thrust
+        dvy/dt = 1/m*sin(delta+θ)*thrust
+        dvθ/dt = -1/I*l_r*sin(delta)*thrust
         ddelta/dt = vdelta
 
         """
         # todo update dynamics
-        F_lx = apply_force_limits(u.F_left, self.rp)
-        F_rx = apply_force_limits(u.F_right, self.rp)
-        ddelta = apply_full_ang_vel_limits(x0.delta, u.ddelta, self.rp)
+        thrust = apply_force_limits(u.thrust, self.sp.thrust_limits)
+        ddelta = apply_full_ang_vel_limits(x0.delta, u.ddelta, self.sp)
 
         # set actions to zero if vehicle has no more fuel
-        if x0.m <= self.rp.m_v:
-            F_lx = 0
-            F_rx = 0
+        if x0.m <= self.sp.m_v:
+            thrust = 0
             logger.warning("Vehicle has no more fuel!")
 
         psi = x0.psi
@@ -235,10 +233,10 @@ class SpaceshipModel(SimModel[SpaceshipState, SpaceshipCommands]):
 
         dx = vx
         dy = vy
-        dm = -self.rp.C_T * (F_lx + F_rx)
-        dvx = 1 / m * (sin(psi + delta) * F_lx + sin(delta - psi) * F_rx)
-        dvy = 1 / m * (-cos(psi + delta) * F_lx + cos(delta - psi) * F_rx)
-        dvpsi = 1 / self.rg.Iz * self.rg.l_m * (cos(delta) * F_rx - cos(delta) * F_lx)
+        dm = -self.sp.C_T * thrust
+        dvx = 1 / m * cos(delta + psi) * thrust
+        dvy = 1 / m * sin(delta + psi) * thrust
+        dvpsi = -1 / self.rg.Iz * self.rg.l_r * sin(delta) * thrust
         ddelta = ddelta
 
         return SpaceshipState(x=dx, y=dy, psi=dpsi, vx=dvx, vy=dvy, dpsi=dvpsi, delta=ddelta, m=dm)
@@ -293,7 +291,7 @@ class SpaceshipModel(SimModel[SpaceshipState, SpaceshipCommands]):
 
     @property
     def model_params(self) -> ModelParameters:
-        return self.rp
+        return self.sp
 
     def get_extra_collision_friction_acc(self):
         raise NotImplementedError
