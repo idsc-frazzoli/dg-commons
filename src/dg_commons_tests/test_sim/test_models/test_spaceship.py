@@ -23,10 +23,10 @@ P1, P2 = PlayerName("PDM4AR"), PlayerName("P2")
 
 
 def get_planet_n_satellite_simcontext() -> SimContext:
-    x0_p1 = SpaceshipState(x=-8, y=-8, psi=pi, vx=0, vy=0, dpsi=0.0, delta=0.0, m=2.1)
+    x0_p1 = SpaceshipState(x=-8, y=-8, psi=pi, vx=0, vy=0, dpsi=0.0, delta=0.0, m=3)
 
     # some static circular obstacles
-    planet1 = Point(5, 5).buffer(3)
+    planet1 = Point(0, 0).buffer(3)
 
     # TODO: add a class with planets and their respective satellite kids
     # for a circular orbit with radius r and angular velocity w --> v=w*r
@@ -54,12 +54,12 @@ def get_planet_n_satellite_simcontext() -> SimContext:
     cmds_p1 = DgSampledSequence[SpaceshipCommands](
         timestamps=[0, 1, 2, 3, 4, 5],
         values=[
-            SpaceshipCommands(thrust=0, ddelta=deg2rad(0)),
+            SpaceshipCommands(thrust=0, ddelta=deg2rad(20)),
             SpaceshipCommands(thrust=0.1, ddelta=deg2rad(20)),
-            SpaceshipCommands(thrust=1, ddelta=deg2rad(20)),
+            SpaceshipCommands(thrust=1, ddelta=deg2rad(-20)),
             SpaceshipCommands(thrust=0, ddelta=deg2rad(-20)),
             SpaceshipCommands(thrust=1, ddelta=deg2rad(-20)),
-            SpaceshipCommands(thrust=2, ddelta=deg2rad(-20)),
+            SpaceshipCommands(thrust=2, ddelta=deg2rad(0)),
         ],
     )
     centripetal_acc = omega**2 * orbit_r
