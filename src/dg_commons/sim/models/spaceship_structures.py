@@ -46,13 +46,13 @@ class SpaceshipGeometry(ModelGeometry):
         color: Color = "royalblue",
         m=2.0,  # MASS TO BE INTENDED AS MASS OF THE ROCKET WITHOUT FUEL
         Iz=1e-00,
-        w_half=0.2,
-        l_c=0.3,
-        l_f=0.05,
-        l_r=0.3,
-        l_t_half=0.2,
-        w_t_half=0.01,
-        F_max=2.0,
+        w_half=0.4,
+        l_c=0.8,
+        l_f=0.5,
+        l_r=1,
+        l_t_half=0.3,
+        w_t_half=0.05,
+        F_max=3.0,
     ) -> "SpaceshipGeometry":
         return SpaceshipGeometry(
             m=m,
@@ -177,9 +177,9 @@ class SpaceshipParameters(ModelParameters):
     """ Thrust coefficient [1/(I_sp) I_sp: specific impulse] [N] """
     thrust_limits: tuple[float, float]
     """ Maximum thrust [N] """
-    phi_limits: tuple[float, float]
+    delta_limits: tuple[float, float]
     """ Maximum nozzle angle [rad] """
-    dphi_limits: tuple[float, float]
+    ddelta_limits: tuple[float, float]
     """ Maximum nozzle angular velocity [rad/s] """
 
     @classmethod
@@ -187,11 +187,11 @@ class SpaceshipParameters(ModelParameters):
         cls,
         m_v=2.0,
         C_T=0.01,
-        vx_limits=(kmh2ms(-7.2), kmh2ms(7.2)),
+        vx_limits=(kmh2ms(-10), kmh2ms(10)),
         acc_limits=(-1.0, 1.0),
         thrust_limits=(0.0, 2.0),
-        phi_limits=(-np.deg2rad(60), np.deg2rad(60)),
-        dphi_limits=(-np.deg2rad(20), np.deg2rad(20)),
+        delta_limits=(-np.deg2rad(60), np.deg2rad(60)),
+        ddelta_limits=(-np.deg2rad(45), np.deg2rad(45)),
     ) -> "SpaceshipParameters":
         return SpaceshipParameters(
             m_v=m_v,
@@ -199,12 +199,12 @@ class SpaceshipParameters(ModelParameters):
             vx_limits=vx_limits,
             acc_limits=acc_limits,
             thrust_limits=thrust_limits,
-            phi_limits=phi_limits,
-            dphi_limits=dphi_limits,
+            delta_limits=delta_limits,
+            ddelta_limits=ddelta_limits,
         )
 
     def __post_init__(self):
         super().__post_init__()
-        assert self.dphi_limits[0] < self.dphi_limits[1]
-        assert self.phi_limits[0] < self.phi_limits[1]
+        assert self.ddelta_limits[0] < self.ddelta_limits[1]
+        assert self.delta_limits[0] < self.delta_limits[1]
         assert self.thrust_limits[0] < self.thrust_limits[1]

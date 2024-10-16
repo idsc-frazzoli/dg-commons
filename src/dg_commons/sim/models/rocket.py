@@ -207,15 +207,16 @@ class RocketModel(SimModel[RocketState, RocketCommands]):
     def dynamics(self, x0: RocketState, u: RocketCommands) -> RocketState:
         """
         Returns state derivative for given control inputs
+        Note that this model has velocities expressed in global frame!
 
         Dynamics:
         dx/dt = vx
         dy/dt = vy
-        dθ/dt = vθ
+        dψ/dt = vψ
         dm/dt = -k_l*(F_l+F_r)
-        dvx/dt = 1/m*(sin(phi+θ)*F_l + sin(phi-θ)*F_r)
-        dvy/dt = 1/m*(-cos(phi+θ)*F_l + cos(phi-θ)*F_r)
-        dvθ/dt = 1/I*l2*cos(phi)*(F_r-F_l)
+        dvx/dt = 1/m*(sin(phi+ψ)*F_l + sin(phi-ψ)*F_r)
+        dvy/dt = 1/m*(-cos(phi+ψ)*F_l + cos(phi-ψ)*F_r)
+        dvψ/dt = 1/I*l2*cos(phi)*(F_r-F_l)
         dphi/dt = vphi
 
         """

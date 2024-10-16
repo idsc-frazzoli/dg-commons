@@ -205,14 +205,14 @@ class SpaceshipModel(SimModel[SpaceshipState, SpaceshipCommands]):
         Returns state derivative for given control inputs
         # todo update dynamics
         Dynamics:
-        dx/dt = vx
-        dy/dt = vy
-        dθ/dt = vθ
-        dm/dt = -k_l*thrust
-        dvx/dt = 1/m*cos(delta+θ)*thrust
-        dvy/dt = 1/m*sin(delta+θ)*thrust
-        dvθ/dt = -1/I*l_r*sin(delta)*thrust
+        dx/dt = vx * cos(ψ) - vy * sin(ψ)
+        dy/dt = vx * sin(ψ) + vy * cos(ψ)
+        dψ/dt = ψdot
+        dvx/dt = 1/m*cos(ψ)*thrust
+        dvy/dt = 0
+        dψdot/dt = 1/I*l_r*sin(delta)*thrust
         ddelta/dt = vdelta
+        dm/dt = -k_l*thrust
 
         """
         # todo update dynamics
@@ -224,22 +224,17 @@ class SpaceshipModel(SimModel[SpaceshipState, SpaceshipCommands]):
             thrust = 0
             logger.warning("Vehicle has no more fuel!")
 
-        psi = x0.psi
-        dpsi = x0.dpsi
-        m = x0.m
-        vx = x0.vx
-        vy = x0.vy
-        delta = x0.delta
-
-        dx = vx
-        dy = vy
-        dm = -self.sp.C_T * thrust
-        dvx = 1 / m * cos(delta + psi) * thrust
-        dvy = 1 / m * sin(delta + psi) * thrust
-        dvpsi = -1 / self.rg.Iz * self.rg.l_r * sin(delta) * thrust
+        costh = cos(x0.psi)
+        sinth = sin(x0.psi)
+        dx = x0.vx * costh - x0.vy * sinth
+        dy = x0.vx * sinth + x0.vy * costh
+        dvx = 1 / x0.m * cos(x0.delta) * thrust
+        dvy = 0
+        dvpsi = -1 / self.rg.Iz * self.rg.l_r * sin(x0.delta) * thrust
         ddelta = ddelta
+        dm = -self.sp.C_T * thrust
 
-        return SpaceshipState(x=dx, y=dy, psi=dpsi, vx=dvx, vy=dvy, dpsi=dvpsi, delta=ddelta, m=dm)
+        return SpaceshipState(x=dx, y=dy, psi=x0.dpsi, vx=dvx, vy=dvy, dpsi=dvpsi, delta=ddelta, m=dm)
 
     def get_footprint(self) -> Polygon:
         """Returns current footprint of the rocket (mainly for collision checking)"""

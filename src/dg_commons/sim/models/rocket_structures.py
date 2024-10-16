@@ -185,9 +185,9 @@ class RocketParameters(ModelParameters):
     """ Thrust coefficient [1/(I_sp) I_sp: specific impulse] [N] """
     F_limits: tuple[float, float]
     """ Maximum thrust [N] """
-    phi_limits: tuple[float, float]
+    delta_limits: tuple[float, float]
     """ Maximum nozzle angle [rad] """
-    dphi_limits: tuple[float, float]
+    ddelta_limits: tuple[float, float]
     """ Maximum nozzle angular velocity [rad/s] """
 
     @classmethod
@@ -198,8 +198,8 @@ class RocketParameters(ModelParameters):
         vx_limits=(kmh2ms(-7.2), kmh2ms(7.2)),
         acc_limits=(-1.0, 1.0),
         F_limits=(0.0, 2.0),
-        phi_limits=(-np.deg2rad(60), np.deg2rad(60)),
-        dphi_limits=(-np.deg2rad(20), np.deg2rad(20)),
+        delta_limits=(-np.deg2rad(60), np.deg2rad(60)),
+        ddelta_limits=(-np.deg2rad(20), np.deg2rad(20)),
     ) -> "RocketParameters":
         return RocketParameters(
             m_v=m_v,
@@ -207,12 +207,12 @@ class RocketParameters(ModelParameters):
             vx_limits=vx_limits,
             acc_limits=acc_limits,
             F_limits=F_limits,
-            phi_limits=phi_limits,
-            dphi_limits=dphi_limits,
+            delta_limits=delta_limits,
+            ddelta_limits=ddelta_limits,
         )
 
     def __post_init__(self):
         super().__post_init__()
-        assert self.dphi_limits[0] < self.dphi_limits[1]
-        assert self.phi_limits[0] < self.phi_limits[1]
+        assert self.ddelta_limits[0] < self.ddelta_limits[1]
+        assert self.delta_limits[0] < self.delta_limits[1]
         assert self.F_limits[0] < self.F_limits[1]
