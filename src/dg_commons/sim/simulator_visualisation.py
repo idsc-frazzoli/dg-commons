@@ -30,6 +30,8 @@ from dg_commons.sim.models.rocket import RocketState, RocketCommands
 from dg_commons.sim.models.rocket_structures import RocketGeometry, RocketParameters
 from dg_commons.sim.models.vehicle import VehicleState, VehicleGeometry
 from dg_commons.sim.models.vehicle_ligths import LightsColors
+from dg_commons.sim.models.spaceship import SpaceshipState, SpaceshipCommands
+from dg_commons.sim.models.spaceship_structures import SpaceshipGeometry, SpaceshipParameters
 from dg_commons.sim.simulator import SimContext
 
 __all__ = ["SimRenderer", "plot_vehicle", "plot_pedestrian", "plot_trajectories"]
@@ -180,6 +182,18 @@ class SimRenderer(SimRendererABC):
                 rocket_poly=model_poly,
             )
             return rocket_poly, []
+        elif issubclass(type(state), SpaceshipState):
+            spaceship_poly = plot_spaceship(
+                ax=ax,
+                player_name=player_name,
+                state=state,
+                command=command,
+                sg=mg,
+                sp=self.sim_context.models[player_name].model_params,
+                alpha=alpha,
+                spaceship_poly=model_poly,
+            )
+            return spaceship_poly, []
         elif issubclass(type(state), DynObstacleState):
             # todo merge with shapely viz
             dyn_obs_model: DynObstacleModel = self.sim_context.models[player_name]
@@ -468,6 +482,50 @@ def plot_rocket(
         for f_idx, flame in enumerate(rocket_poly[2 + rg.n_thrusters :]):
             flame.set_xy(np.array([[0.0, 0.0]]))
     return rocket_poly
+
+
+def plot_spaceship(
+    ax: Axes,
+    player_name: PlayerName,
+    state: SpaceshipState,
+    command: SpaceshipCommands,
+    sg: SpaceshipGeometry,
+    sp: SpaceshipParameters,
+    alpha: float,
+    spaceship_poly: Optional[list[Polygon]],
+) -> list[Polygon]:
+    q = SE2_from_xytheta((state.x, state.y, state.psi))
+    x4, y4 = transform_xy(q, ((0, 0),))[0]
+    if spaceship_poly is None:
+        spaceship_box = ax.fill([], [], color=sg.color, alpha=alpha, zorder=ZOrders.MODEL)[0]
+        text: Text = ax.text(
+            x4,
+            y4,
+            player_name,
+            zorder=ZOrders.PLAYER_NAME,
+            horizontalalignment="center",
+            verticalalignment="center",
+            clip_on=True,
+        )
+        spaceship_poly = [spaceship_box, text]
+        thruster_box = ax.fill([], [], color="k", alpha=alpha, zorder=ZOrders.MODEL)[0]
+        flame_box = ax.fill([], [], color="r", alpha=alpha, zorder=ZOrders.MODEL)[0]
+        spaceship_poly.extend([thruster_box, flame_box])
+    # body
+    spaceship_outline: Sequence[tuple[float, float], ...] = sg.outline
+    outline_xy = transform_xy(q, spaceship_outline)
+    spaceship_poly[0].set_xy(outline_xy)
+    spaceship_poly[1].set_position((x4, y4))
+    # thruster
+    thruster_outline = transform_xy(q, sg.thrusters_outline_in_body_frame(state.delta)[0])
+    spaceship_poly[2].set_xy(thruster_outline)
+    # flame if fuel is not zero
+    if state.m > sp.m_v:
+        flame_outline = transform_xy(q, sg.flames_outline_in_body_frame(state.delta, command.thrust)[0])
+        spaceship_poly[3].set_xy(flame_outline)
+    else:
+        spaceship_poly[3].set_xy(np.array([[0.0, 0.0]]))
+    return spaceship_poly
 
 
 # todo duplicate to be removed?
