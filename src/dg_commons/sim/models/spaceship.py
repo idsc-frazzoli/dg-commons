@@ -208,9 +208,9 @@ class SpaceshipModel(SimModel[SpaceshipState, SpaceshipCommands]):
         dx/dt = vx * cos(ψ) - vy * sin(ψ)
         dy/dt = vx * sin(ψ) + vy * cos(ψ)
         dψ/dt = ψdot
-        dvx/dt = 1/m*cos(ψ)*thrust
-        dvy/dt = 0
-        dψdot/dt = 1/I*l_r*sin(delta)*thrust
+        dvx/dt = 1/m*cos(delta)*thrust
+        dvy/dt = 1/m*sin(delta)*thrust
+        dψdot/dt = -1/I*l_r*sin(delta)*thrust
         ddelta/dt = vdelta
         dm/dt = -k_l*thrust
 
@@ -226,11 +226,15 @@ class SpaceshipModel(SimModel[SpaceshipState, SpaceshipCommands]):
 
         costh = cos(x0.psi)
         sinth = sin(x0.psi)
+        cosdelta = cos(x0.delta)
+        sindelta = sin(x0.delta)
+
         dx = x0.vx * costh - x0.vy * sinth
         dy = x0.vx * sinth + x0.vy * costh
-        dvx = 1 / x0.m * cos(x0.delta) * thrust
-        dvy = 0
-        dvpsi = -1 / self.rg.Iz * self.rg.l_r * sin(x0.delta) * thrust
+        dvx = 1 / x0.m * cosdelta * thrust
+        dvy = 1 / x0.m * sindelta * thrust
+
+        dvpsi = -1 / self.rg.Iz * self.rg.l_r * sindelta * thrust
         ddelta = ddelta
         dm = -self.sp.C_T * thrust
 

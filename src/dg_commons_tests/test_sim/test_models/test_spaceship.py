@@ -56,10 +56,10 @@ def get_planet_n_satellite_simcontext() -> SimContext:
         values=[
             SpaceshipCommands(thrust=0, ddelta=deg2rad(20)),
             SpaceshipCommands(thrust=0.1, ddelta=deg2rad(20)),
+            SpaceshipCommands(thrust=1, ddelta=deg2rad(0)),
+            SpaceshipCommands(thrust=0, ddelta=deg2rad(0)),
             SpaceshipCommands(thrust=1, ddelta=deg2rad(-20)),
-            SpaceshipCommands(thrust=0, ddelta=deg2rad(-20)),
-            SpaceshipCommands(thrust=1, ddelta=deg2rad(-20)),
-            SpaceshipCommands(thrust=2, ddelta=deg2rad(0)),
+            SpaceshipCommands(thrust=2, ddelta=deg2rad(-20)),
         ],
     )
     centripetal_acc = omega**2 * orbit_r
