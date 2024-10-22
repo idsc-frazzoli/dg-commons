@@ -68,15 +68,15 @@ class SpaceshipCommands:
 @dataclass(unsafe_hash=True, eq=True, order=True)
 class SpaceshipState:
     x: float
-    """ CoG x location [m] """
+    """ CoG x location [m] in the global frame"""
     y: float
-    """ CoG y location [m] """
+    """ CoG y location [m] in the global frame"""
     psi: float
     """ Heading (yaw) [rad] """
     vx: float
-    """ CoG longitudinal velocity [m/s] """
+    """ CoG longitudinal velocity [m/s] in the body frame"""
     vy: float
-    """ CoG longitudinal velocity [m/s] """
+    """ CoG longitudinal velocity [m/s] in the body frame"""
     dpsi: float
     """ Heading (yaw) rate [rad/s] """
     delta: float
@@ -208,8 +208,8 @@ class SpaceshipModel(SimModel[SpaceshipState, SpaceshipCommands]):
         dx/dt = vx * cos(ψ) - vy * sin(ψ)
         dy/dt = vx * sin(ψ) + vy * cos(ψ)
         dψ/dt = ψdot
-        dvx/dt = 1/m*cos(delta)*thrust
-        dvy/dt = 1/m*sin(delta)*thrust
+        dvx/dt = 1/m*cos(delta)*thrust - dψ*vy  (Coriolis term)
+        dvy/dt = 1/m*sin(delta)*thrust + dψ*vx  (Coriolis term)
         dψdot/dt = -1/I*l_r*sin(delta)*thrust
         ddelta/dt = vdelta
         dm/dt = -k_l*thrust
@@ -232,7 +232,7 @@ class SpaceshipModel(SimModel[SpaceshipState, SpaceshipCommands]):
         dx = x0.vx * costh - x0.vy * sinth
         dy = x0.vx * sinth + x0.vy * costh
         dvx = 1 / x0.m * cosdelta * thrust - x0.dpsi * x0.vy
-        dvy = 1 / x0.m * sindelta * thrust + x0.dpsi * x0.vx  # DO NOT forgect to add the Coriolis term!
+        dvy = 1 / x0.m * sindelta * thrust + x0.dpsi * x0.vx
 
         dvpsi = -1 / self.rg.Iz * self.rg.l_r * sindelta * thrust
         ddelta = ddelta
