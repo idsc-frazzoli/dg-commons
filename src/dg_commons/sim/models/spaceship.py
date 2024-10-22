@@ -208,8 +208,8 @@ class SpaceshipModel(SimModel[SpaceshipState, SpaceshipCommands]):
         dx/dt = vx * cos(ψ) - vy * sin(ψ)
         dy/dt = vx * sin(ψ) + vy * cos(ψ)
         dψ/dt = ψdot
-        dvx/dt = 1/m*cos(delta)*thrust - dψ*vy  (Coriolis term)
-        dvy/dt = 1/m*sin(delta)*thrust + dψ*vx  (Coriolis term)
+        dvx/dt = 1/m*cos(delta)*thrust + dψ*vy  (Coriolis term)
+        dvy/dt = 1/m*sin(delta)*thrust - dψ*vx  (Coriolis term)
         dψdot/dt = -1/I*l_r*sin(delta)*thrust
         ddelta/dt = vdelta
         dm/dt = -k_l*thrust
