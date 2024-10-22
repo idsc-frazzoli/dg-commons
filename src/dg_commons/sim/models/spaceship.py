@@ -231,8 +231,8 @@ class SpaceshipModel(SimModel[SpaceshipState, SpaceshipCommands]):
 
         dx = x0.vx * costh - x0.vy * sinth
         dy = x0.vx * sinth + x0.vy * costh
-        dvx = 1 / x0.m * cosdelta * thrust - x0.dpsi * x0.vy
-        dvy = 1 / x0.m * sindelta * thrust + x0.dpsi * x0.vx
+        dvx = 1 / x0.m * cosdelta * thrust + x0.dpsi * x0.vy
+        dvy = 1 / x0.m * sindelta * thrust - x0.dpsi * x0.vx
 
         dvpsi = -1 / self.rg.Iz * self.rg.l_r * sindelta * thrust
         ddelta = ddelta
