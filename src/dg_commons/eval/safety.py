@@ -2,7 +2,7 @@ from typing import Mapping, MutableMapping
 import numpy as np
 from shapely import distance
 from shapely.ops import nearest_points
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, Point
 from shapely.affinity import translate
 from geometry import SE2_from_xytheta
 from dg_commons import apply_SE2_to_shapely_geo
@@ -25,14 +25,21 @@ def has_collision(cr_list: list[CollisionReport]) -> bool:
 
 
 def get_min_dist(logs: SimLog, models: MutableMapping[PlayerName, SimModel],
-                 missions: Mapping[PlayerName, TPlanningGoal], ego_name: PlayerName) -> (
-        float, PlayerName, Timestamp):
-    """Get the minimum distance between the ego and any other agent throughout the simulation."""
+                 missions: Mapping[PlayerName, TPlanningGoal], ego_name: PlayerName,
+                 t_range: tuple[Timestamp|None, Timestamp|None] = (None, None)) -> tuple[float, PlayerName, Timestamp]:
+    """
+    Get the minimum distance between the ego and any other agent throughout the simulation.
+    Only timesteps within t_range are considered.
+    """
     timesteps = logs[ego_name].states.timestamps
     min_dist = np.inf
     min_dist_agent = None
     min_dist_t = None
     for t in timesteps:
+        if t_range[0] is not None and t < t_range[0]:
+            continue
+        if t_range[1] is not None and t > t_range[1]:
+            break
         min_dist_at_t, min_dist_agent_at_t = get_min_dist_at_t(logs, models, missions, t, ego_name)
         if min_dist_at_t < min_dist:
             min_dist = min_dist_at_t
@@ -43,10 +50,12 @@ def get_min_dist(logs: SimLog, models: MutableMapping[PlayerName, SimModel],
 
 def get_min_ttc_max_drac(logs: SimLog, models: MutableMapping[PlayerName, SimModel],
                          missions: Mapping[PlayerName, TPlanningGoal],
-                         ego_name: PlayerName) -> (
-        float, PlayerName, Timestamp):
-    """Get te minimum ttc and maximum drac throughout the simulation.
-    Returns the value, the agent involved and the time when the value is obtained."""
+                         ego_name: PlayerName, t_range: tuple[Timestamp|None, Timestamp|None] = (None, None)) -> tuple[float, PlayerName, Timestamp]:
+    """
+    Get te minimum time-to-collision(ttc) and maximum deceleration-rate-to-avoid-collision(drac) throughout the
+    simulation.
+    Only timesteps within t_range are considered.
+    """
     timesteps = logs[ego_name].states.timestamps
     min_ttc = np.inf
     min_ttc_agent = None
@@ -55,6 +64,10 @@ def get_min_ttc_max_drac(logs: SimLog, models: MutableMapping[PlayerName, SimMod
     max_drac_agent = None
     max_drac_t = None
     for t in timesteps:
+        if t_range[0] is not None and t < t_range[0]:
+            continue
+        if t_range[1] is not None and t > t_range[1]:
+            break
         ttc_at_t, ttc_agent_at_t, drac_at_t, drac_agent_at_t = get_ttc_drac_at_t(logs, models, missions, t, ego_name)
         if ttc_at_t < min_ttc:
             min_ttc = ttc_at_t
@@ -69,7 +82,7 @@ def get_min_ttc_max_drac(logs: SimLog, models: MutableMapping[PlayerName, SimMod
 
 def get_min_dist_at_t(logs: SimLog, models: MutableMapping[PlayerName, SimModel],
                       missions: Mapping[PlayerName, TPlanningGoal], t: Timestamp,
-                      ego_name: PlayerName) -> (float, PlayerName):
+                      ego_name: PlayerName) -> tuple[float, PlayerName]:
     """
     Compute the minimum distance between the ego vehicle and the agents at current timestep.
     :param logs: simulation log
@@ -86,14 +99,11 @@ def get_min_dist_at_t(logs: SimLog, models: MutableMapping[PlayerName, SimModel]
         return np.inf, None
     ego_state = logs_at_t[ego_name].state
     ego_model = models[ego_name]
-    ego_pos = np.array([ego_state.x, ego_state.y])
     min_dist = np.inf
     min_dist_agent = None
     for name, log in logs_at_t.items():
         if name == ego_name:
             continue
-        # agent_pos = np.array([log.state.x, log.state.y])
-        # dist = np.linalg.norm(agent_pos - ego_pos)
         agent_state = log.state
         agent_model = models[name]
         dist, _ = _get_dist(ego_state, agent_state, ego_model, agent_model)
@@ -104,8 +114,7 @@ def get_min_dist_at_t(logs: SimLog, models: MutableMapping[PlayerName, SimModel]
 
 
 def get_ttc_drac_at_t(logs: SimLog, models: MutableMapping[PlayerName, SimModel],
-                      missions: Mapping[PlayerName, TPlanningGoal], t: Timestamp, ego_name: PlayerName) -> (
-        float, PlayerName, float, PlayerName):
+                      missions: Mapping[PlayerName, TPlanningGoal], t: Timestamp, ego_name: PlayerName) -> tuple[float, PlayerName, float, PlayerName]:
     """
     Compute the minimum time-to-collision and the maximum deceleration-rate-to-avoid-collision for the ego vehicle
     against all agents at current timestep.
@@ -143,10 +152,11 @@ def get_ttc_drac_at_t(logs: SimLog, models: MutableMapping[PlayerName, SimModel]
             # two agents are leaving each other or far enough
             continue
         ttc, ego_dtc, agent_dtc = _get_ttc(ego_state, agent_state, ego_model, agent_model)
-        drac = ego_state.vx ** 2 / (2 * ego_dtc)
         if ttc < min_time:
             min_time = ttc
             min_ttc_agent = name
+
+        drac = ego_state.vx ** 2 / (2 * ego_dtc) if ego_dtc > 0 else np.inf
         if drac > max_drac:
             max_drac = drac
             max_drac_agent = name
@@ -154,7 +164,7 @@ def get_ttc_drac_at_t(logs: SimLog, models: MutableMapping[PlayerName, SimModel]
     return min_time, min_ttc_agent, max_drac, max_drac_agent
 
 
-def _get_dist(state1: X, state2: X, model1: SimModel, model2: SimModel) -> (float, np.ndarray):
+def _get_dist(state1: X, state2: X, model1: SimModel, model2: SimModel) -> tuple[float, tuple[Point, Point]]:
     """get the minimum distance between two vehicles, considering their geometry"""
     pose1 = SE2_from_xytheta([state1.x, state1.y, state1.psi])
     poly1 = apply_SE2_to_shapely_geo(model1.vg.outline_as_polygon, pose1)
@@ -164,11 +174,10 @@ def _get_dist(state1: X, state2: X, model1: SimModel, model2: SimModel) -> (floa
     dist = distance(nearest_pts[0], nearest_pts[1])
     pt1 = np.array([nearest_pts[0].x, nearest_pts[0].y])
     pt2 = np.array([nearest_pts[1].x, nearest_pts[1].y])
-    dir = (pt2 - pt1) / np.linalg.norm(pt2 - pt1)
-    return dist, dir
+    return dist, nearest_pts
 
 
-def _get_ttc(state1: X, state2: X, model1: SimModel, model2: SimModel) -> (float, float, float):
+def _get_ttc(state1: X, state2: X, model1: SimModel, model2: SimModel) -> tuple[float, float, float]:
     """
     Compute the time-to-collision and distance-to-collisions of the two vehicles, considering their geometry.
     :param poly1: geometry of the first agent
@@ -185,7 +194,7 @@ def _get_ttc(state1: X, state2: X, model1: SimModel, model2: SimModel) -> (float
     return ttc, dist_to_collision1, dist_to_collision2
 
 
-def _get_ttc_of_poly_and_state(poly1: Polygon, poly2: Polygon, state1: X, state2: X):
+def _get_ttc_of_poly_and_state(poly1: Polygon, poly2: Polygon, state1: X, state2: X) -> tuple[float, float, float]:
     """
     Compute the time-to-collision and distance-to-collisions of the two polygons, considering their geometry.
     :param poly1: geometry of the first agent
@@ -202,13 +211,11 @@ def _get_ttc_of_poly_and_state(poly1: Polygon, poly2: Polygon, state1: X, state2
     delta_pos = (v2 - v1) * timestep
     while not poly1.intersects(poly2):
         if time > max_time:
-            break
+            return np.inf, np.inf, np.inf
         # move poly2
         poly2 = translate(poly2, xoff=delta_pos[0], yoff=delta_pos[1])
         time += timestep
-    # if time <= max_time:
     return time, state1.vx * time, state2.vx * time
-    # return np.inf, np.inf, np.inf
 
 
 def _remove_finished_players(log_at_t: Mapping[PlayerName, LogEntry], missions: Mapping[PlayerName, TPlanningGoal]) -> \
