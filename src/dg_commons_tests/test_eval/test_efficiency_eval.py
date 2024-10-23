@@ -1,7 +1,4 @@
 import pickle
-from pathlib import Path
-import os
-import numpy as np
 from dg_commons import PlayerName
 from dg_commons.eval.efficiency import time_goal_lane_reached, distance_traveled
 

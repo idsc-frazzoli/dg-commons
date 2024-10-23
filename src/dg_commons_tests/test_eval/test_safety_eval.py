@@ -2,8 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import shapely.affinity
 from geometry import SE2_from_xytheta
-from shapely import distance
-from shapely.ops import nearest_points
 from dg_commons import apply_SE2_to_shapely_geo, X
 from dg_commons.sim.models.vehicle_dynamic import VehicleStateDyn, VehicleModelDyn
 from dg_commons.eval.safety import _get_ttc, _get_dist

@@ -28,7 +28,7 @@ def get_min_dist(logs: SimLog, models: MutableMapping[PlayerName, SimModel],
                  missions: Mapping[PlayerName, TPlanningGoal], ego_name: PlayerName,
                  t_range: tuple[Timestamp|None, Timestamp|None] = (None, None)) -> tuple[float, PlayerName, Timestamp]:
     """
-    Get the minimum distance between the ego and any other agent throughout the simulation.
+    Get the minimum distance between the ego and any other agent.
     Only timesteps within t_range are considered.
     """
     timesteps = logs[ego_name].states.timestamps
@@ -52,8 +52,7 @@ def get_min_ttc_max_drac(logs: SimLog, models: MutableMapping[PlayerName, SimMod
                          missions: Mapping[PlayerName, TPlanningGoal],
                          ego_name: PlayerName, t_range: tuple[Timestamp|None, Timestamp|None] = (None, None)) -> tuple[float, PlayerName, Timestamp]:
     """
-    Get te minimum time-to-collision(ttc) and maximum deceleration-rate-to-avoid-collision(drac) throughout the
-    simulation.
+    Get te minimum time-to-collision(ttc) and maximum deceleration-rate-to-avoid-collision(drac).
     Only timesteps within t_range are considered.
     """
     timesteps = logs[ego_name].states.timestamps
