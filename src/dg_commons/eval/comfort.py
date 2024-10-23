@@ -1,42 +1,37 @@
 import numpy as np
-from dg_commons import U, DgSampledSequence
+from dg_commons import U, DgSampledSequence, iterate_with_dt
+from dg_commons.seq.sequence import Timestamp
 
 
-def get_max_jerk(commands: DgSampledSequence[U]):
-    length = len(commands.timestamps)
-    last_command = commands.values[0]
-    last_t = commands.timestamps[0]
+def get_max_jerk(commands: DgSampledSequence[U], t_range: tuple[Timestamp|None, Timestamp|None] = (None, None)):
+    """
+    Get the maximum jerk of the planned action sequence.
+    Only timesteps within t_range are considered.
+    """
     max_jerk = 0
-    for idx in range(1, length):
-        cur_command = commands.values[idx]
-        cur_t = commands.timestamps[idx]
-        jerk = (cur_command.acc - last_command.acc) / float(cur_t - last_t)
+    for it in iterate_with_dt(commands):
+        if t_range[0] is not None and it.t1 < t_range[0]:
+            continue
+        if t_range[1] is not None and it.t1 > t_range[1]:
+            break
+        jerk = (it.v1.acc - it.v0.acc) / float(it.t1 - it.t0)
         if np.abs(jerk) > max_jerk:
             max_jerk = np.abs(jerk)
-        last_command = cur_command
-        last_t = cur_t
     return max_jerk
 
 
-def get_acc_rms(commands: DgSampledSequence[U]):
+def get_acc_rms(commands: DgSampledSequence[U], t_range: tuple[Timestamp|None, Timestamp|None] = (None, None)):
     """
-    comfort measurement according to ISO 2631
-    the rms of frequency weighted acceletation
-    the
-    :param states:
-    :return:
+    comfort measurement according to ISO 2631. returns the rms of frequency weighted acceletation
+    Only timesteps within t_range are considered.
     """
-    acc_time = []
-    for idx in range(len(commands.timestamps)):
-        acc_time.append(commands.values[idx].acc)
-    acc_time = np.array(acc_time)
-    n_acc = len(acc_time)
+    t_range_min = commands.timestamps[0] if t_range[0] is None else t_range[0]
+    t_range_max = commands.timestamps[-1] if t_range[1] is None else t_range[1]
+    acc_time = np.array([command.acc for command, timestep in zip(commands.values, commands.timestamps) if timestep >= t_range_min and timestep <= t_range_max])
     st = 0.1
-    acc_freq = np.fft.rfft(acc_time)
-    freq = np.fft.rfftfreq(n=n_acc, d=st)
-    acc_freq_weighted = []
-    for idx in range(len(freq)):
-        acc_freq_weighted.append(acc_freq[idx] * acc_freq_filter(freq[idx]))
+    acc_freqs = np.fft.rfft(acc_time)
+    freqs = np.fft.rfftfreq(n=len(acc_time), d=st)
+    acc_freq_weighted = [acc_freq * acc_freq_filter(freq) for acc_freq, freq in zip(acc_freqs, freqs)]
     acc_freq_weighted = np.array(acc_freq_weighted)
     acc_time_weighted = np.fft.irfft(acc_freq_weighted)
     acc_rms = 0
