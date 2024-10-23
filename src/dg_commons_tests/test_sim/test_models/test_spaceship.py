@@ -52,14 +52,17 @@ def get_planet_n_satellite_simcontext() -> SimContext:
     }
 
     cmds_p1 = DgSampledSequence[SpaceshipCommands](
-        timestamps=[0, 1, 2, 3, 4, 5],
+        timestamps=[0, 1, 2, 3, 4, 5, 6, 7, 8],
         values=[
-            SpaceshipCommands(thrust=0, ddelta=deg2rad(20)),
-            SpaceshipCommands(thrust=0.1, ddelta=deg2rad(20)),
-            SpaceshipCommands(thrust=1, ddelta=deg2rad(0)),
+            SpaceshipCommands(thrust=5, ddelta=deg2rad(0)),
+            SpaceshipCommands(thrust=5, ddelta=deg2rad(0)),
+            SpaceshipCommands(thrust=5, ddelta=deg2rad(0)),
+            SpaceshipCommands(thrust=5, ddelta=deg2rad(-5)),
+            SpaceshipCommands(thrust=5, ddelta=deg2rad(-5)),
             SpaceshipCommands(thrust=0, ddelta=deg2rad(0)),
-            SpaceshipCommands(thrust=1, ddelta=deg2rad(-20)),
-            SpaceshipCommands(thrust=2, ddelta=deg2rad(-20)),
+            SpaceshipCommands(thrust=0, ddelta=deg2rad(+5)),
+            SpaceshipCommands(thrust=0, ddelta=deg2rad(+5)),
+            SpaceshipCommands(thrust=0, ddelta=deg2rad(0)),
         ],
     )
     centripetal_acc = omega**2 * orbit_r
