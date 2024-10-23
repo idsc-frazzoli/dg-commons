@@ -151,7 +151,7 @@ def get_ttc_drac_at_t(logs: SimLog, models: MutableMapping[PlayerName, SimModel]
         if rel_vel_along_dist > 0 or np.abs(dist_center / rel_vel_along_dist) > 5.0:
             # two agents are leaving each other or far enough
             continue
-        ttc, ego_dtc, agent_dtc = _get_ttc(ego_state, agent_state, ego_model, agent_model)
+        ttc, ego_dtc, _ = _get_ttc(ego_state, agent_state, ego_model, agent_model)
         if ttc < min_time:
             min_time = ttc
             min_ttc_agent = name
@@ -172,8 +172,6 @@ def _get_dist(state1: X, state2: X, model1: SimModel, model2: SimModel) -> tuple
     poly2 = apply_SE2_to_shapely_geo(model2.vg.outline_as_polygon, pose2)
     nearest_pts = nearest_points(poly1, poly2)
     dist = distance(nearest_pts[0], nearest_pts[1])
-    pt1 = np.array([nearest_pts[0].x, nearest_pts[0].y])
-    pt2 = np.array([nearest_pts[1].x, nearest_pts[1].y])
     return dist, nearest_pts
 
 
