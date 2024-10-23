@@ -21,10 +21,7 @@ def test_efficiency_eval():
     ego_goal_lane = missions[ego_name]
     ego_states = log[ego_name].states
     time_to_reach = time_goal_lane_reached(lanelet_network, ego_goal_lane, ego_states)
-    if time_to_reach < 0:
-        has_reached_the_goal = False
-    else:
-        has_reached_the_goal = True
+    has_reached_the_goal = time_to_reach is not None
     if has_reached_the_goal:
         print("Goal lane reached " + "at time " + str(time_to_reach))
     else:
