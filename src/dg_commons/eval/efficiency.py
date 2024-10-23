@@ -23,23 +23,14 @@ def actuation_effort(commands: DgSampledSequence[U]) -> float:
 
 def time_goal_lane_reached(lanelet_network: LaneletNetwork, goal_lane: RefLaneGoal, states: DgSampledSequence[X],
                            pos_tol: float = 0.8,
-                           heading_tol: float = 0.08) -> Timestamp:
-    reached_time = -1.0
-    # for idx in range(1, len(states.values) + 1):
-    #     state = states.values[-idx]
-    #     timestep = states.timestamps[-idx]
-    #     reached = desired_lane_reached(lanelet_network, goal_lane, state, pos_tol, heading_tol)
-    #     if not reached:
-    #         break
-    #     reached_time = timestep
-    for idx in range(0, len(states.values)):
-        state = states.values[idx]
-        timestep = states.timestamps[idx]
+                           heading_tol: float = 0.08) -> Timestamp|None:
+    reached_time = None
+    for idx, state in enumerate(states.values):
         reached = desired_lane_reached(lanelet_network, goal_lane, state, pos_tol, heading_tol)
         if reached:
-            reached_time = timestep
+            reached_time = states.timestamps[idx]
             break
-    return float(reached_time)
+    return reached_time
 
 
 def desired_lane_reached(lanelet_network: LaneletNetwork, goal_lane: RefLaneGoal, state: X, pos_tol: float,
@@ -56,7 +47,7 @@ def desired_lane_reached(lanelet_network: LaneletNetwork, goal_lane: RefLaneGoal
     ref_lane = goal_lane.ref_lane  # dglanelet
     lane_pose = ref_lane.lane_pose_from_SE2Transform(ego_pose)
     while not lane_pose.along_inside:
-        if np.abs(lane_pose.along_lane) < 1.0 or lane_pose.along_lane - ref_lane.get_lane_length() < 1.0:
+        if np.abs(lane_pose.along_lane) < 1.0 or np.abs(lane_pose.along_lane - ref_lane.get_lane_length()) < 1.0:
             # not inside the lane but close enough
             break
         if lane_pose.along_after:
@@ -90,6 +81,7 @@ def get_lanelet_from_dglanelet(lanelet_network: LaneletNetwork, dglanelet: DgLan
 
 
 def get_successor_lane(lanelet_network: LaneletNetwork, cur_lane: Lanelet | DgLanelet) -> Optional[Lanelet]:
+    # note: only one successor is considered for now
     if isinstance(cur_lane, DgLanelet):
         cur_lane = get_lanelet_from_dglanelet(lanelet_network, cur_lane)
     if len(cur_lane.successor) > 0:
@@ -107,6 +99,7 @@ def get_successor_dglane(lanelet_network: LaneletNetwork, cur_lane: Lanelet | Dg
 
 
 def get_predecessor_lane(lanelet_network: LaneletNetwork, cur_lane: Lanelet | DgLanelet) -> Optional[Lanelet]:
+    # note: only one predecessor is considered for now
     if isinstance(cur_lane, DgLanelet):
         cur_lane = get_lanelet_from_dglanelet(lanelet_network, cur_lane)
     if len(cur_lane.predecessor) > 0:
