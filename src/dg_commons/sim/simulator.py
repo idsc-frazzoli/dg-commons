@@ -106,11 +106,15 @@ class Simulator:
         logger.debug("Writing logs terminated.")
 
     def pre_update(self, sim_context: SimContext):
-        """Prior to stepping the simulation we compute the observations for each agent"""
+        """Prior to stepping the simulation we compute the observations for each agent.
+        Note that observations are generated only about active players.
+        """
+
         # we update the observations only when we will need to use them
         if self._need_to_update_commands(sim_context):
             players_observations: dict[PlayerName, PlayerObservations] = {}
-            for player_name, model in sim_context.models.items():
+            for player_name in sim_context.players:
+                model = sim_context.models[player_name]
                 player_obs = PlayerObservations(state=model.get_state(), occupancy=model.get_footprint())
                 players_observations.update({player_name: player_obs})
             self.last_observations = replace(
