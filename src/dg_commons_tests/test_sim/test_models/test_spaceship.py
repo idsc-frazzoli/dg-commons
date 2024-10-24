@@ -2,30 +2,31 @@ import os
 from decimal import Decimal as D
 from math import cos, sin, pi
 
+import matplotlib.pyplot as plt
+
 from numpy import deg2rad, pi, arctan2
 from shapely import LineString, Point
 
 from dg_commons import PlayerName, DgSampledSequence
 from dg_commons.sim import SimParameters
 from dg_commons.sim.agents import NPAgent
-from dg_commons.sim.models import kmh2ms
 from dg_commons.sim.models.obstacles import StaticObstacle, DynObstacleParameters, ObstacleGeometry
 from dg_commons.sim.models.obstacles_dyn import DynObstacleModel, DynObstacleState, DynObstacleCommands
-from dg_commons.sim.models.rocket import RocketState, RocketCommands, RocketModel
+from dg_commons.sim.models.spaceship import SpaceshipState, SpaceshipCommands, SpaceshipModel
 from dg_commons.sim.scenarios.structures import DgScenario
 from dg_commons.sim.simulator import SimContext
 from dg_commons.sim.utils import run_simulation
 from dg_commons_tests import OUT_TESTS_DIR
 from dg_commons_tests.test_sim.test_sim import generate_report
 
-P1, P2 = PlayerName("PDM4ARocket"), PlayerName("P2")
+P1, P2 = PlayerName("PDM4AR"), PlayerName("P2")
 
 
 def get_planet_n_satellite_simcontext() -> SimContext:
-    x0_p1 = RocketState(x=-8, y=-8, psi=pi, vx=0, vy=0, dpsi=0.0, phi=0.0, m=2.1)
+    x0_p1 = SpaceshipState(x=-8, y=-8, psi=pi / 2, vx=0, vy=0, dpsi=0.0, delta=0.0, m=3)
 
     # some static circular obstacles
-    planet1 = Point(5, 5).buffer(3)
+    planet1 = Point(0, 0).buffer(3)
 
     # TODO: add a class with planets and their respective satellite kids
     # for a circular orbit with radius r and angular velocity w --> v=w*r
@@ -41,7 +42,7 @@ def get_planet_n_satellite_simcontext() -> SimContext:
     satellite_1_shape = Point(0, 0).buffer(1)
 
     models = {
-        P1: RocketModel.default(x0_p1),
+        P1: SpaceshipModel.default(x0_p1),
         P2: DynObstacleModel(
             satellite_1,
             shape=satellite_1_shape,
@@ -50,15 +51,18 @@ def get_planet_n_satellite_simcontext() -> SimContext:
         ),
     }
 
-    cmds_p1 = DgSampledSequence[RocketCommands](
-        timestamps=[0, 1, 2, 3, 4, 5],
+    cmds_p1 = DgSampledSequence[SpaceshipCommands](
+        timestamps=[0, 1, 2, 3, 4, 5, 6, 7, 8],
         values=[
-            RocketCommands(F_left=0, F_right=0, dphi=deg2rad(20)),
-            RocketCommands(F_left=0.1, F_right=0.1, dphi=deg2rad(20)),
-            RocketCommands(F_left=1, F_right=1, dphi=deg2rad(-20)),
-            RocketCommands(F_left=0, F_right=2, dphi=deg2rad(-20)),
-            RocketCommands(F_left=1, F_right=0, dphi=deg2rad(-20)),
-            RocketCommands(F_left=2, F_right=2, dphi=deg2rad(0)),
+            SpaceshipCommands(thrust=5, ddelta=deg2rad(0)),
+            SpaceshipCommands(thrust=5, ddelta=deg2rad(0)),
+            SpaceshipCommands(thrust=5, ddelta=deg2rad(0)),
+            SpaceshipCommands(thrust=5, ddelta=deg2rad(-5)),
+            SpaceshipCommands(thrust=5, ddelta=deg2rad(-5)),
+            SpaceshipCommands(thrust=0, ddelta=deg2rad(0)),
+            SpaceshipCommands(thrust=0, ddelta=deg2rad(+5)),
+            SpaceshipCommands(thrust=0, ddelta=deg2rad(+5)),
+            SpaceshipCommands(thrust=0, ddelta=deg2rad(0)),
         ],
     )
     centripetal_acc = omega**2 * orbit_r
@@ -84,15 +88,15 @@ def get_planet_n_satellite_simcontext() -> SimContext:
     )
 
 
-def test_rocket_n_planet_sim():
+def test_spaceship_n_planet_sim():
     sim_context = get_planet_n_satellite_simcontext()
     # run simulation
     run_simulation(sim_context)
     report = generate_report(sim_context)
     # save report
-    report_file = os.path.join(OUT_TESTS_DIR, "sim_rocket.html")
+    report_file = os.path.join(OUT_TESTS_DIR, "sim_spaceship.html")
     report.to_html(report_file)
 
 
 if __name__ == "__main__":
-    test_rocket_n_planet_sim()
+    test_spaceship_n_planet_sim()
