@@ -147,7 +147,7 @@ class SlowTurningParams:
         return cls(v0=cls.v0 * (1 + aggr))
 
 
-class IDMAgent(Agent, RegisteredAgent):
+class IDMAgent(Agent):
     """This agent class takes its policy from the Intelligent Driver Model."""
 
     vehicle_params: VehicleParameters
