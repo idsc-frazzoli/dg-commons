@@ -14,14 +14,14 @@ from dg_commons.sim.simulator_structures import SimLog, SimModel
 from dg_commons.seq.sequence import Timestamp
 
 
-def has_collision(cr_list: list[CollisionReport]) -> bool:
+def has_collision(cr_list: list[CollisionReport]) -> tuple[bool, set[PlayerName]]:
     """Check whether the ego vehicle is involved in a collision."""
     ego_name = PlayerName("Ego")
     collided_players: set[PlayerName] = set()
     for cr in cr_list:
         collided_players.update((cr.players.keys()))
     has_collided = True if ego_name in collided_players else False
-    return has_collided
+    return has_collided, collided_players
 
 
 def get_min_dist(logs: SimLog, models: MutableMapping[PlayerName, SimModel],
