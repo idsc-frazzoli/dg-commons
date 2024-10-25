@@ -50,7 +50,7 @@ def get_min_dist(logs: SimLog, models: MutableMapping[PlayerName, SimModel],
 
 def get_min_ttc_max_drac(logs: SimLog, models: MutableMapping[PlayerName, SimModel],
                          missions: Mapping[PlayerName, TPlanningGoal],
-                         ego_name: PlayerName, t_range: tuple[Timestamp|None, Timestamp|None] = (None, None)) -> tuple[float, PlayerName, Timestamp]:
+                         ego_name: PlayerName, t_range: tuple[Timestamp|None, Timestamp|None] = (None, None)) -> tuple[float, PlayerName, Timestamp, float, PlayerName, Timestamp]:
     """
     Get te minimum time-to-collision(ttc) and maximum deceleration-rate-to-avoid-collision(drac).
     Only timesteps within t_range are considered.
