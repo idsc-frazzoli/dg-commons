@@ -1,18 +1,20 @@
 import pickle
+
 from dg_commons import PlayerName
 from dg_commons.eval.efficiency import time_goal_lane_reached, distance_traveled
+from dg_commons_tests import REPO_DIR
 
 
 def test_efficiency_eval():
-    file = open("src/dg_commons_tests/test_eval/logs/lanelet_network.pickle", 'rb')
-    lanelet_network = pickle.load(file)
-    file.close()
-    file = open("src/dg_commons_tests/test_eval/logs/log.pickle", 'rb')
-    log = pickle.load(file)
-    file.close()
-    file = open("src/dg_commons_tests/test_eval/logs/missions.pickle", 'rb')
-    missions = pickle.load(file)
-    file.close()
+    logs = REPO_DIR / "src/dg_commons_tests/test_eval/logs"
+    with open(logs / "lanelet_network.pickle", "rb") as file:
+        lanelet_network = pickle.load(file)
+
+    with open(logs / "log.pickle", "rb") as file:
+        log = pickle.load(file)
+
+    with open(logs / "missions.pickle", "rb") as file:
+        missions = pickle.load(file)
 
     ego_name = PlayerName("Ego")
     ego_goal_lane = missions[ego_name]
@@ -25,8 +27,3 @@ def test_efficiency_eval():
         print("Goal lane not reached.")
     dist = distance_traveled(ego_states)
     print("Distance traveled: " + str(dist))
-
-
-if __name__ == '__main__':
-    test_efficiency_eval()
-    

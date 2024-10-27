@@ -1,17 +1,20 @@
-from typing import Mapping, MutableMapping
+from __future__ import annotations
+
+from typing import Mapping, MutableMapping, Optional
+
 import numpy as np
-from shapely import distance
-from shapely.ops import nearest_points
-from shapely.geometry import Polygon, Point
-from shapely.affinity import translate
 from geometry import SE2_from_xytheta
-from dg_commons import apply_SE2_to_shapely_geo
-from dg_commons import PlayerName, X
+from shapely import distance
+from shapely.affinity import translate
+from shapely.geometry import Polygon, Point
+from shapely.ops import nearest_points
+
+from dg_commons import apply_SE2_to_shapely_geo, PlayerName, X
+from dg_commons.seq.sequence import Timestamp
 from dg_commons.sim import CollisionReport
 from dg_commons.sim.goals import TPlanningGoal
 from dg_commons.sim.simulator import LogEntry
 from dg_commons.sim.simulator_structures import SimLog, SimModel
-from dg_commons.seq.sequence import Timestamp
 
 
 def has_collision(cr_list: list[CollisionReport]) -> bool:
@@ -24,9 +27,13 @@ def has_collision(cr_list: list[CollisionReport]) -> bool:
     return has_collided
 
 
-def get_min_dist(logs: SimLog, models: MutableMapping[PlayerName, SimModel],
-                 missions: Mapping[PlayerName, TPlanningGoal], ego_name: PlayerName,
-                 t_range: tuple[Timestamp|None, Timestamp|None] = (None, None)) -> tuple[float, PlayerName, Timestamp]:
+def get_min_dist(
+    logs: SimLog,
+    models: MutableMapping[PlayerName, SimModel],
+    missions: Mapping[PlayerName, TPlanningGoal],
+    ego_name: PlayerName,
+    t_range: tuple[Timestamp | None, Timestamp | None] = (None, None),
+) -> tuple[float, PlayerName, Timestamp]:
     """
     Get the minimum distance between the ego and any other agent.
     Only timesteps within t_range are considered.
@@ -48,9 +55,13 @@ def get_min_dist(logs: SimLog, models: MutableMapping[PlayerName, SimModel],
     return min_dist, min_dist_agent, min_dist_t
 
 
-def get_min_ttc_max_drac(logs: SimLog, models: MutableMapping[PlayerName, SimModel],
-                         missions: Mapping[PlayerName, TPlanningGoal],
-                         ego_name: PlayerName, t_range: tuple[Timestamp|None, Timestamp|None] = (None, None)) -> tuple[float, PlayerName, Timestamp]:
+def get_min_ttc_max_drac(
+    logs: SimLog,
+    models: MutableMapping[PlayerName, SimModel],
+    missions: Mapping[PlayerName, TPlanningGoal],
+    ego_name: PlayerName,
+    t_range: tuple[Timestamp | None, Timestamp | None] = (None, None),
+) -> tuple[float, PlayerName, Timestamp]:
     """
     Get te minimum time-to-collision(ttc) and maximum deceleration-rate-to-avoid-collision(drac).
     Only timesteps within t_range are considered.
@@ -79,9 +90,13 @@ def get_min_ttc_max_drac(logs: SimLog, models: MutableMapping[PlayerName, SimMod
     return min_ttc, min_ttc_agent, min_ttc_t, max_drac, max_drac_agent, max_drac_t
 
 
-def get_min_dist_at_t(logs: SimLog, models: MutableMapping[PlayerName, SimModel],
-                      missions: Mapping[PlayerName, TPlanningGoal], t: Timestamp,
-                      ego_name: PlayerName) -> tuple[float, PlayerName]:
+def get_min_dist_at_t(
+    logs: SimLog,
+    models: MutableMapping[PlayerName, SimModel],
+    missions: Mapping[PlayerName, TPlanningGoal],
+    t: Timestamp,
+    ego_name: PlayerName,
+) -> tuple[float, Optional[PlayerName]]:
     """
     Compute the minimum distance between the ego vehicle and the agents at current timestep.
     :param logs: simulation log
@@ -112,8 +127,13 @@ def get_min_dist_at_t(logs: SimLog, models: MutableMapping[PlayerName, SimModel]
     return min_dist, min_dist_agent
 
 
-def get_ttc_drac_at_t(logs: SimLog, models: MutableMapping[PlayerName, SimModel],
-                      missions: Mapping[PlayerName, TPlanningGoal], t: Timestamp, ego_name: PlayerName) -> tuple[float, PlayerName, float, PlayerName]:
+def get_ttc_drac_at_t(
+    logs: SimLog,
+    models: MutableMapping[PlayerName, SimModel],
+    missions: Mapping[PlayerName, TPlanningGoal],
+    t: Timestamp,
+    ego_name: PlayerName,
+) -> tuple[float, Optional[PlayerName], float, Optional[PlayerName]]:
     """
     Compute the minimum time-to-collision and the maximum deceleration-rate-to-avoid-collision for the ego vehicle
     against all agents at current timestep.
@@ -155,7 +175,7 @@ def get_ttc_drac_at_t(logs: SimLog, models: MutableMapping[PlayerName, SimModel]
             min_time = ttc
             min_ttc_agent = name
 
-        drac = ego_state.vx ** 2 / (2 * ego_dtc) if ego_dtc > 0 else np.inf
+        drac = ego_state.vx**2 / (2 * ego_dtc) if ego_dtc > 0 else np.inf
         if drac > max_drac:
             max_drac = drac
             max_drac_agent = name
@@ -215,10 +235,11 @@ def _get_ttc_of_poly_and_state(poly1: Polygon, poly2: Polygon, state1: X, state2
     return time, state1.vx * time, state2.vx * time
 
 
-def _remove_finished_players(log_at_t: Mapping[PlayerName, LogEntry], missions: Mapping[PlayerName, TPlanningGoal]) -> \
-        Mapping[PlayerName, LogEntry]:
+def _remove_finished_players(
+    log_at_t: Mapping[PlayerName, LogEntry], missions: Mapping[PlayerName, TPlanningGoal]
+) -> Mapping[PlayerName, LogEntry]:
     """
-    Remove the agents that have acomplished their goal.
+    Remove the agents that have accomplished their goal.
     :param log_at_t: collection of players and their log(state, command, etc.) at time t
     :param missions: the goal of each player
     :return: a now collection of running players and their logs.

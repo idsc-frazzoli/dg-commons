@@ -4,7 +4,7 @@ from dg_commons.eval.comfort import get_max_jerk, get_acc_rms
 
 
 def test_comfort_eval():
-    file = open("src/dg_commons_tests/test_eval/logs/log.pickle", 'rb')
+    file = open("src/dg_commons_tests/test_eval/logs/log.pickle", "rb")
     log = pickle.load(file)
     file.close()
 
@@ -14,8 +14,3 @@ def test_comfort_eval():
     acc_rms = get_acc_rms(ego_commands)
     print("Max jerk: " + str(max_jerk))
     print("Acc rms: " + str(acc_rms))
-
-
-if __name__ == '__main__':
-    test_comfort_eval()
-    

@@ -1,13 +1,16 @@
+from __future__ import annotations
+
 from math import sqrt
 from typing import Optional
 
 import numpy as np
 from commonroad.scenario.lanelet import Lanelet, LaneletNetwork
-from dg_commons.geo import PoseState, SE2Transform
+
 from dg_commons import X, U, DgSampledSequence, iterate_with_dt
-from dg_commons.sim.goals import RefLaneGoal
+from dg_commons.geo import PoseState, SE2Transform
 from dg_commons.maps.lanes import DgLanelet
 from dg_commons.seq.sequence import Timestamp
+from dg_commons.sim.goals import RefLaneGoal
 
 
 def distance_traveled(states: DgSampledSequence[X]) -> float:
@@ -21,9 +24,13 @@ def actuation_effort(commands: DgSampledSequence[U]) -> float:
     pass
 
 
-def time_goal_lane_reached(lanelet_network: LaneletNetwork, goal_lane: RefLaneGoal, states: DgSampledSequence[X],
-                           pos_tol: float = 0.8,
-                           heading_tol: float = 0.08) -> Timestamp|None:
+def time_goal_lane_reached(
+    lanelet_network: LaneletNetwork,
+    goal_lane: RefLaneGoal,
+    states: DgSampledSequence[X],
+    pos_tol: float = 0.8,
+    heading_tol: float = 0.08,
+) -> Timestamp | None:
     reached_time = None
     for idx, state in enumerate(states.values):
         reached = desired_lane_reached(lanelet_network, goal_lane, state, pos_tol, heading_tol)
@@ -33,8 +40,9 @@ def time_goal_lane_reached(lanelet_network: LaneletNetwork, goal_lane: RefLaneGo
     return reached_time
 
 
-def desired_lane_reached(lanelet_network: LaneletNetwork, goal_lane: RefLaneGoal, state: X, pos_tol: float,
-                         heading_tol: float) -> bool:
+def desired_lane_reached(
+    lanelet_network: LaneletNetwork, goal_lane: RefLaneGoal, state: X, pos_tol: float, heading_tol: float
+) -> bool:
     """
 
     :param state: the last ego state in the simulation
@@ -66,8 +74,11 @@ def desired_lane_reached(lanelet_network: LaneletNetwork, goal_lane: RefLaneGoal
     if goal_lane.is_fulfilled(state):
         return True
     # vehicle still on the road and is inside the desired lane, check its pose
-    if lane_pose.lateral_inside and lane_pose.distance_from_center < pos_tol and abs(
-            lane_pose.relative_heading) < heading_tol:
+    if (
+        lane_pose.lateral_inside
+        and lane_pose.distance_from_center < pos_tol
+        and abs(lane_pose.relative_heading) < heading_tol
+    ):
         return True
     else:
         return False
