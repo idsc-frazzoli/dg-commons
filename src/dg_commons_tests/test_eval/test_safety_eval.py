@@ -1,10 +1,12 @@
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 import shapely.affinity
 from geometry import SE2_from_xytheta
-from dg_commons import apply_SE2_to_shapely_geo, X
+from dg_commons import apply_SE2_to_shapely_geo, X, PlayerName
 from dg_commons.sim.models.vehicle_dynamic import VehicleStateDyn, VehicleModelDyn
-from dg_commons.eval.safety import _get_ttc, _get_dist
+from dg_commons.eval.safety import _get_ttc, _get_dist, get_min_dist, get_min_ttc_max_drac, has_collision
+from dg_commons_tests import REPO_DIR
 
 
 def plot_polygon(polygon: shapely.geometry.Polygon, ax: plt.Axes, color="black", alpha=1.0):
@@ -19,7 +21,7 @@ def plot_vehicle_at_t(poly: shapely.geometry.Polygon, state: X, t: float, ax: pl
     plot_polygon(poly, ax, color=color, alpha=alpha)
 
 
-def test_safety_eval():
+def test_dist_ttc_drac():
     # create shapely geometry from vehicle pose
     # state1 = VehicleStateDyn(x=21.84, y=-2.2, psi=-0.72, vx=10.29, delta=0)
     # state2 = VehicleStateDyn(x=32.11, y=-6.96, psi=-0.71, vx=3.3, delta=0)
@@ -56,3 +58,37 @@ def test_safety_eval():
     plot_vehicle_at_t(poly1, state1, ttc_sim, ax, color="b")
     plot_vehicle_at_t(poly2, state2, ttc_sim, ax, color="r")
     plt.show()
+
+
+def test_safety_eval():
+    logs = REPO_DIR / "src/dg_commons_tests/test_eval/logs"
+    file = open(logs / "collision_reports.pickle", 'rb')
+    collision_reports = pickle.load(file)
+    file.close()
+    file = open(logs / "log.pickle", 'rb')
+    log = pickle.load(file)
+    file.close()
+    file = open(logs / "missions.pickle", 'rb')
+    missions = pickle.load(file)
+    file.close()
+    file = open(logs / "models.pickle", 'rb')
+    models = pickle.load(file)
+    file.close()
+
+    ego_name = PlayerName("Ego")
+
+    t_range = (0.2, 3.0)
+    min_dist, min_dist_agent, min_dist_t = get_min_dist(log, models, missions, ego_name, t_range)
+    min_ttc, min_ttc_agent, min_ttc_t, max_drac, max_drac_agent, max_drac_t = get_min_ttc_max_drac(log, models,
+                                                                                                    missions,
+                                                                                                    ego_name, t_range)
+    print(
+        "Minimum distance is %.2f" % min_dist + "m from agent " + str(min_dist_agent) + " at time step %.2f" % float(
+            min_dist_t) + "s.")
+    if not np.isinf(min_ttc):
+        print("Minimum time-to-collision is %.2f" % min_ttc + "s from agent " + str(
+            min_ttc_agent) + " at time step %.2f " % float(min_ttc_t) + "s.")
+        print("Maximum decelleration rate to avoid collision is %.2f" % max_drac + "m/s2 from agent " + str(
+            max_drac_agent) + " at time step %.2f " % float(max_drac_t) + "s.")
+    has_collided = has_collision(collision_reports)
+    print("Has collided: ", has_collided)
