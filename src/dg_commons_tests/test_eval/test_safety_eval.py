@@ -7,12 +7,12 @@ from dg_commons.sim.models.vehicle_dynamic import VehicleStateDyn, VehicleModelD
 from dg_commons.eval.safety import _get_ttc, _get_dist
 
 
-def plot_polygon(polygon: shapely.geometry.Polygon, ax: plt.Axes, color='black', alpha=1.0):
+def plot_polygon(polygon: shapely.geometry.Polygon, ax: plt.Axes, color="black", alpha=1.0):
     x1, y1 = polygon.exterior.xy
     ax.plot(x1, y1, color=color, alpha=alpha)
 
 
-def plot_vehicle_at_t(poly: shapely.geometry.Polygon, state: X, t: float, ax: plt.Axes, color='black', alpha=1.0):
+def plot_vehicle_at_t(poly: shapely.geometry.Polygon, state: X, t: float, ax: plt.Axes, color="black", alpha=1.0):
     delta_x = state.vx * np.cos(state.psi) * t
     delta_y = state.vx * np.sin(state.psi) * t
     poly = shapely.affinity.translate(poly, xoff=delta_x, yoff=delta_y)
@@ -34,18 +34,17 @@ def test_safety_eval():
     # plot the vehicles
     plt.figure()
     ax = plt.gca()
-    plot_polygon(poly1, ax, color='b', alpha=0.5)
-    plot_polygon(poly2, ax, color='r', alpha=0.5)
-    ax.axis('equal')
+    plot_polygon(poly1, ax, color="b", alpha=0.5)
+    plot_polygon(poly2, ax, color="r", alpha=0.5)
+    ax.axis("equal")
 
     # compute the nearest points
     dist, nearest_pts = _get_dist(state1, state2, model1, model2)
     pt1 = np.array([nearest_pts[0].x, nearest_pts[0].y])
     pt2 = np.array([nearest_pts[1].x, nearest_pts[1].y])
     pts = np.stack([pt1, pt2])
-    plt.scatter(pts[:, 0], pts[:, 1], color='red')
-    print('min dist between the vehicle is ', dist, "m")
-
+    plt.scatter(pts[:, 0], pts[:, 1], color="red")
+    print("min dist between the vehicle is ", dist, "m")
 
     # simulate the movement, stop when the two vehicles collide
     ttc_sim, dtc1, dtc2 = _get_ttc(state1, state2, model1, model2)
@@ -54,12 +53,6 @@ def test_safety_eval():
     print("dist to collision for vehicle2 is ", dtc2, "m")
     # plot the vehicle poses when they collide(in case of no collision, plot the vehicle poses at t=3.0)
     ttc_sim = ttc_sim if not np.isinf(ttc_sim) else 3.0
-    plot_vehicle_at_t(poly1, state1, ttc_sim, ax, color='b')
-    plot_vehicle_at_t(poly2, state2, ttc_sim, ax, color='r')
-
+    plot_vehicle_at_t(poly1, state1, ttc_sim, ax, color="b")
+    plot_vehicle_at_t(poly2, state2, ttc_sim, ax, color="r")
     plt.show()
-
-
-if __name__ == '__main__':
-    test_safety_eval()
-    
