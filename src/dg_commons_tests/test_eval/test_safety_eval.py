@@ -46,13 +46,13 @@ def test_dist_ttc_drac():
     pt2 = np.array([nearest_pts[1].x, nearest_pts[1].y])
     pts = np.stack([pt1, pt2])
     plt.scatter(pts[:, 0], pts[:, 1], color="red")
-    print("min dist between the vehicle is ", dist, "m")
+    print(f"min dist between the vehicle is {dist:.2f}m")
 
     # simulate the movement, stop when the two vehicles collide
     ttc_sim, dtc1, dtc2 = _get_ttc(state1, state2, model1, model2)
-    print("the simulated time to collision is ", ttc_sim, "s")
-    print("dist to collision for vehicle1 is ", dtc1, "m")
-    print("dist to collision for vehicle2 is ", dtc2, "m")
+    print(f"the simulated time to collision is {ttc_sim:.2f}s")
+    print(f"dist to collision for vehicle1 is {dtc1:.2f}m")
+    print(f"dist to collision for vehicle2 is {dtc2:.2f}m")
     # plot the vehicle poses when they collide(in case of no collision, plot the vehicle poses at t=3.0)
     ttc_sim = ttc_sim if not np.isinf(ttc_sim) else 3.0
     plot_vehicle_at_t(poly1, state1, ttc_sim, ax, color="b")
@@ -81,14 +81,12 @@ def test_safety_eval():
     min_dist, min_dist_agent, min_dist_t = get_min_dist(log, models, missions, ego_name, t_range)
     min_ttc, min_ttc_agent, min_ttc_t, max_drac, max_drac_agent, max_drac_t = get_min_ttc_max_drac(log, models,
                                                                                                     missions,
-                                                                                                    ego_name, t_range)
+                                                                                                   ego_name, t_range)
     print(
-        "Minimum distance is %.2f" % min_dist + "m from agent " + str(min_dist_agent) + " at time step %.2f" % float(
-            min_dist_t) + "s.")
+        f"Minimum distance is {min_dist:.2f}m from agent {min_dist_agent} at time step {min_dist_t:.2f}s.")
     if not np.isinf(min_ttc):
-        print("Minimum time-to-collision is %.2f" % min_ttc + "s from agent " + str(
-            min_ttc_agent) + " at time step %.2f " % float(min_ttc_t) + "s.")
-        print("Maximum decelleration rate to avoid collision is %.2f" % max_drac + "m/s2 from agent " + str(
-            max_drac_agent) + " at time step %.2f " % float(max_drac_t) + "s.")
+        print(f"Minimum time-to-collision is {min_ttc:.2f}s from agent {min_ttc_agent} at time step {min_ttc_t:.2f}s.")
+        print(f"Maximum decelleration rate to avoid collision is {max_drac:.2f}m/s2 from agent {max_drac_agent} at time step {max_drac_t:.2f}s.")
+    
     has_collided = has_collision(collision_reports)
-    print("Has collided: ", has_collided)
+    print(f"Ego vehicle has collided: {has_collided}")

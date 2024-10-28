@@ -22,8 +22,8 @@ def test_efficiency_eval():
     time_to_reach = time_goal_lane_reached(lanelet_network, ego_goal_lane, ego_states)
     has_reached_the_goal = time_to_reach is not None
     if has_reached_the_goal:
-        print("Goal lane reached " + "at time " + str(time_to_reach))
+        print(f"Goal lane reached at time {time_to_reach:.2f}s")
     else:
         print("Goal lane not reached.")
     dist = distance_traveled(ego_states)
-    print("Distance traveled: " + str(dist))
+    print(f"Distance traveled: {dist:.2f}m")
