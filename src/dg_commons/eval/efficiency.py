@@ -30,12 +30,12 @@ def time_goal_lane_reached(
     states: DgSampledSequence[X],
     pos_tol: float = 0.8,
     heading_tol: float = 0.08,
-) -> Timestamp | None:
+) -> float | None:
     reached_time = None
     for idx, state in enumerate(states.values):
         reached = desired_lane_reached(lanelet_network, goal_lane, state, pos_tol, heading_tol)
         if reached:
-            reached_time = states.timestamps[idx]
+            reached_time = float(states.timestamps[idx])
             break
     return reached_time
 
