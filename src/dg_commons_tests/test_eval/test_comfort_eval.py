@@ -12,5 +12,8 @@ def test_comfort_eval():
     ego_commands = log[ego_name].commands
     max_jerk = get_max_jerk(ego_commands)
     acc_rms = get_acc_rms(ego_commands)
-    print("Max jerk: " + str(max_jerk))
-    print("Acc rms: " + str(acc_rms))
+    max_jerk_expected = 2.61
+    acc_rms_expected = 0.13
+    eps = 1e-2
+    assert max_jerk_expected - eps <= max_jerk <= max_jerk_expected + eps
+    assert acc_rms_expected - eps <= acc_rms <= acc_rms_expected + eps
