@@ -189,7 +189,7 @@ class SpaceshipParameters(ModelParameters):
         C_T=0.01,
         vx_limits=(kmh2ms(-10), kmh2ms(10)),
         acc_limits=(-1.0, 1.0),
-        thrust_limits=(0.0, 2.0),
+        thrust_limits=(-2.0, 2.0),
         delta_limits=(-np.deg2rad(60), np.deg2rad(60)),
         ddelta_limits=(-np.deg2rad(45), np.deg2rad(45)),
     ) -> "SpaceshipParameters":
