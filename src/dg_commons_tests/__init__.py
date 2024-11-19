@@ -1,4 +1,4 @@
-# OUT_TESTS_DIR = "out/test-results"
 from pathlib import Path
 
-OUT_TESTS_DIR = str(Path(__file__).parent.parent.parent / "out/test-results")
+REPO_DIR: Path = Path(__file__).parent.parent.parent
+OUT_TESTS_DIR: str = str(REPO_DIR / "out/test-results")
