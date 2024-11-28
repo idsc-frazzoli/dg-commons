@@ -95,7 +95,8 @@ def test_safety_eval():
     # if not np.isinf(min_ttc):
     #     print(f"Minimum time-to-collision is {min_ttc:.2f}s from agent {min_ttc_agent} at time step {min_ttc_t:.2f}s.")
     #     print(f"Maximum decelleration rate to avoid collision is {max_drac:.2f}m/s2 from agent {max_drac_agent} at time step {max_drac_t:.2f}s.")
-    has_collided, collided_player = has_collision(collision_reports)
+    has_collided = has_collision(collision_reports)
+
     min_dist_expected = 0.47
     min_dist_agent_expected = "P18"
     min_dist_t_expected = 0.35
@@ -116,14 +117,9 @@ def test_safety_eval():
     assert max_drac_agent == max_drac_agent_expected
     assert max_drac_t_expected - eps <= max_drac_t <= max_drac_t_expected + eps
     assert not has_collided
-    assert len(collided_player)==0
 
     file = open(logs / "collision_reports_collided.pickle", 'rb')
     collision_reports = pickle.load(file)
     file.close()
-    has_collided, collided_player = has_collision(collision_reports)
+    has_collided = has_collision(collision_reports)
     assert has_collided
-    assert "P12" in collided_player and "P14" in collided_player and "Ego" in collided_player
-
-if __name__ == "__main__":
-    test_safety_eval()
