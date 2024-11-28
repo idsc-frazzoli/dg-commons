@@ -17,14 +17,14 @@ from dg_commons.sim.simulator import LogEntry
 from dg_commons.sim.simulator_structures import SimLog, SimModel
 
 
-def has_collision(cr_list: list[CollisionReport]) -> tuple[bool, set[PlayerName]]:
+def has_collision(cr_list: list[CollisionReport]) -> bool:
     """Check whether the ego vehicle is involved in a collision."""
     ego_name = PlayerName("Ego")
     collided_players: set[PlayerName] = set()
     for cr in cr_list:
         collided_players.update((cr.players.keys()))
     has_collided = True if ego_name in collided_players else False
-    return has_collided, collided_players
+    return has_collided
 
 
 def get_min_dist(
@@ -55,9 +55,13 @@ def get_min_dist(
     return min_dist, min_dist_agent, min_dist_t
 
 
-def get_min_ttc_max_drac(logs: SimLog, models: MutableMapping[PlayerName, SimModel],
-                         missions: Mapping[PlayerName, TPlanningGoal],
-                         ego_name: PlayerName, t_range: tuple[Timestamp|None, Timestamp|None] = (None, None)) -> tuple[float, PlayerName, Timestamp, float, PlayerName, Timestamp]:
+def get_min_ttc_max_drac(
+    logs: SimLog,
+    models: MutableMapping[PlayerName, SimModel],
+    missions: Mapping[PlayerName, TPlanningGoal],
+    ego_name: PlayerName,
+    t_range: tuple[Timestamp | None, Timestamp | None] = (None, None),
+) -> tuple[float, PlayerName, Timestamp]:
     """
     Get te minimum time-to-collision(ttc) and maximum deceleration-rate-to-avoid-collision(drac).
     Only timesteps within t_range are considered.
