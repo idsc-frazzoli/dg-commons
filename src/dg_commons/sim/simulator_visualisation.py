@@ -132,6 +132,7 @@ class SimRenderer(SimRendererABC):
         alpha: float = 0.6,
         plot_wheels: bool = False,
         plot_lights: bool = False,
+        plot_text: bool = True,
     ) -> tuple[list[Polygon], list[Circle]]:
         """Draw the player the state."""
         # todo make it nicer with a map of plotting functions based on the state type
@@ -149,6 +150,7 @@ class SimRenderer(SimRendererABC):
                 lights_patches=lights_patches,
                 plot_wheels=plot_wheels,
                 plot_ligths=plot_lights,
+                plot_text = plot_text,
             )
         elif issubclass(type(state), PedestrianState):
             ped_poly = plot_pedestrian(
@@ -287,6 +289,7 @@ def plot_vehicle(
     lights_patches: Optional[list[Circle]] = None,
     plot_wheels: bool = False,
     plot_ligths: bool = False,
+    plot_text: bool = True,
     **style_kwargs,
 ) -> tuple[list[Polygon], list[Circle]]:
     """"""
@@ -296,16 +299,19 @@ def plot_vehicle(
     x4, y4 = transform_xy(q, ((0, 0),))[0]
     if vehicle_poly is None:
         vehicle_box = ax.fill([], [], color=vehicle_color, alpha=alpha, zorder=ZOrders.MODEL, **style_kwargs)[0]
-        text: Text = ax.text(
-            x4,
-            y4,
-            player_name,
-            zorder=ZOrders.PLAYER_NAME,
-            horizontalalignment="center",
-            verticalalignment="center",
-            clip_on=True,
-        )
-        vehicle_poly = [vehicle_box, text]
+        if plot_text:
+            text: Text = ax.text(
+                x4,
+                y4,
+                player_name,
+                zorder=ZOrders.PLAYER_NAME,
+                horizontalalignment="center",
+                verticalalignment="center",
+                clip_on=True,
+            )
+            vehicle_poly = [vehicle_box, text]
+        else:
+            vehicle_poly = [vehicle_box, None] 
         if plot_wheels:
             wheels_boxes = [
                 ax.fill([], [], color="k", alpha=alpha, zorder=ZOrders.MODEL)[0] for _ in range(vg.n_wheels)
@@ -316,7 +322,8 @@ def plot_vehicle(
 
     outline = transform_xy(q, vehicle_outline)
     vehicle_poly[0].set_xy(outline)
-    vehicle_poly[1].set_position((x4, y4))
+    if plot_text:
+        vehicle_poly[1].set_position((x4, y4))
 
     if plot_wheels:
         wheels_outlines = vg.get_rotated_wheels_outlines(state.delta)
