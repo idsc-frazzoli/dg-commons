@@ -91,6 +91,7 @@ def create_animation(
                         state=state,
                         command=VehicleCommands(acc=0, ddelta=0),
                         lights_colors = None,
+                        zorder=ZOrders.PRED_MODEL,
                         player_name=name,
                         alpha=alpha,
                         plot_text=False,
@@ -103,17 +104,17 @@ def create_animation(
                 for i in range(horizon):
                     time = traj.timestamps[i]
                     state = traj.at(time)
-                    state_artist, _ = sim_viz.plot_player(
+                    state_artists[idx], _ = sim_viz.plot_player(
                         ax=ax,
                         state=state,
                         command=VehicleCommands(acc=0, ddelta=0),
                         lights_colors = None,
                         model_poly=state_artists[idx],
+                        zorder=ZOrders.PRED_MODEL,
                         player_name=name,
                         alpha=alpha,
                         plot_text=False,
                     )
-                    state_artists[idx] = state_artist
                     idx += 1
                     
         return state_artists
@@ -145,7 +146,9 @@ def create_animation(
                             colors = ["gold"]*len(trajs)
                             traj_lines[name], traj_points[name] = sim_viz.plot_trajectories(
                                 ax=ax, player_name=name, trajectories=trajs, colors=colors)
+                            # print(f"Number of trajectories for {name}: {len(trajs)}")
                             states_pred[name] = plot_pred_states(name, trajs)
+                            # print(f"Number of pred states for {name}: {len(states_pred[name])}")
                     except Exception as e:
                         logger.debug("Cannot plot extra", extra=type(plog.extra))
                         print("init extra failed because: ", e)
@@ -166,8 +169,6 @@ def create_animation(
 
     def update_plot(frame: int = 0) -> Iterable[Artist]:
         t: float = frame * dt / 1000.0
-        if frame >= 15:
-            pass
         log_at_t: Mapping[PlayerName, LogEntry] = sim_context.log.at_interp(t)
         for pname, box_handle in states.items():
             lights_colors: LightsColors = get_lights_colors_from_cmds(log_at_t[pname].commands, t=t)
@@ -182,7 +183,7 @@ def create_animation(
                 plot_wheels=plot_wheels,
                 plot_lights=plot_ligths,
             )
-            if log_at_t[pname].extra:
+            if log_at_t[pname].extra is not None:
                 try:
                     # trajectories, tcolors = unzip(log_at_t[pname].extra)
                     # traj_lines[pname], traj_points[pname] = sim_viz.plot_trajectories(
@@ -204,20 +205,18 @@ def create_animation(
                             traj_lines[name], traj_points[name] = sim_viz.plot_trajectories(
                                 ax=ax, player_name=name, trajectories=trajs, colors=colors, traj_lines=traj_lines[name], traj_points=traj_points[name])
                             states_pred[name] = plot_pred_states(name, trajs, states_pred[name])
+                        # print(f"Number of trajectories for {name}: {len(trajs)}")
+                        # print(f"Number of plotted trajecttory for {name}: {len(traj_lines[name].get_segments())}")
+                        # print(f"Number of pred states for {name}: {len(states_pred[name])}")
                     prev_names = list(traj_lines.keys())
                     for prev_name in prev_names:
                         if prev_name not in trajectories.keys():
-                            fake_trajs = [Trajectory(timestamps=[0], values=[VehicleState(x=0, y=0, psi=0, vx=0, delta=0)])]
+                            num_trajs = len(traj_lines[prev_name].get_segments())
+                            horizon = int(len(states_pred[prev_name]) / num_trajs)
+                            fake_trajs = create_fake_trajectories(num_trajs, horizon)
                             traj_lines[prev_name], traj_points[prev_name] = sim_viz.plot_trajectories(
                                 ax=ax, player_name=prev_name, trajectories=fake_trajs, traj_lines=traj_lines[prev_name], traj_points=traj_points[prev_name], alpha=0)
-                            states_pred[prev_name] = plot_pred_states(prev_name, trajs, states_pred[prev_name], alpha=0)
-                            # prev_traj_lines.remove()
-                            # prev_traj_points = traj_points.pop(prev_name)
-                            # prev_traj_points.remove()
-                            # prev_states_pred = states_pred.pop(prev_name)
-                            # for state in prev_states_pred:
-                            #     state[0].remove()
-                                # pass
+                            states_pred[prev_name] = plot_pred_states(prev_name, fake_trajs, states_pred[prev_name], alpha=0)
                 except Exception as e:
                     print("update extra failed because: ", e)
 
@@ -254,6 +253,9 @@ def create_animation(
         )
     ax.clear()
 
+def create_fake_trajectories(num_trajs: int, horizon: int) -> list[Trajectory]:
+    fake_trajs = [Trajectory(timestamps=list(range(horizon)), values=[VehicleState(x=0, y=0, psi=0, vx=0, delta=0)]*horizon)] * num_trajs
+    return fake_trajs
 
 def adjust_axes_limits(
     ax: Axes,

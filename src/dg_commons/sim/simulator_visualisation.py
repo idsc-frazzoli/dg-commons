@@ -62,6 +62,7 @@ class SimRendererABC(Generic[X, U], ABC):
 
 class ZOrders(IntEnum):
     GOAL = 30
+    PRED_MODEL = 31
     ENV_OBSTACLE = 32
     LIGHTS = 34
     MODEL = 35
@@ -129,6 +130,7 @@ class SimRenderer(SimRendererABC):
         lights_colors: Optional[LightsColors],
         model_poly: Optional[list[Polygon]] = None,
         lights_patches: Optional[list[Circle]] = None,
+        zorder : ZOrders = ZOrders.MODEL,
         alpha: float = 0.6,
         plot_wheels: bool = False,
         plot_lights: bool = False,
@@ -148,6 +150,7 @@ class SimRenderer(SimRendererABC):
                 alpha=alpha,
                 vehicle_poly=model_poly,
                 lights_patches=lights_patches,
+                zorder=zorder,
                 plot_wheels=plot_wheels,
                 plot_ligths=plot_lights,
                 plot_text = plot_text,
@@ -287,6 +290,7 @@ def plot_vehicle(
     alpha: float,
     vehicle_poly: Optional[list[Polygon]] = None,
     lights_patches: Optional[list[Circle]] = None,
+    zorder: ZOrders = ZOrders.MODEL,
     plot_wheels: bool = False,
     plot_ligths: bool = False,
     plot_text: bool = True,
@@ -298,7 +302,7 @@ def plot_vehicle(
     q = SE2_from_xytheta((state.x, state.y, state.psi))
     x4, y4 = transform_xy(q, ((0, 0),))[0]
     if vehicle_poly is None:
-        vehicle_box = ax.fill([], [], color=vehicle_color, alpha=alpha, zorder=ZOrders.MODEL, **style_kwargs)[0]
+        vehicle_box = ax.fill([], [], color=vehicle_color, alpha=alpha, zorder=zorder, **style_kwargs)[0]
         if plot_text:
             text: Text = ax.text(
                 x4,
@@ -322,6 +326,7 @@ def plot_vehicle(
 
     outline = transform_xy(q, vehicle_outline)
     vehicle_poly[0].set_xy(outline)
+    vehicle_poly[0].set_alpha(alpha)
     if plot_text:
         vehicle_poly[1].set_position((x4, y4))
 
