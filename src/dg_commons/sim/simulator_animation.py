@@ -100,23 +100,37 @@ def create_animation(
                     )
                     state_artists.append(state_artist)
         else:
+            n_state_artists = len(state_artists)
             idx = 0
             for traj in trajs:
                 horizon = len(traj)
                 for i in range(horizon):
                     time = traj.timestamps[i]
                     state = traj.at(time)
-                    state_artists[idx], _ = sim_viz.plot_player(
-                        ax=ax,
-                        state=state,
-                        command=VehicleCommands(acc=0, ddelta=0),
-                        lights_colors=None,
-                        model_poly=state_artists[idx],
-                        zorder=ZOrders.PRED_MODEL,
-                        player_name=name,
-                        alpha=alpha,
-                        plot_text=False,
-                    )
+                    if idx < n_state_artists:
+                        state_artists[idx], _ = sim_viz.plot_player(
+                            ax=ax,
+                            state=state,
+                            command=VehicleCommands(acc=0, ddelta=0),
+                            lights_colors=None,
+                            model_poly=state_artists[idx],
+                            zorder=ZOrders.PRED_MODEL,
+                            player_name=name,
+                            alpha=alpha,
+                            plot_text=False,
+                        )
+                    else:
+                        state_artist, _ = sim_viz.plot_player(
+                            ax=ax,
+                            state=state,
+                            command=VehicleCommands(acc=0, ddelta=0),
+                            lights_colors=None,
+                            zorder=ZOrders.PRED_MODEL,
+                            player_name=name,
+                            alpha=alpha,
+                            plot_text=False,
+                        )
+                        state_artists.append(state_artist)
                     idx += 1
 
         return state_artists
