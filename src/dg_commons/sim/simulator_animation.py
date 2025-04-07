@@ -132,7 +132,18 @@ def create_animation(
                         )
                         state_artists.append(state_artist)
                     idx += 1
-
+            for i in range(idx, n_state_artists): # unnecessary artists
+                state_artists[i], _ = sim_viz.plot_player(
+                            ax=ax,
+                            state=state,
+                            command=VehicleCommands(acc=0, ddelta=0),
+                            lights_colors=None,
+                            model_poly=state_artists[i],
+                            zorder=ZOrders.PRED_MODEL,
+                            player_name=name,
+                            alpha=0.0,
+                            plot_text=False,
+                        )
         return state_artists
 
     def init_plot() -> Iterable[Artist]:
