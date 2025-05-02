@@ -62,8 +62,8 @@ def create_animation(
     history = {}
     # some parameters
     plot_wheels: bool = True
-    plot_ligths: bool = True
-
+    plot_lights: bool = True
+    plot_text: bool = True  # name of the player
     # self.f.set_size_inches(*fig_size)
     def _get_list() -> list[Artist]:
         # fixme this is supposed to be an iterable of artists
@@ -160,7 +160,8 @@ def create_animation(
                     player_name=pname,
                     alpha=0.8,
                     plot_wheels=plot_wheels,
-                    plot_lights=plot_ligths,
+                    plot_lights=plot_lights,
+                    plot_text=plot_text,
                 )
                 if plog.extra:
                     try:
@@ -199,6 +200,19 @@ def create_animation(
         t: float = frame * dt / 1000.0
         log_at_t: Mapping[PlayerName, LogEntry] = sim_context.log.at_interp(t)
         for pname, box_handle in states.items():
+            alpha = 0.8
+            plot_lights = True
+            plot_wheels = True
+            plot_text = True
+            try:
+                mission = sim_context.missions[pname]
+                if mission.is_fulfilled(log_at_t[pname].state):
+                    alpha = 0.0
+                    plot_lights = False
+                    plot_wheels = False
+                    plot_text = False
+            except:
+                 pass
             lights_colors: LightsColors = get_lights_colors_from_cmds(log_at_t[pname].commands, t=t)
             states[pname], actions[pname] = sim_viz.plot_player(
                 ax=ax,
@@ -209,7 +223,9 @@ def create_animation(
                 model_poly=box_handle,
                 lights_patches=actions[pname],
                 plot_wheels=plot_wheels,
-                plot_lights=plot_ligths,
+                plot_lights=plot_lights,
+                plot_text=plot_text,
+                alpha=alpha,
             )
             if log_at_t[pname].extra is not None:
                 try:

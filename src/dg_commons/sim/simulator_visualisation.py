@@ -95,6 +95,8 @@ class SimRenderer(SimRendererABC):
         for s_obstacle in self.sim_context.dg_scenario.static_obstacles:
             self.shapely_viz.add_shape(s_obstacle.shape, color=s_obstacle.geometry.color, zorder=ZOrders.ENV_OBSTACLE)
         for p, goal in self.sim_context.missions.items():
+            if p is not PlayerName("Ego"):
+                continue
             if goal.is_static:
                 goal_color = self.sim_context.models[p].model_geometry.color
                 try:
