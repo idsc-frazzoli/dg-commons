@@ -331,6 +331,8 @@ def plot_vehicle(
     vehicle_poly[0].set_alpha(alpha)
     if plot_text:
         vehicle_poly[1].set_position((x4, y4))
+    elif vehicle_poly[1] is not None:
+        vehicle_poly[1].set_visible(False)
 
     if plot_wheels:
         wheels_outlines = vg.get_rotated_wheels_outlines(state.delta)
@@ -338,6 +340,9 @@ def plot_vehicle(
         for w_idx, wheel in enumerate(vehicle_poly[2:]):
             xy_poly = wheels_outlines[w_idx][:2, :].T
             wheel.set_xy(xy_poly)
+    elif len(vehicle_poly) > 2:
+        for w_idx, wheel in enumerate(vehicle_poly[2:]):
+            wheel.set_visible(False)
 
     if plot_ligths:
         light_dict = asdict(lights_colors)
@@ -347,6 +352,9 @@ def plot_vehicle(
             x2, y2 = transform_xy(q, (position,))[0]
             lights_patches[i].center = x2, y2
             lights_patches[i].set_color(light_color)
+    elif lights_patches is not None:
+        for i, light in enumerate(lights_patches):
+            light.set_visible(False)
 
     return vehicle_poly, lights_patches
 
