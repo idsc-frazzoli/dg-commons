@@ -100,7 +100,8 @@ class PurePursuit:
         _, goal_point = self.find_goal_point()
         p_goal, theta_goal = translation_angle_from_SE2(goal_point)
         alpha = np.arctan2(p_goal[1] - rear_axle[1], p_goal[0] - rear_axle[0]) - theta
-        radius = self._get_lookahead() / (2 * sin(alpha))
+        eps = 1e-9
+        radius = self._get_lookahead() / (2 * sin(alpha) + eps)
         return atan(self.param.length / radius)
 
     def _get_lookahead(self) -> float:
