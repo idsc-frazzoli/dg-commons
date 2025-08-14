@@ -101,6 +101,8 @@ class Simulator:
             self.update(sim_context)
             self.post_update(sim_context)
         logger.info("<~~~~~ Completed simulation")
+        for player_name in sim_context.players:
+            sim_context.players[player_name].on_terminate()
         for player_name in sim_context.models:
             sim_context.log[player_name] = self.simlogger[player_name].as_sequence()
         logger.debug("Writing logs terminated.")
@@ -213,7 +215,7 @@ class Simulator:
                     report: Optional[CollisionReport] = resolve_collision_with_environment(
                         p, p_model, sobstacle, sim_context.time
                     )
-                except CollisionException as e:
+                except Exception as e:
                     logger.warn(f"Failed to resolve collision of {p} with environment because:\n{e.args}")
                     report = CollisionReport.get_empty(players={p: None}, at_time=sim_context.time)
                 if report is not None and not isinstance(p_model, DynObstacleModel):
@@ -242,7 +244,7 @@ class Simulator:
             if a_shape.intersects(b_shape):
                 try:
                     report: Optional[CollisionReport] = resolve_collision(p1, p2, sim_context)
-                except CollisionException as e:
+                except Exception as e:
                     logger.warn(f"Failed to resolve collision between {p1} and {p2} because:\n{e.args}")
                     report = CollisionReport.get_empty(players={p1: None, p2: None}, at_time=sim_context.time)
                 if report is not None:
@@ -262,7 +264,8 @@ class Simulator:
                 if m.is_fulfilled(p_state, sim_context.time):
                     t = sim_context.time
                     self.simlogger[p].states.add(t=t, v=p_state)
-                    sim_context.players.pop(p)
+                    finished_player = sim_context.players.pop(p)
+                    finished_player.on_terminate()
 
     def _need_to_update_commands(self, sim_context: SimContext) -> bool:
         """Checks if we need to update the commands of the players"""
