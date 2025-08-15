@@ -39,7 +39,6 @@ class Agent(ABC):
         pass
 
 
-
 class NPAgent(Agent):
     """
     Non-playing character which returns commands based purely on the sim time

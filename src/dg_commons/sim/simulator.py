@@ -18,6 +18,10 @@ from dg_commons.sim.simulator_structures import *
 from dg_commons.sim.simulator_structures import InitSimObservations
 from dg_commons.time import time_function
 
+# import logging
+# from dg_hyundai.utils.logger import create_logger
+
+# logger = create_logger("SimulatorLogger", "results/sim_logs", level=logging.DEBUG)
 
 @dataclass
 class SimContext:

@@ -167,7 +167,7 @@ def get_ttc_drac_at_t(
         agent_vel = agent_state.vx * np.array([np.cos(agent_state.psi), np.sin(agent_state.psi)])
         dist_center = np.linalg.norm(agent_pos - ego_pos)
         rel_vel_along_dist = np.dot(agent_vel - ego_vel, (agent_pos - ego_pos) / dist_center)
-        if rel_vel_along_dist > 0 or np.abs(dist_center / rel_vel_along_dist) > 5.0:
+        if rel_vel_along_dist > 0 or np.abs(dist_center / (rel_vel_along_dist + 1e-6)) > 5.0:
             # two agents are leaving each other or far enough
             continue
         ttc, ego_dtc, _ = _get_ttc(ego_state, agent_state, ego_model, agent_model)
