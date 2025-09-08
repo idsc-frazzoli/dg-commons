@@ -75,7 +75,8 @@ def desired_lane_reached(
         return True
     # vehicle still on the road and is inside the desired lane, check its pose
     if (
-        lane_pose.lateral_inside
+        lane_pose.lateral_inside 
+        and lane_pose.along_inside
         and lane_pose.distance_from_center < pos_tol
         and abs(lane_pose.relative_heading) < heading_tol
     ):
