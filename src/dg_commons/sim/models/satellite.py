@@ -6,7 +6,6 @@ from typing import Type, Mapping
 from dg_commons import logger
 
 import numpy as np
-from dg_commons.sim.models.satellite import SatelliteCommands, SatelliteState
 from frozendict import frozendict
 from geometry import SE2value, SE2_from_xytheta, SO2_from_angle, SO2value, T2value
 from scipy.integrate import solve_ivp
