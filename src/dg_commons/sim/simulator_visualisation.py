@@ -535,7 +535,7 @@ def plot_satellite(
     satellite_poly[1].set_position((x4, y4))
     # thrusters
     thrusters_outline = np.array(
-        [transform_xy(q, t_outline) for t_outline in rg.thrusters_outline_in_body_frame(state.phi)]
+        [transform_xy(q, t_outline) for t_outline in rg.thrusters_outline_in_body_frame(0)]
     )
     for t_idx, thruster in enumerate(satellite_poly[2 : 2 + rg.n_thrusters]):
         xy_poly = thrusters_outline[t_idx]
