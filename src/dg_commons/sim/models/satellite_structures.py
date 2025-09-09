@@ -54,10 +54,10 @@ class SatelliteGeometry(ModelGeometry):
         m=2.0,  # MASS TO BE INTENDED AS MASS OF THE SATELLITE WITHOUT FUEL
         Iz=1e-00,
         w_half=0.5,
-        l_c=0.5,
-        l_f=0.25,
-        l_m=0.25,
-        l_r=0.25,
+        l_c=0.4,
+        l_f=0.3,
+        l_m=0.3,
+        l_r=0.3,
         l=1,
         l_t_half=0.2,
         w_t_half=0.01,
@@ -109,27 +109,27 @@ class SatelliteGeometry(ModelGeometry):
 
         solar_panel_left = Polygon(
             [
-                (-(self.l_r + self.l_f)*0.1 / 2, self.w_half),
-                (-(self.l_r + self.l_f)*0.1 / 2, self.w_half * 1.1),
-                (-self.l_r, self.w_half * 1.1),
-                (-self.l_r, self.w_half * 1.1 + self.w_half),
-                (self.l_f, self.w_half * 1.1 + self.w_half),
-                (self.l_f, self.w_half * 1.1),
-                ((self.l_r + self.l_f)*0.1 / 2, self.w_half * 1.1),
-                ((self.l_r + self.l_f)*0.1 / 2, self.w_half),
+                (-(self.l_r + self.l_f)*0.2 / 2, self.w_half),
+                (-(self.l_r + self.l_f)*0.2 / 2, self.w_half * 1.25),
+                (-self.l_r, self.w_half * 1.25),
+                (-self.l_r, self.w_half * 1.25 + self.w_half*1.25),
+                (self.l_f, self.w_half * 1.25 + self.w_half*1.25),
+                (self.l_f, self.w_half * 1.25),
+                ((self.l_r + self.l_f)*0.2 / 2, self.w_half * 1.25),
+                ((self.l_r + self.l_f)*0.2 / 2, self.w_half),
             ]
         )
 
         solar_panel_right = Polygon(
             [
-                (-(self.l_r + self.l_f)*0.1 / 2, -self.w_half),
-                (-(self.l_r + self.l_f)*0.1 / 2, -self.w_half * 1.1),
-                (-self.l_r, -self.w_half * 1.1),
-                (-self.l_r, -self.w_half * 1.1 - self.w_half),
-                (self.l_f, -self.w_half * 1.1 - self.w_half),
-                (self.l_f, -self.w_half * 1.1),
-                ((self.l_r + self.l_f)*0.1 / 2, -self.w_half * 1.1),
-                ((self.l_r + self.l_f)*0.1 / 2, -self.w_half),
+                (-(self.l_r + self.l_f)*0.2 / 2, -self.w_half),
+                (-(self.l_r + self.l_f)*0.2 / 2, -self.w_half * 1.25),
+                (-self.l_r, -self.w_half * 1.25),
+                (-self.l_r, -self.w_half * 1.25 - self.w_half*1.25),
+                (self.l_f, -self.w_half * 1.25 - self.w_half*1.25),
+                (self.l_f, -self.w_half * 1.25),
+                ((self.l_r + self.l_f)*0.2 / 2, -self.w_half * 1.25),
+                ((self.l_r + self.l_f)*0.2 / 2, -self.w_half),
             ]
         )
 
