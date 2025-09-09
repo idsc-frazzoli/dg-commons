@@ -210,10 +210,10 @@ class SatelliteModel(SimModel[SatelliteState, SatelliteCommands]):
         F_rx = apply_force_limits(u.F_right, self.rp.F_limits)
 
         # set actions to zero if vehicle has no more fuel
-        if x0.m <= self.rp.m_v:
-            F_lx = 0
-            F_rx = 0
-            logger.warning("Vehicle has no more fuel!")
+        # if x0.m <= self.rp.m_v:
+        #     F_lx = 0
+        #     F_rx = 0
+        #     logger.warning("Vehicle has no more fuel!")
 
         psi = x0.psi
         dpsi = x0.dpsi
