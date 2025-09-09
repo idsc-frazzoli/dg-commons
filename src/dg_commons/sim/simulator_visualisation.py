@@ -545,7 +545,7 @@ def plot_satellite(
     flames_outline = np.array(
         [
             transform_xy(q, f_outline)
-            for f_outline in rg.flames_outline_in_body_frame(state.phi, [command.F_left, command.F_right])
+            for f_outline in rg.flames_outline_in_body_frame(0, [command.F_left, command.F_right])
         ]
     )
     for f_idx, flame in enumerate(satellite_poly[2 + rg.n_thrusters :]):
