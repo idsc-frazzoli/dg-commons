@@ -208,7 +208,6 @@ class SatelliteModel(SimModel[SatelliteState, SatelliteCommands]):
         """
         F_lx = apply_force_limits(u.F_left, self.rp.F_limits)
         F_rx = apply_force_limits(u.F_right, self.rp.F_limits)
-        dphi = apply_full_ang_vel_limits(x0.phi, u.dphi, self.rp)
 
         # set actions to zero if vehicle has no more fuel
         if x0.m <= self.rp.m_v:
@@ -221,17 +220,15 @@ class SatelliteModel(SimModel[SatelliteState, SatelliteCommands]):
         vx = x0.vx
         vy = x0.vy
 
-        m = 2
-        phi = 0
+        m = self.rp.m_v
 
         dx = vx
         dy = vy
         dvx = 1 / m * (sin(psi) * F_lx + sin(-psi) * F_rx)
         dvy = 1 / m * (-cos(psi) * F_lx + cos(-psi) * F_rx)
         dvpsi = 1 / self.rg.Iz * self.rg.l_m * (F_rx - F_lx)
-        dphi = dphi
 
-        return SatelliteState(x=dx, y=dy, psi=dpsi, vx=dvx, vy=dvy, dpsi=dvpsi, phi=dphi)
+        return SatelliteState(x=dx, y=dy, psi=dpsi, vx=dvx, vy=dvy, dpsi=dvpsi)
 
     def get_footprint(self) -> Polygon:
         """Returns current footprint of the satellite (mainly for collision checking)"""
