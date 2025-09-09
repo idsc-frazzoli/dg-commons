@@ -227,9 +227,9 @@ class SatelliteModel(SimModel[SatelliteState, SatelliteCommands]):
 
         dx = vx
         dy = vy
-        dvx = 1 / m * (sin(psi + phi) * F_lx + sin(phi - psi) * F_rx)
-        dvy = 1 / m * (-cos(psi + phi) * F_lx + cos(phi - psi) * F_rx)
-        dvpsi = 1 / self.rg.Iz * self.rg.l_m * (cos(phi) * F_rx - cos(phi) * F_lx)
+        dvx = 1 / m * (sin(psi) * F_lx + sin(-psi) * F_rx)
+        dvy = 1 / m * (-cos(psi) * F_lx + cos(-psi) * F_rx)
+        dvpsi = 1 / self.rg.Iz * self.rg.l_m * (F_rx - F_lx)
         dphi = dphi
 
         return SatelliteState(x=dx, y=dy, psi=dpsi, vx=dvx, vy=dvy, dpsi=dvpsi, phi=dphi)

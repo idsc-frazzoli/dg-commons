@@ -106,7 +106,34 @@ class SatelliteGeometry(ModelGeometry):
                 (self.l_f + self.l_m, self.w_half),
             ]
         )
-        satellite_poly = unary_union([body, header])
+
+        solar_panel_left = Polygon(
+            [
+                (-(self.l_r + self.l_f)*0.1 / 2, self.w_half),
+                (-(self.l_r + self.l_f)*0.1 / 2, self.w_half * 1.1),
+                (-self.l_r, self.w_half * 1.1),
+                (-self.l_r, self.w_half * 1.1 + self.w_half),
+                (self.l_f, self.w_half * 1.1 + self.w_half),
+                (self.l_f, self.w_half * 1.1),
+                ((self.l_r + self.l_f)*0.1 / 2, self.w_half * 1.1),
+                ((self.l_r + self.l_f)*0.1 / 2, self.w_half),
+            ]
+        )
+
+        solar_panel_right = Polygon(
+            [
+                (-(self.l_r + self.l_f)*0.1 / 2, -self.w_half),
+                (-(self.l_r + self.l_f)*0.1 / 2, -self.w_half * 1.1),
+                (-self.l_r, -self.w_half * 1.1),
+                (-self.l_r, -self.w_half * 1.1 - self.w_half),
+                (self.l_f, -self.w_half * 1.1 - self.w_half),
+                (self.l_f, -self.w_half * 1.1),
+                ((self.l_r + self.l_f)*0.1 / 2, -self.w_half * 1.1),
+                ((self.l_r + self.l_f)*0.1 / 2, -self.w_half),
+            ]
+        )
+
+        satellite_poly = unary_union([body, header, solar_panel_left, solar_panel_right])
         return tuple(satellite_poly.exterior.coords)
 
     @cached_property
@@ -159,8 +186,8 @@ class SatelliteGeometry(ModelGeometry):
     def flame_position(self, phi: float) -> list[SE2value]:
         # positions = [SE2_from_xytheta((-self.l_m, self.w_half, phi)), SE2_from_xytheta((-self.l_m, -self.w_half, -phi))]
         positions = [
-            SE2_from_xytheta((self.l_m, -self.w_half / 10, phi + math.pi / 2)),
-            SE2_from_xytheta((self.l_m, self.w_half / 10, -phi - math.pi / 2)),
+            SE2_from_xytheta((self.l_m, -self.w_half / 10, 0)),
+            SE2_from_xytheta((self.l_m, self.w_half / 10, 0)),
         ]
         return positions
 
@@ -178,38 +205,25 @@ class SatelliteGeometry(ModelGeometry):
 class SatelliteParameters(ModelParameters):
     m_v: float
     """ Mass of the vehicle [kg] """
-    C_T: float
-    """ Thrust coefficient [1/(I_sp) I_sp: specific impulse] [N] """
     F_limits: tuple[float, float]
     """ Maximum thrust [N] """
-    delta_limits: tuple[float, float]
-    """ Maximum nozzle angle [rad] """
-    ddelta_limits: tuple[float, float]
-    """ Maximum nozzle angular velocity [rad/s] """
 
     @classmethod
     def default(
         cls,
         m_v=2.0,
-        C_T=0.01,
         vx_limits=(kmh2ms(-7.2), kmh2ms(7.2)),
         acc_limits=(-1.0, 1.0),
         F_limits=(-2.0, 2.0),
-        delta_limits=(-np.deg2rad(60), np.deg2rad(60)),
-        ddelta_limits=(-np.deg2rad(20), np.deg2rad(20)),
+
     ) -> "SatelliteParameters":
         return SatelliteParameters(
             m_v=m_v,
-            C_T=C_T,
             vx_limits=vx_limits,
             acc_limits=acc_limits,
             F_limits=F_limits,
-            delta_limits=delta_limits,
-            ddelta_limits=ddelta_limits,
         )
 
     def __post_init__(self):
         super().__post_init__()
-        assert self.ddelta_limits[0] < self.ddelta_limits[1]
-        assert self.delta_limits[0] < self.delta_limits[1]
         assert self.F_limits[0] < self.F_limits[1]
