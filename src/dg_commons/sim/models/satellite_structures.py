@@ -179,10 +179,10 @@ class SatelliteGeometry(ModelGeometry):
         l_flame = F / self.F_max / 2
         flame = Polygon(
             [
-                (l_half, -w_half),
-                (l_flame + l_half, 0),
-                (l_half, w_half),
-                (l_half, -w_half),
+                (0, -w_half),
+                (-l_flame, 0),
+                (0, w_half),
+                (0, -w_half),
             ]
         )
         return tuple(flame.exterior.coords)
