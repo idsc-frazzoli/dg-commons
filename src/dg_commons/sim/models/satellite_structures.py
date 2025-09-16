@@ -39,6 +39,8 @@ class SatelliteGeometry(ModelGeometry):
     """ Rear length of satellite - dist from CoG to back [m] """
     l: float
     """ Total length of satellite - dist from nosecone tip to the back [m] """
+    offset_thruster: float
+    """ Offset of the thruster from the edge of the satellite [m] """
     l_t_half: float
     """ Half Length of the thruster [m] """
     w_t_half: float
@@ -72,6 +74,7 @@ class SatelliteGeometry(ModelGeometry):
             l_f=l_f,
             l_m=l_m,
             l_r=l_r,
+            offset_thruster=offset_thruster,
             l=l_r + l_f + l_c,
             l_t_half=l_t_half,
             w_t_half=w_t_half,
