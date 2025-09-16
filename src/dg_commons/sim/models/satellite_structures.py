@@ -59,8 +59,9 @@ class SatelliteGeometry(ModelGeometry):
         l_m=0.3,
         l_r=0.3,
         l=1,
-        l_t_half=0.2,
-        w_t_half=0.01,
+        offset_thruster=0.1,
+        l_t_half=0.25,
+        w_t_half=0.05,
         F_max=2.0,
     ) -> "SatelliteGeometry":
         return SatelliteGeometry(
@@ -112,8 +113,8 @@ class SatelliteGeometry(ModelGeometry):
                 (-(self.l_r + self.l_f)*0.2 / 2, self.w_half),
                 (-(self.l_r + self.l_f)*0.2 / 2, self.w_half * 1.25),
                 (-self.l_r, self.w_half * 1.25),
-                (-self.l_r, self.w_half * 1.25 + self.w_half*1.25),
-                (self.l_f, self.w_half * 1.25 + self.w_half*1.25),
+                (-self.l_r, self.w_half * 1.25 + self.w_half*1.5),
+                (self.l_f, self.w_half * 1.25 + self.w_half*1.5),
                 (self.l_f, self.w_half * 1.25),
                 ((self.l_r + self.l_f)*0.2 / 2, self.w_half * 1.25),
                 ((self.l_r + self.l_f)*0.2 / 2, self.w_half),
@@ -125,8 +126,8 @@ class SatelliteGeometry(ModelGeometry):
                 (-(self.l_r + self.l_f)*0.2 / 2, -self.w_half),
                 (-(self.l_r + self.l_f)*0.2 / 2, -self.w_half * 1.25),
                 (-self.l_r, -self.w_half * 1.25),
-                (-self.l_r, -self.w_half * 1.25 - self.w_half*1.25),
-                (self.l_f, -self.w_half * 1.25 - self.w_half*1.25),
+                (-self.l_r, -self.w_half * 1.25 - self.w_half*1.5),
+                (self.l_f, -self.w_half * 1.25 - self.w_half*1.5),
                 (self.l_f, -self.w_half * 1.25),
                 ((self.l_r + self.l_f)*0.2 / 2, -self.w_half * 1.25),
                 ((self.l_r + self.l_f)*0.2 / 2, -self.w_half),
@@ -159,14 +160,14 @@ class SatelliteGeometry(ModelGeometry):
 
         return tuple(thruster.exterior.coords)
 
-    def thrusters_position(self, phi: float) -> list[SE2value]:
+    def thrusters_position(self) -> list[SE2value]:
         # positions = [SE2_from_xytheta((-self.l_m, self.w_half, phi)), SE2_from_xytheta((-self.l_m, -self.w_half, -phi))]
-        positions = [SE2_from_xytheta((-self.l_m, self.w_half, 0)), SE2_from_xytheta((-self.l_m, -self.w_half, 0))]
+        positions = [SE2_from_xytheta((-self.l_m, self.w_half-self.offset_thruster, 0)), SE2_from_xytheta((-self.l_m, -(self.w_half-self.offset_thruster), 0))]
         return positions
 
     def thrusters_outline_in_body_frame(self, phi: float) -> list[tuple[tuple[float, float], ...]]:
         """Takes phi angle of nozzle w.r.t. body frame"""
-        thrusters_outline = [transform_xy(q, self.thruster_outline) for q in self.thrusters_position(phi)]
+        thrusters_outline = [transform_xy(q, self.thruster_outline) for q in self.thrusters_position()]
         return thrusters_outline
 
     def flame_outline(self, F: float) -> tuple[tuple[float, float], ...]:
@@ -183,11 +184,11 @@ class SatelliteGeometry(ModelGeometry):
         )
         return tuple(flame.exterior.coords)
 
-    def flame_position(self, phi: float) -> list[SE2value]:
+    def flame_position(self) -> list[SE2value]:
         # positions = [SE2_from_xytheta((-self.l_m, self.w_half, phi)), SE2_from_xytheta((-self.l_m, -self.w_half, -phi))]
         positions = [
-            SE2_from_xytheta((self.l_m, -self.w_half / 10, 0)),
-            SE2_from_xytheta((self.l_m, self.w_half / 10, 0)),
+            SE2_from_xytheta((-self.l_m, -(self.w_half - self.offset_thruster), 0)),
+            SE2_from_xytheta((-self.l_m, self.w_half - self.offset_thruster, 0)),
         ]
         return positions
 
@@ -195,7 +196,7 @@ class SatelliteGeometry(ModelGeometry):
         self, phi: float, command: [float, float]
     ) -> list[tuple[tuple[float, float], ...]]:
         """Takes phi angle of nozzle w.r.t. body frame"""
-        flame_pos = self.flame_position(phi)
+        flame_pos = self.flame_position()
         flame_outline = [self.flame_outline(command[0]), self.flame_outline(command[1])]
         flame_outline = [transform_xy(q, flame_outline[i]) for i, q in enumerate(flame_pos)]
         return flame_outline
