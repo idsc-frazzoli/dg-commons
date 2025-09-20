@@ -199,13 +199,11 @@ class SatelliteModel(SimModel[SatelliteState, SatelliteCommands]):
         dx/dt = vx
         dy/dt = vy
         dψ/dt = vψ
-        dm/dt = -k_l*(F_l+F_r)
-        dvx/dt = 1/m*(sin(phi+ψ)*F_l + sin(phi-ψ)*F_r)
-        dvy/dt = 1/m*(-cos(phi+ψ)*F_l + cos(phi-ψ)*F_r)
-        dvψ/dt = 1/I*l2*cos(phi)*(F_r-F_l)
-        dphi/dt = vphi
-
+        dvx = 1 / m * cos(ψ) * (F_lx + F_rx)
+        dvy = 1 / m * sin(ψ) * (F_lx + F_rx)
+        dvψ/dt = 1/I*l2*(F_r-F_l)
         """
+
         F_lx = apply_force_limits(u.F_left, self.rp.F_limits)
         F_rx = apply_force_limits(u.F_right, self.rp.F_limits)
 

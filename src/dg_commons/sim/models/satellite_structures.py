@@ -168,8 +168,7 @@ class SatelliteGeometry(ModelGeometry):
         positions = [SE2_from_xytheta((-self.l_m, self.w_half-self.offset_thruster, 0)), SE2_from_xytheta((-self.l_m, -(self.w_half-self.offset_thruster), 0))]
         return positions
 
-    def thrusters_outline_in_body_frame(self, phi: float) -> list[tuple[tuple[float, float], ...]]:
-        """Takes phi angle of nozzle w.r.t. body frame"""
+    def thrusters_outline_in_body_frame(self) -> list[tuple[tuple[float, float], ...]]:
         thrusters_outline = [transform_xy(q, self.thruster_outline) for q in self.thrusters_position()]
         return thrusters_outline
 
@@ -207,9 +206,8 @@ class SatelliteGeometry(ModelGeometry):
         return positions
 
     def flames_outline_in_body_frame(
-        self, phi: float, command: [float, float]
+        self, command: [float, float]
     ) -> list[tuple[tuple[float, float], ...]]:
-        """Takes phi angle of nozzle w.r.t. body frame"""
         flame_pos = self.flame_position()
         flame_outline = [self.flame_outline(command[0]), self.flame_outline(command[1])]
         flame_outline = [transform_xy(q, flame_outline[i]) for i, q in enumerate(flame_pos)]

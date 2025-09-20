@@ -535,7 +535,7 @@ def plot_satellite(
     satellite_poly[1].set_position((x4, y4))
     # thrusters
     thrusters_outline = np.array(
-        [transform_xy(q, t_outline) for t_outline in rg.thrusters_outline_in_body_frame(0)]
+        [transform_xy(q, t_outline) for t_outline in rg.thrusters_outline_in_body_frame()]
     )
     for t_idx, thruster in enumerate(satellite_poly[2 : 2 + rg.n_thrusters]):
         xy_poly = thrusters_outline[t_idx]
@@ -543,10 +543,7 @@ def plot_satellite(
     # flames if fuel is not zero
     # if state.m > rp.m_v:
     flames_outline = np.array(
-        [
-            transform_xy(q, f_outline)
-            for f_outline in rg.flames_outline_in_body_frame(0, [command.F_left, command.F_right])
-        ]
+        [transform_xy(q, f_outline) for f_outline in rg.flames_outline_in_body_frame([command.F_left, command.F_right])]
     )
     for f_idx, flame in enumerate(satellite_poly[2 + rg.n_thrusters :]):
         xy_poly = flames_outline[f_idx]
