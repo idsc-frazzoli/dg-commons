@@ -176,15 +176,26 @@ class SatelliteGeometry(ModelGeometry):
     def flame_outline(self, F: float) -> tuple[tuple[float, float], ...]:
         w_half, l_half = self.w_t_half, self.l_t_half
 
-        l_flame = F / self.F_max / 2
-        flame = Polygon(
-            [
-                (0, -w_half),
-                (-l_flame, 0),
-                (0, w_half),
-                (0, -w_half),
-            ]
-        )
+        l_flame = F / self.F_max
+
+        if F>=0:
+            flame = Polygon(
+                [
+                    (0, -w_half),
+                    (-l_flame, 0),
+                    (0, w_half),
+                    (0, -w_half),
+                ]
+            )
+        else:
+            flame = Polygon(
+                [
+                    (l_half, -w_half),
+                    (l_flame + l_half, 0),
+                    (l_half, w_half),
+                    (l_half, -w_half),
+                ]
+            )
         return tuple(flame.exterior.coords)
 
     def flame_position(self) -> list[SE2value]:
