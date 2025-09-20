@@ -201,8 +201,8 @@ class SatelliteGeometry(ModelGeometry):
     def flame_position(self) -> list[SE2value]:
         # positions = [SE2_from_xytheta((-self.l_m, self.w_half, phi)), SE2_from_xytheta((-self.l_m, -self.w_half, -phi))]
         positions = [
-            SE2_from_xytheta((-self.l_m, -(self.w_half - self.offset_thruster), 0)),
             SE2_from_xytheta((-self.l_m, self.w_half - self.offset_thruster, 0)),
+            SE2_from_xytheta((-self.l_m, -(self.w_half - self.offset_thruster), 0)),
         ]
         return positions
 
