@@ -191,7 +191,7 @@ class SatelliteGeometry(ModelGeometry):
             flame = Polygon(
                 [
                     (l_half, -w_half),
-                    (l_flame + l_half, 0),
+                    (-l_flame + l_half, 0),
                     (l_half, w_half),
                     (l_half, -w_half),
                 ]
