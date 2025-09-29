@@ -125,19 +125,19 @@ class SatelliteGeometry(ModelGeometry):
             ]
         )
 
-        solar_panel_right = Polygon(
-            [
-                (-(self.l_r + self.l_f)*0.2 / 2, -self.w_half),
-                (-(self.l_r + self.l_f)*0.2 / 2, -self.w_half * 1.25),
-                (-self.l_r, -self.w_half * 1.25),
-                (-self.l_r, -self.w_half * 1.25 - self.w_half*1.5),
-                (self.l_f, -self.w_half * 1.25 - self.w_half*1.5),
-                (self.l_f, -self.w_half * 1.25),
-                ((self.l_r + self.l_f)*0.2 / 2, -self.w_half * 1.25),
-                ((self.l_r + self.l_f)*0.2 / 2, -self.w_half),
-                (-(self.l_r + self.l_f)*0.2 / 2, -self.w_half),
-            ]
-        )
+        # solar_panel_right = Polygon(
+        #     [
+        #         (-(self.l_r + self.l_f)*0.2 / 2, -self.w_half),
+        #         (-(self.l_r + self.l_f)*0.2 / 2, -self.w_half * 1.25),
+        #         (-self.l_r, -self.w_half * 1.25),
+        #         (-self.l_r, -self.w_half * 1.25 - self.w_half*1.5),
+        #         (self.l_f, -self.w_half * 1.25 - self.w_half*1.5),
+        #         (self.l_f, -self.w_half * 1.25),
+        #         ((self.l_r + self.l_f)*0.2 / 2, -self.w_half * 1.25),
+        #         ((self.l_r + self.l_f)*0.2 / 2, -self.w_half),
+        #         (-(self.l_r + self.l_f)*0.2 / 2, -self.w_half),
+        #     ]
+        # )
 
         satellite_poly = unary_union([body, header, solar_panel_left, solar_panel_right])
         return tuple(satellite_poly.exterior.coords)
