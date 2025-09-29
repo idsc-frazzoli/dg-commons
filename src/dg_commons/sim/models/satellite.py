@@ -258,16 +258,19 @@ class SatelliteModel(SimModel[SatelliteState, SatelliteCommands]):
         vy = self._state.vy
         dpsi = self._state.dpsi
         v_l = np.array([vx, vy])
-        if in_model_frame:
-            return v_l, dpsi
-        rot: SO2value = SO2_from_angle(self._state.psi)
-        v_g = rot @ v_l
-        return v_g, dpsi
+
+        return v_l, dpsi # always in global frame
+    
+        # if in_model_frame:
+        #     return v_l, dpsi
+        # rot: SO2value = SO2_from_angle(self._state.psi)
+        # v_g = rot @ v_l
+        # return v_g, dpsi
 
     def set_velocity(self, vel: T2value, dpsi: float, in_model_frame: bool):
-        if not in_model_frame:
-            rot: SO2value = SO2_from_angle(-self._state.psi)
-            vel = rot @ vel
+        # if not in_model_frame:
+        #     rot: SO2value = SO2_from_angle(-self._state.psi)
+        #     vel = rot @ vel
         self._state.vx = vel[0]
         self._state.vy = vel[1]
         self._state.dpsi = dpsi
