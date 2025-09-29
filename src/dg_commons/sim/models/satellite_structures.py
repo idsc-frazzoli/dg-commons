@@ -139,7 +139,7 @@ class SatelliteGeometry(ModelGeometry):
         #     ]
         # )
 
-        satellite_poly = unary_union([body, header, solar_panel_left, solar_panel_right])
+        satellite_poly = unary_union([body, header, solar_panel_left])
         return tuple(satellite_poly.exterior.coords)
 
     @cached_property
