@@ -253,24 +253,26 @@ class SatelliteModel(SimModel[SatelliteState, SatelliteCommands]):
         return self.rg
 
     def get_velocity(self, in_model_frame: bool) -> (T2value, float):
-        """Returns velocity at COG"""
         vx = self._state.vx
         vy = self._state.vy
         dpsi = self._state.dpsi
         v_l = np.array([vx, vy])
 
-        return v_l, dpsi # always in global frame
-    
-        # if in_model_frame:
-        #     return v_l, dpsi
-        # rot: SO2value = SO2_from_angle(self._state.psi)
-        # v_g = rot @ v_l
-        # return v_g, dpsi
+        if not in_model_frame: # asked as global
+            return v_l, dpsi # dynamics in global frame
+
+        # else transfor global to local
+        rot: SO2value = SO2_from_angle(-self._state.psi)
+        v_g = rot @ v_l
+        return v_g, dpsi
 
     def set_velocity(self, vel: T2value, dpsi: float, in_model_frame: bool):
-        # if not in_model_frame:
-        #     rot: SO2value = SO2_from_angle(-self._state.psi)
-        #     vel = rot @ vel
+        if in_model_frame: # provided in body frame
+            # local to global
+            rot: SO2value = SO2_from_angle(self._state.psi)
+            vel = rot @ vel
+
+        # else already in global frame
         self._state.vx = vel[0]
         self._state.vy = vel[1]
         self._state.dpsi = dpsi
