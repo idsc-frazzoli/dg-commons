@@ -204,7 +204,7 @@ class Simulator:
         env_obstacles = sim_context.dg_scenario.strtree_obstacles
         collision = False
         for p in sim_context.players:
-            if isinstance(sim_context.models[p], DynObstacleModel) and sim_context.models[p].tag == "asteroid":
+            if isinstance(sim_context.models[p], DynObstacleModel) and (sim_context.models[p].tag == "asteroid" or sim_context.models[p].tag == "satellite"):
                 # dynamic obstacles that impact everywhere do not collide with the environment
                 continue
             p_model = sim_context.models[p]
