@@ -39,6 +39,8 @@ class SatelliteGeometry(ModelGeometry):
     """ Rear length of satellite - dist from CoG to back [m] """
     l: float
     """ Total length of satellite - dist from nosecone tip to the back [m] """
+    w_panel: float
+    """ Width of the solar panels [m] """
     offset_thruster: float
     """ Offset of the thruster from the edge of the satellite [m] """
     l_t_half: float
@@ -57,7 +59,7 @@ class SatelliteGeometry(ModelGeometry):
         Iz=1e-00,
         w_half=0.5,
         l_c=0.4,
-        l_f=0.3,
+        l_f=0.6,
         l_m=0.3,
         l_r=0.3,
         l=1,
@@ -76,6 +78,7 @@ class SatelliteGeometry(ModelGeometry):
             l_r=l_r,
             offset_thruster=offset_thruster,
             l=l_r + l_f + l_c,
+            w_panel=(w_half * 1.25 + w_half * 1.5),
             l_t_half=l_t_half,
             w_t_half=w_t_half,
             F_max=F_max,
@@ -85,7 +88,7 @@ class SatelliteGeometry(ModelGeometry):
 
     @cached_property
     def width(self):
-        return self.w_half * 2
+        return self.w_half * 2 + 2 * self.w_panel
 
     @cached_property
     def outline(self) -> tuple[tuple[float, float], ...]:
@@ -96,18 +99,18 @@ class SatelliteGeometry(ModelGeometry):
         body = Polygon(
             [
                 (-self.l_r, self.w_half),
-                (self.l_f + self.l_m, self.w_half),
-                (self.l_f + self.l_m, -self.w_half),
+                (self.l_f, self.w_half),
+                (self.l_f, -self.w_half),
                 (-self.l_r, -self.w_half),
                 (-self.l_r, self.w_half),
             ]
         )
         header = Polygon(
             [
-                (self.l_f + self.l_m, self.w_half),
-                (self.l_f + self.l_m + self.l_c, 0),
-                (self.l_f + self.l_m, -self.w_half),
-                (self.l_f + self.l_m, self.w_half),
+                (self.l_f, self.w_half),
+                (self.l_f + self.l_c, 0),
+                (self.l_f, -self.w_half),
+                (self.l_f, self.w_half),
             ]
         )
 
@@ -116,8 +119,8 @@ class SatelliteGeometry(ModelGeometry):
                 (-(self.l_r + self.l_f)*0.2 / 2, self.w_half),
                 (-(self.l_r + self.l_f)*0.2 / 2, self.w_half * 1.25),
                 (-self.l_r, self.w_half * 1.25),
-                (-self.l_r, self.w_half * 1.25 + self.w_half*1.5),
-                (self.l_f, self.w_half * 1.25 + self.w_half*1.5),
+                (-self.l_r, self.w_panel),
+                (self.l_f,self.w_panel),
                 (self.l_f, self.w_half * 1.25),
                 ((self.l_r + self.l_f)*0.2 / 2, self.w_half * 1.25),
                 ((self.l_r + self.l_f)*0.2 / 2, self.w_half),
@@ -130,8 +133,8 @@ class SatelliteGeometry(ModelGeometry):
                 (-(self.l_r + self.l_f)*0.2 / 2, -self.w_half),
                 (-(self.l_r + self.l_f)*0.2 / 2, -self.w_half * 1.25),
                 (-self.l_r, -self.w_half * 1.25),
-                (-self.l_r, -self.w_half * 1.25 - self.w_half*1.5),
-                (self.l_f, -self.w_half * 1.25 - self.w_half*1.5),
+                (-self.l_r, -self.w_panel),
+                (self.l_f, -self.w_panel),
                 (self.l_f, -self.w_half * 1.25),
                 ((self.l_r + self.l_f)*0.2 / 2, -self.w_half * 1.25),
                 ((self.l_r + self.l_f)*0.2 / 2, -self.w_half),
@@ -166,8 +169,8 @@ class SatelliteGeometry(ModelGeometry):
         return tuple(thruster.exterior.coords)
 
     def thrusters_position(self) -> list[SE2value]:
-        # positions = [SE2_from_xytheta((-self.l_m, self.w_half, phi)), SE2_from_xytheta((-self.l_m, -self.w_half, -phi))]
-        positions = [SE2_from_xytheta((-self.l_m, self.w_half-self.offset_thruster, 0)), SE2_from_xytheta((-self.l_m, -(self.w_half-self.offset_thruster), 0))]
+        # positions = [SE2_from_xytheta((-self.l_r, self.w_half, phi)), SE2_from_xytheta((-self.l_r, -self.w_half, -phi))]
+        positions = [SE2_from_xytheta((-self.l_r, self.w_half-self.offset_thruster, 0)), SE2_from_xytheta((-self.l_r, -(self.w_half-self.offset_thruster), 0))]
         return positions
 
     def thrusters_outline_in_body_frame(self) -> list[tuple[tuple[float, float], ...]]:
@@ -200,10 +203,10 @@ class SatelliteGeometry(ModelGeometry):
         return tuple(flame.exterior.coords)
 
     def flame_position(self) -> list[SE2value]:
-        # positions = [SE2_from_xytheta((-self.l_m, self.w_half, phi)), SE2_from_xytheta((-self.l_m, -self.w_half, -phi))]
+        # positions = [SE2_from_xytheta((-self.l_r, self.w_half, phi)), SE2_from_xytheta((-self.l_r, -self.w_half, -phi))]
         positions = [
-            SE2_from_xytheta((-self.l_m, self.w_half - self.offset_thruster, 0)),
-            SE2_from_xytheta((-self.l_m, -(self.w_half - self.offset_thruster), 0)),
+            SE2_from_xytheta((-self.l_r, self.w_half - self.offset_thruster, 0)),
+            SE2_from_xytheta((-self.l_r, -(self.w_half - self.offset_thruster), 0)),
         ]
         return positions
 
