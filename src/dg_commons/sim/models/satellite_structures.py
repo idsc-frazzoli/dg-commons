@@ -60,7 +60,7 @@ class SatelliteGeometry(ModelGeometry):
         w_half=0.5,
         l_c=0.4,
         l_f=0.6,
-        l_m=0.3,
+        l_m=None,
         l_r=0.3,
         l=1,
         offset_thruster=0.1,
@@ -74,7 +74,7 @@ class SatelliteGeometry(ModelGeometry):
             w_half=w_half,
             l_c=l_c,
             l_f=l_f,
-            l_m=l_m,
+            l_m=w_half - offset_thruster,
             l_r=l_r,
             offset_thruster=offset_thruster,
             l=l_r + l_f + l_c,
@@ -170,7 +170,7 @@ class SatelliteGeometry(ModelGeometry):
 
     def thrusters_position(self) -> list[SE2value]:
         # positions = [SE2_from_xytheta((-self.l_r, self.w_half, phi)), SE2_from_xytheta((-self.l_r, -self.w_half, -phi))]
-        positions = [SE2_from_xytheta((-self.l_r, self.w_half-self.offset_thruster, 0)), SE2_from_xytheta((-self.l_r, -(self.w_half-self.offset_thruster), 0))]
+        positions = [SE2_from_xytheta((-self.l_r, self.l_m, 0)), SE2_from_xytheta((-self.l_r, -(self.l_m), 0))]
         return positions
 
     def thrusters_outline_in_body_frame(self) -> list[tuple[tuple[float, float], ...]]:
@@ -205,8 +205,8 @@ class SatelliteGeometry(ModelGeometry):
     def flame_position(self) -> list[SE2value]:
         # positions = [SE2_from_xytheta((-self.l_r, self.w_half, phi)), SE2_from_xytheta((-self.l_r, -self.w_half, -phi))]
         positions = [
-            SE2_from_xytheta((-self.l_r, self.w_half - self.offset_thruster, 0)),
-            SE2_from_xytheta((-self.l_r, -(self.w_half - self.offset_thruster), 0)),
+            SE2_from_xytheta((-self.l_r, self.l_m, 0)),
+            SE2_from_xytheta((-self.l_r, -(self.l_m), 0)),
         ]
         return positions
 
