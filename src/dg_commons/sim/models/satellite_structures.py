@@ -32,7 +32,7 @@ class SatelliteGeometry(ModelGeometry):
     l_c: float
     """ Length of nose cone [m] """
     l_f: float
-    """ Front length of satellite - dist from thruster location to the nose [m] """
+    """ Front length of satellite - dist from CoG to the base of the nose [m] """
     l_m: float
     """ Middle length of satellite - dist from CoG to thruster location [m] """
     l_r: float
