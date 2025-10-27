@@ -1,0 +1,62 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.241.1/containers/python-3
+{
+	"name": "pdm4ar2025",
+	"image": "idscfrazz/pdm4ar2025:3.11-bullseye",
+	// Configure tool-specific properties.
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			// Set *default* container specific settings.json values on container create.
+			"settings": {
+				"python.defaultInterpreterPath": "/home/vscode/.venv/bin/python",
+				"python.venvPath": "/home/vscode/.venv",
+				"python.formatting.provider": "black",
+				"python.analysis.typeCheckingMode": "basic",
+				"python.analysis.autoImportCompletions": true,
+				"python.terminal.activateEnvironment": true,
+				"black-formatter.args": [
+					"--line-length=120"
+				],
+				"pylint.args": [
+					"--disable=missing-class-docstring,missing-function-docstring,missing-module-docstring,line-too-long,unused-import"
+				],
+				"[python]": {
+					"editor.defaultFormatter": "ms-python.black-formatter",
+					"editor.formatOnSave": true
+				}
+			},
+			// Add the IDs of extensions you want installed when the container is created.
+			"extensions": [
+				"ms-python.python",
+				"ms-python.pylint",
+				"ms-python.black-formatter",
+				"ms-toolsai.jupyter",
+				"ms-toolsai.jupyter-renderers",
+				"ritwickdey.LiveServer"
+			]
+		}
+	},
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [
+		5500
+	],
+	"portsAttributes": {
+		"5500": {
+			"label": "report-liveServer",
+			"onAutoForward": "notify"
+		}
+	},
+	"containerEnv": {
+		"MPLBACKEND": "agg"
+	},
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "poetry lock && poetry install",
+	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+	"remoteUser": "vscode",
+	"features": {
+		"ghcr.io/devcontainers/features/git:1": {},
+		"ghcr.io/devcontainers/features/git-lfs:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+	}
+}
