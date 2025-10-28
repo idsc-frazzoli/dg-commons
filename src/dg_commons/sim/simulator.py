@@ -204,6 +204,9 @@ class Simulator:
         env_obstacles = sim_context.dg_scenario.strtree_obstacles
         collision = False
         for p in sim_context.players:
+            if isinstance(sim_context.models[p], DynObstacleModel) and (sim_context.models[p].tag == "asteroid" or sim_context.models[p].tag == "satellite"):
+                # dynamic obstacles that impact everywhere do not collide with the environment
+                continue
             p_model = sim_context.models[p]
             p_shape = p_model.get_footprint()
             items = env_obstacles.query(p_shape, predicate="intersects")
@@ -237,6 +240,8 @@ class Simulator:
 
         collision = False
         for p1, p2 in combinations(sim_context.players, 2):
+            if isinstance(sim_context.models[p1], DynObstacleModel) and isinstance(sim_context.models[p2], DynObstacleModel) and sim_context.models[p1].tag == "asteroid" and sim_context.models[p2].tag == "asteroid":
+                continue
             a_shape = sim_context.models[p1].get_footprint()
             b_shape = sim_context.models[p2].get_footprint()
             if a_shape.intersects(b_shape):

@@ -143,7 +143,7 @@ class DynObstacleState:
 class DynObstacleModel(SimModel[DynObstacleState, DynObstacleCommands]):
     """A dynamic obstacle"""
 
-    def __init__(self, x0: DynObstacleState, shape: Polygon, og: ObstacleGeometry, op: DynObstacleParameters):
+    def __init__(self, x0: DynObstacleState, shape: Polygon, og: ObstacleGeometry, op: DynObstacleParameters, tag:str=""):
         """For realistic behavior it is important that the shape is centered around the origin
         that will be used as the c.o.g. for the obstacle"""
         self._state: DynObstacleState = x0
@@ -152,6 +152,7 @@ class DynObstacleModel(SimModel[DynObstacleState, DynObstacleCommands]):
         self.op: DynObstacleParameters = op
         assert shape.is_valid, "Shape is not valid"
         self.shape: Polygon = shape
+        self.tag: str = tag
 
     def update(self, commands: U, dt: SimTime):
         """
