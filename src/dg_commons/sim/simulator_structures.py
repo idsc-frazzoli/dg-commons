@@ -24,6 +24,7 @@ __all__ = [
     "LogEntry",
     "PlayerLogger",
     "PlayerObservations",
+    "SharedGoalObservation",
 ]
 
 
@@ -46,11 +47,18 @@ class PlayerObservations:
 
 
 @dataclass(frozen=True)
+class SharedGoalObservation:
+    """Observation of a shared goal"""
+    occupancy: Polygon
+
+
+@dataclass(frozen=True)
 class SimObservations:
     """The observations from the simulator passed to each agent"""
 
     players: Mapping[PlayerName, PlayerObservations]
     time: SimTime
+    available_goals: Optional[Mapping[str, SharedGoalObservation]] = None
 
 
 @dataclass(frozen=True)
