@@ -88,7 +88,7 @@ class Simulator:
         # initialize the simulation
         for player_name, player in sim_context.players.items():
             if hasattr(player, "_capacity"):
-                self._ensure_agent_within_capacity(agent, player_name)
+                self._ensure_agent_within_capacity(player, player_name)
             scenario = deepcopy(sim_context.dg_scenario)
             init_obs = InitSimObservations(
                 my_name=player_name,
