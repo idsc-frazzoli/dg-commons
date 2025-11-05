@@ -103,7 +103,7 @@ class SimRenderer(SimRendererABC):
                 except NotImplementedError:
                     pass
         if self.sim_context.shared_goals_manager is not None:
-            for goal in self.sim_context.shared_goals_manager.shared_goals.values():
+            for goal in self.sim_context.shared_goals_manager.initial_goals.values():
                 self.shapely_viz.add_shape(
                     goal.polygon, color="yellow", zorder=ZOrders.GOAL, alpha=0.5
                 )

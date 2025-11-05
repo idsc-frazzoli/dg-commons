@@ -45,9 +45,11 @@ class SharedPolygonGoalsManager:
         Initialize the shared goals manager.
 
         Args:
+            initial_goals: List of initial shared goals available for collection (used for plotting)
             shared_goals: List of shared goals available for collection
             collection_points: List of collection points for goal delivery
         """
+        self.initial_goals: Dict[str, SharedPolygonGoal] = {g.goal_id: g for g in shared_goals}
         self.shared_goals: Dict[str, SharedPolygonGoal] = {g.goal_id: g for g in shared_goals}
         self.collection_points: Dict[str, CollectionPoint] = {cp.point_id: cp for cp in collection_points}
         self.agent_carrying: Dict[PlayerName, Optional[str]] = {}  # Maps agent to goal_id they're carrying
