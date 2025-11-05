@@ -87,6 +87,8 @@ class Simulator:
         logger.info("~~~~~> Beginning simulation")
         # initialize the simulation
         for player_name, player in sim_context.players.items():
+            if hasattr(player, "_capacity"):
+                self._ensure_agent_within_capacity(agent, player_name)
             scenario = deepcopy(sim_context.dg_scenario)
             init_obs = InitSimObservations(
                 my_name=player_name,
@@ -281,6 +283,20 @@ class Simulator:
                     t = sim_context.time
                     self.simlogger[p].states.add(t=t, v=p_state)
                     sim_context.players.pop(p)
+
+    @staticmethod
+    def _ensure_agent_within_capacity(agent: Agent, player_name: PlayerName) -> None:
+        """Verify that an agent does not exceed its declared capacity."""
+        get_current_load = getattr(agent, "get_current_load", None)
+        get_capacity = getattr(agent, "get_capacity", None)
+        if callable(get_current_load) and callable(get_capacity):
+            current_load = get_current_load()
+            capacity = get_capacity()
+            if current_load > capacity:
+                raise RuntimeError(
+                    f"Agent '{player_name}' load {current_load} exceeds capacity {capacity}"
+                )
+
 
     @staticmethod
     def _update_shared_goals_manager(sim_context: SimContext):
