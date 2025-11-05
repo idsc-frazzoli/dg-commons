@@ -297,7 +297,6 @@ class Simulator:
                     f"Agent '{player_name}' load {current_load} exceeds capacity {capacity}"
                 )
 
-
     @staticmethod
     def _update_shared_goals_manager(sim_context: SimContext):
         """Update shared goals manager if present"""
@@ -306,8 +305,12 @@ class Simulator:
             events = sim_context.shared_goals_manager.update(agents_states)
             if events['goals_collected']:
                 logger.info(f"Goals collected: {events['goals_collected']}")
+                for agent_name, _ in events['goals_collected']:
+                    sim_context.players[agent_name].grab_goal()
             if events['goals_delivered']:
                 logger.info(f"Goals delivered: {events['goals_delivered']}")
+                for agent_name, _, _ in events['goals_delivered']:
+                    sim_context.players[agent_name].deliver_goal()
 
     def _need_to_update_commands(self, sim_context: SimContext) -> bool:
         """Checks if we need to update the commands of the players"""
