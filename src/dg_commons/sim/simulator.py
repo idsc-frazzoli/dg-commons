@@ -87,8 +87,6 @@ class Simulator:
         logger.info("~~~~~> Beginning simulation")
         # initialize the simulation
         for player_name, player in sim_context.players.items():
-            if hasattr(player, "_capacity"):
-                self._ensure_agent_within_capacity(player, player_name)
             scenario = deepcopy(sim_context.dg_scenario)
             init_obs = InitSimObservations(
                 my_name=player_name,
@@ -148,6 +146,8 @@ class Simulator:
         # fixme this can be parallelized later with ProcessPoolExecutor?
         t = sim_context.time
         for player_name, agent in sim_context.players.items():
+            if hasattr(agent, "_capacity"):
+                self._ensure_agent_within_capacity(agent, player_name)
             state = sim_context.models[player_name].get_state()
             self.simlogger[player_name].states.add(t=t, v=state)
             if self._need_to_update_commands(sim_context):
