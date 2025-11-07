@@ -163,38 +163,43 @@ class SimRenderer(SimRendererABC):
                 except Exception:
                     pass
 
-        def update_shared_goals_frame(self, ax: Axes, t: float) -> None:
-            """Public helper called once per frame to update shared goals and collection point counters."""
-            self._update_shared_goals_visuals(ax=ax, t=t)
-            mgr = self.sim_context.shared_goals_manager
-            if mgr is None:
-                return
-            for cp_id, cp in mgr.collection_points.items():
-                txt = self._collection_point_texts.get(cp_id)
+    def update_shared_goals_frame(self, ax: Axes, t: float) -> None:
+        """Public helper called once per frame to update shared goals and collection point counters."""
+        # update goal patches
+        self._update_shared_goals_visuals(ax=ax, t=t)
+        mgr = self.sim_context.shared_goals_manager
+        if mgr is None:
+            return
+        for cp_id, cp in mgr.collection_points.items():
+            txt = self._collection_point_texts.get(cp_id)
+            # cp.collected_goals may be dict(goal_id->time) or list; handle both
+            try:
                 count = len(cp.collected_goals) if cp.collected_goals is not None else 0
-                if txt is None:
-                    try:
-                        cent = cp.polygon.centroid
-                        txt = self.commonroad_renderer.ax.text(
-                            cent.x,
-                            cent.y,
-                            str(count),
-                            horizontalalignment="center",
-                            verticalalignment="center",
-                            zorder=ZOrders.GOAL + 1,
-                            fontsize=10,
-                            color="black",
-                        )
-                        self._collection_point_texts[cp_id] = txt
-                    except Exception:
-                        continue
-                else:
-                    txt.set_text(str(count))
-                    try:
-                        cent = cp.polygon.centroid
-                        txt.set_position((cent.x, cent.y))
-                    except Exception:
-                        pass
+            except Exception:
+                count = 0
+            if txt is None:
+                try:
+                    cent = cp.polygon.centroid
+                    txt = self.commonroad_renderer.ax.text(
+                        cent.x,
+                        cent.y,
+                        str(count),
+                        horizontalalignment="center",
+                        verticalalignment="center",
+                        zorder=ZOrders.GOAL + 1,
+                        fontsize=10,
+                        color="black",
+                    )
+                    self._collection_point_texts[cp_id] = txt
+                except Exception:
+                    continue
+            else:
+                txt.set_text(str(count))
+                try:
+                    cent = cp.polygon.centroid
+                    txt.set_position((cent.x, cent.y))
+                except Exception:
+                    pass
 
     def plot_timevarying_goals(
         self, ax: Axes, player_name: PlayerName, t: float, goal_box: Optional = None, **style_kwargs
@@ -210,36 +215,7 @@ class SimRenderer(SimRendererABC):
         outline = tuple(zip(goal_poly.exterior.coords.xy[0], goal_poly.exterior.coords.xy[1]))
         goal_box.set_xy(outline)
 
-        # Update shared goals visuals and collection point counters if manager is present
-        if self.sim_context.shared_goals_manager is not None:
-            self._update_shared_goals_visuals(ax=ax, t=t)
-            # update collection point counters
-            for cp_id, cp in self.sim_context.shared_goals_manager.collection_points.items():
-                txt = self._collection_point_texts.get(cp_id)
-                if txt is None:
-                    # create text if missing
-                    try:
-                        cent = cp.polygon.centroid
-                        txt = ax.text(
-                            cent.x,
-                            cent.y,
-                            str(len(cp.collected_goals)),
-                            horizontalalignment="center",
-                            verticalalignment="center",
-                            zorder=ZOrders.GOAL + 1,
-                            fontsize=10,
-                            color="black",
-                        )
-                        self._collection_point_texts[cp_id] = txt
-                    except Exception:
-                        continue
-                else:
-                    txt.set_text(str(len(cp.collected_goals)))
-                    try:
-                        cent = cp.polygon.centroid
-                        txt.set_position((cent.x, cent.y))
-                    except Exception:
-                        pass
+        # per-player plotting only; shared goals and counters are updated once per frame
         return goal_box
 
     def plot_player(
