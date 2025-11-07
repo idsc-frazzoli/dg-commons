@@ -63,6 +63,20 @@ def create_animation(
     plot_wheels: bool = True
     plot_ligths: bool = True
 
+    def _as_artists(x):
+        if x is None:
+            return []
+        if isinstance(x, (list, tuple)):
+            return list(x)
+        return [x]
+    
+    def _set_visible(artists, vis: bool):
+            for a in _as_artists(artists):
+                try:
+                    a.set_visible(vis)
+                except Exception:
+                    pass
+
     # self.f.set_size_inches(*fig_size)
     def _get_list() -> list[Artist]:
         # fixme this is supposed to be an iterable of artists
@@ -73,6 +87,7 @@ def create_animation(
             + list(traj_lines.values())
             + list(traj_points.values())
             + list(texts.values())
+            + list(chain.from_iterable(_as_artists(v) for v in goals.values()))
         )
 
     def init_plot() -> Iterable[Artist]:
@@ -112,12 +127,6 @@ def create_animation(
                 bbox=dict(facecolor="lightgreen", alpha=0.5),
                 zorder=ZOrders.TIME_TEXT,
             )
-            # plot shared goals for the initial time
-            try:
-                sim_viz.plot_shared_goals(ax=ax, t=time_begin)
-            except Exception:
-                # don't fail initialization if plotting shared goals fails
-                logger.debug("Failed plotting shared goals at init", exc_info=True)
         return _get_list()
 
     def update_plot(frame: int = 0) -> Iterable[Artist]:
@@ -154,11 +163,19 @@ def create_animation(
                 goal_box = goals[pname] if pname in goals else None
                 goals[pname] = sim_viz.plot_timevarying_goals(ax=ax, player_name=pname, goal_box=goal_box, t=t)
 
-        # update shared goals display for current time
-        try:
-            sim_viz.plot_shared_goals(ax=ax, t=t)
-        except Exception:
-            logger.debug("Failed updating shared goals in frame", exc_info=True)
+        for goal in sim_context.shared_goals_manager.all_goals.values():
+            active = (goal.collection_time >= t)
+            exists = (goal.goal_id in goals)
+
+            if active:
+                if not exists:
+                    artists = sim_viz.plot_shared_goals(ax=ax, goal=goal, t=t)
+                    goals[goal.goal_id] = _as_artists(artists)
+                _set_visible(goals[goal.goal_id], True)
+            else:
+                if exists:
+                    _set_visible(goals[goal.goal_id], False)
+
 
         adjust_axes_limits(
             ax=ax, plot_limits=plot_limits, players_states={p: log_entry.state for p, log_entry in log_at_t.items()}

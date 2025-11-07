@@ -120,53 +120,19 @@ class SimRenderer(SimRendererABC):
 
         return goal_box
 
-    def plot_shared_goals(self, ax: Axes, t: float) -> dict:
-        """Plot shared goals stored in sim_context.shared_goals_manager.
+    def plot_shared_goals(
+        self, ax: Axes, t: float, goal_box: Optional = None, goal: Optional = None, **style_kwargs
+    ) -> Optional[Polygon]:
+        color = "yellow" if t < goal.collection_time else "white"
+        goal_poly: Polygon = goal.polygon
+        if goal_box is None:
+            goal_box = ax.fill([], [], color=color, alpha=0.8, zorder=ZOrders.GOAL, **style_kwargs)[0]
 
-        For each goal in manager.all_goals: if goal.collection_time is not None and
-        goal.collection_time > t, plot it as a yellow polygon; otherwise remove it.
+        outline = tuple(zip(goal_poly.exterior.coords.xy[0], goal_poly.exterior.coords.xy[1]))
+        goal_box.set_xy(outline)
 
-        Returns the mapping goal_id -> patch currently present on the axes.
-        """
-        mgr = getattr(self.sim_context, "shared_goals_manager", None)
-        if mgr is None:
-            return {}
-
-        # store patches on the renderer instance
-        if not hasattr(self, "_shared_goal_patches"):
-            self._shared_goal_patches = {}
-
-        # Add or remove patches based on collection_time
-        # First, ensure patches for current/all goals
-        for goal_id, goal in mgr.all_goals.items():
-            should_plot = goal.collection_time is not None and float(goal.collection_time) > float(t)
-            if should_plot and goal_id not in self._shared_goal_patches:
-                try:
-                    outline = tuple(zip(goal.polygon.exterior.coords.xy[0], goal.polygon.exterior.coords.xy[1]))
-                except Exception:
-                    # fallback to sequence of coords
-                    outline = list(goal.polygon.exterior.coords)
-                patch = Polygon(outline, facecolor="yellow", edgecolor="k", alpha=0.8, zorder=ZOrders.GOAL)
-                ax.add_patch(patch)
-                self._shared_goal_patches[goal_id] = patch
-            elif not should_plot and goal_id in self._shared_goal_patches:
-                patch = self._shared_goal_patches.pop(goal_id)
-                try:
-                    patch.remove()
-                except Exception:
-                    pass
-
-        # Remove patches that belong to goals no longer present
-        removed = [gid for gid in list(getattr(self, "_shared_goal_patches", {}).keys()) if gid not in mgr.all_goals]
-        for gid in removed:
-            patch = self._shared_goal_patches.pop(gid)
-            try:
-                patch.remove()
-            except Exception:
-                pass
-
-        return self._shared_goal_patches
-
+        return goal_box
+    
     def plot_player(
         self,
         ax: Axes,
