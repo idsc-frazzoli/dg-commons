@@ -13,6 +13,7 @@ class SharedPolygonGoal:
     goal_id: str
     polygon: Polygon
     collected_by: Optional[PlayerName] = None
+    collection_time: Optional[float] = None
 
     def is_collected(self) -> bool:
         return self.collected_by is not None
@@ -45,16 +46,15 @@ class SharedPolygonGoalsManager:
         Initialize the shared goals manager.
 
         Args:
-            initial_goals: List of initial shared goals available for collection (used for plotting)
             shared_goals: List of shared goals available for collection
             collection_points: List of collection points for goal delivery
         """
-        self.initial_goals: Dict[str, SharedPolygonGoal] = {g.goal_id: g for g in shared_goals}
+        self.all_goals: Dict[str, SharedPolygonGoal] = {g.goal_id: g for g in shared_goals}
         self.shared_goals: Dict[str, SharedPolygonGoal] = {g.goal_id: g for g in shared_goals}
         self.collection_points: Dict[str, CollectionPoint] = {cp.point_id: cp for cp in collection_points}
         self.agent_carrying: Dict[PlayerName, Optional[str]] = {}  # Maps agent to goal_id they're carrying
 
-    def update(self, agents_states: Dict[PlayerName, PoseState]) -> Dict[str, any]:
+    def update(self, agents_states: Dict[PlayerName, PoseState], simulation_time: float) -> Dict[str, any]:
         """
         Update the state of goals and collection points based on agent positions.
 
@@ -95,6 +95,9 @@ class SharedPolygonGoalsManager:
                     if not goal.is_collected() and goal.polygon.contains(agent_point):
                         # Agent collected this goal
                         goal.collected_by = agent_name
+                        goal.collection_time = simulation_time
+                        self.all_goals[goal_id].collected_by = agent_name
+                        self.all_goals[goal_id].collection_time = simulation_time
                         self.agent_carrying[agent_name] = goal_id
                         events['goals_collected'].append((agent_name, goal_id))
                         break  # Agent can only collect one goal at a time

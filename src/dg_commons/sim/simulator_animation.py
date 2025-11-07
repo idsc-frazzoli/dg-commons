@@ -112,6 +112,12 @@ def create_animation(
                 bbox=dict(facecolor="lightgreen", alpha=0.5),
                 zorder=ZOrders.TIME_TEXT,
             )
+            # plot shared goals for the initial time
+            try:
+                sim_viz.plot_shared_goals(ax=ax, t=time_begin)
+            except Exception:
+                # don't fail initialization if plotting shared goals fails
+                logger.debug("Failed plotting shared goals at init", exc_info=True)
         return _get_list()
 
     def update_plot(frame: int = 0) -> Iterable[Artist]:
@@ -147,6 +153,12 @@ def create_animation(
             if pname in sim_context.missions:
                 goal_box = goals[pname] if pname in goals else None
                 goals[pname] = sim_viz.plot_timevarying_goals(ax=ax, player_name=pname, goal_box=goal_box, t=t)
+
+        # update shared goals display for current time
+        try:
+            sim_viz.plot_shared_goals(ax=ax, t=t)
+        except Exception:
+            logger.debug("Failed updating shared goals in frame", exc_info=True)
 
         adjust_axes_limits(
             ax=ax, plot_limits=plot_limits, players_states={p: log_entry.state for p, log_entry in log_at_t.items()}
