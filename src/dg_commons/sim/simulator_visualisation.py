@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from dataclasses import asdict
 from enum import IntEnum
 from math import inf
-from typing import Sequence, Generic, Optional, List, Union
+from typing import Sequence, Generic, Optional, List, Union, Dict
 
 import numpy as np
 from commonroad.visualization.draw_params import MPDrawParams
@@ -81,6 +81,12 @@ class SimRenderer(SimRendererABC):
         self.commonroad_renderer: MPRenderer = MPRenderer(ax=ax, draw_params=draw_params, *args, **kwargs)
         self.shapely_viz = ShapelyViz(ax=self.commonroad_renderer.ax)
 
+        # dynamic visualization state for shared goals and collection point counters
+        # goal_id -> matplotlib.patches.Polygon (from ax.fill)
+        self._shared_goal_patches: Dict[str, Polygon] = {}
+        # collection_point_id -> matplotlib.text.Text
+        self._collection_point_texts: Dict[str, Text] = {}
+
     @property
     def draw_params(self):
         return self.commonroad_renderer.draw_params
@@ -103,15 +109,77 @@ class SimRenderer(SimRendererABC):
                 except NotImplementedError:
                     pass
         if self.sim_context.shared_goals_manager is not None:
-            for goal in self.sim_context.shared_goals_manager.initial_goals.values():
-                self.shapely_viz.add_shape(
-                    goal.polygon, color="yellow", zorder=ZOrders.GOAL, alpha=0.5
-                )
+            # don't draw initial goals as static shapes (they should disappear when collected)
+            # collection points are static polygons, we draw them and create centered counter texts
             for cp in self.sim_context.shared_goals_manager.collection_points.values():
                 self.shapely_viz.add_shape(
                     cp.polygon, color="green", zorder=ZOrders.GOAL, alpha=0.3
                 )
+                # create a text at the centroid showing delivered count (initially 0)
+                try:
+                    cent = cp.polygon.centroid
+                    txt = self.commonroad_renderer.ax.text(
+                        cent.x,
+                        cent.y,
+                        str(len(cp.collected_goals)),
+                        horizontalalignment="center",
+                        verticalalignment="center",
+                        zorder=ZOrders.GOAL + 1,
+                        fontsize=10,
+                        color="black",
+                    )
+                    self._collection_point_texts[cp.point_id] = txt
+                except Exception:
+                    # defensive: if centroid computation fails, skip text
+                    pass
         yield
+
+    def _update_shared_goals_visuals(self, ax: Axes) -> None:
+        """Ensure available shared goals are shown and collected ones removed.
+
+        This updates/creates polygon patches for currently available goals (from
+        the shared_goals_manager) and removes patches for goals that were collected.
+        """
+        mgr = self.sim_context.shared_goals_manager
+        if mgr is None:
+            return
+
+        # available goals (not collected)
+        available = mgr.get_available_goals()
+        available_ids = {g.goal_id for g in available}
+
+        # remove patches for goals no longer available
+        for gid in list(self._shared_goal_patches.keys()):
+            if gid not in available_ids:
+                try:
+                    patch = self._shared_goal_patches.pop(gid)
+                    patch.remove()
+                except Exception:
+                    pass
+
+        # add or update patches for available goals
+        for g in available:
+            try:
+                outline = tuple(zip(g.polygon.exterior.coords.xy[0], g.polygon.exterior.coords.xy[1]))
+            except Exception:
+                # fallback: try converting geometry
+                try:
+                    outline = tuple(zip(*list(g.polygon.exterior.coords)))
+                except Exception:
+                    continue
+
+            if g.goal_id in self._shared_goal_patches:
+                try:
+                    self._shared_goal_patches[g.goal_id].set_xy(outline)
+                except Exception:
+                    pass
+            else:
+                try:
+                    patch = ax.fill([], [], color="yellow", alpha=0.5, zorder=ZOrders.GOAL)[0]
+                    patch.set_xy(outline)
+                    self._shared_goal_patches[g.goal_id] = patch
+                except Exception:
+                    pass
 
     def plot_timevarying_goals(
         self, ax: Axes, player_name: PlayerName, t: float, goal_box: Optional = None, **style_kwargs
@@ -127,6 +195,36 @@ class SimRenderer(SimRendererABC):
         outline = tuple(zip(goal_poly.exterior.coords.xy[0], goal_poly.exterior.coords.xy[1]))
         goal_box.set_xy(outline)
 
+        # Update shared goals visuals and collection point counters if manager is present
+        if self.sim_context.shared_goals_manager is not None:
+            self._update_shared_goals_visuals(ax=ax)
+            # update collection point counters
+            for cp_id, cp in self.sim_context.shared_goals_manager.collection_points.items():
+                txt = self._collection_point_texts.get(cp_id)
+                if txt is None:
+                    # create text if missing
+                    try:
+                        cent = cp.polygon.centroid
+                        txt = ax.text(
+                            cent.x,
+                            cent.y,
+                            str(len(cp.collected_goals)),
+                            horizontalalignment="center",
+                            verticalalignment="center",
+                            zorder=ZOrders.GOAL + 1,
+                            fontsize=10,
+                            color="black",
+                        )
+                        self._collection_point_texts[cp_id] = txt
+                    except Exception:
+                        continue
+                else:
+                    txt.set_text(str(len(cp.collected_goals)))
+                    try:
+                        cent = cp.polygon.centroid
+                        txt.set_position((cent.x, cent.y))
+                    except Exception:
+                        pass
         return goal_box
 
     def plot_player(
