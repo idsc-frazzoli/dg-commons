@@ -302,7 +302,7 @@ class Simulator:
         """Update shared goals manager if present"""
         if sim_context.shared_goals_manager is not None:
             agents_states = {pn: sim_context.models[pn].get_state() for pn in sim_context.players}
-            events = sim_context.shared_goals_manager.update(agents_states)
+            events = sim_context.shared_goals_manager.update(agents_states, sim_context.time)
             if events['goals_collected']:
                 logger.info(f"Goals collected: {events['goals_collected']}")
                 for agent_name, _ in events['goals_collected']:
