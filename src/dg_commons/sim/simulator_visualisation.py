@@ -80,12 +80,11 @@ class SimRenderer(SimRendererABC):
         self.sim_context = sim_context
         self.commonroad_renderer: MPRenderer = MPRenderer(ax=ax, draw_params=draw_params, *args, **kwargs)
         self.shapely_viz = ShapelyViz(ax=self.commonroad_renderer.ax)
-
-        # dynamic visualization state for shared goals and collection point counters
-        # goal_id -> matplotlib.patches.Polygon (from ax.fill)
-        self._shared_goal_patches: Dict[str, Polygon] = {}
-        # collection_point_id -> matplotlib.text.Text
-        self._collection_point_texts: Dict[str, Text] = {}
+        # runtime visualization state
+        # maps goal_id -> Polygon patch
+        self._shared_goal_patches = {}
+        # maps collection_point_id -> Text
+        self._collection_point_texts = {}
 
     @property
     def draw_params(self):
@@ -101,7 +100,7 @@ class SimRenderer(SimRendererABC):
             self.shapely_viz.add_shape(s_obstacle.shape, color=s_obstacle.geometry.color, zorder=ZOrders.ENV_OBSTACLE)
         for p, goal in self.sim_context.missions.items():
             if goal.is_static:
-                goal_color = self.sim_context.models[p].model_geometry.color
+                goal_color = "yellow"
                 try:
                     self.shapely_viz.add_shape(
                         goal.get_plottable_geometry(), color=goal_color, zorder=ZOrders.GOAL, alpha=0.5
@@ -115,26 +114,9 @@ class SimRenderer(SimRendererABC):
                 self.shapely_viz.add_shape(
                     cp.polygon, color="green", zorder=ZOrders.GOAL, alpha=0.3
                 )
-                # create a text at the centroid showing delivered count (initially 0)
-                try:
-                    cent = cp.polygon.centroid
-                    txt = self.commonroad_renderer.ax.text(
-                        cent.x,
-                        cent.y,
-                        str(len(cp.collected_goals)),
-                        horizontalalignment="center",
-                        verticalalignment="center",
-                        zorder=ZOrders.GOAL + 1,
-                        fontsize=10,
-                        color="black",
-                    )
-                    self._collection_point_texts[cp.point_id] = txt
-                except Exception:
-                    # defensive: if centroid computation fails, skip text
-                    pass
         yield
 
-    def _update_shared_goals_visuals(self, ax: Axes) -> None:
+    def _update_shared_goals_visuals(self, ax: Axes, t: float) -> None:
         """Ensure available shared goals are shown and collected ones removed.
 
         This updates/creates polygon patches for currently available goals (from
@@ -144,8 +126,8 @@ class SimRenderer(SimRendererABC):
         if mgr is None:
             return
 
-        # available goals (not collected)
-        available = mgr.get_available_goals()
+        # available goals
+        available = mgr.get_available_goals(time=t)
         available_ids = {g.goal_id for g in available}
 
         # remove patches for goals no longer available
@@ -181,6 +163,39 @@ class SimRenderer(SimRendererABC):
                 except Exception:
                     pass
 
+        def update_shared_goals_frame(self, ax: Axes, t: float) -> None:
+            """Public helper called once per frame to update shared goals and collection point counters."""
+            self._update_shared_goals_visuals(ax=ax, t=t)
+            mgr = self.sim_context.shared_goals_manager
+            if mgr is None:
+                return
+            for cp_id, cp in mgr.collection_points.items():
+                txt = self._collection_point_texts.get(cp_id)
+                count = len(cp.collected_goals) if cp.collected_goals is not None else 0
+                if txt is None:
+                    try:
+                        cent = cp.polygon.centroid
+                        txt = self.commonroad_renderer.ax.text(
+                            cent.x,
+                            cent.y,
+                            str(count),
+                            horizontalalignment="center",
+                            verticalalignment="center",
+                            zorder=ZOrders.GOAL + 1,
+                            fontsize=10,
+                            color="black",
+                        )
+                        self._collection_point_texts[cp_id] = txt
+                    except Exception:
+                        continue
+                else:
+                    txt.set_text(str(count))
+                    try:
+                        cent = cp.polygon.centroid
+                        txt.set_position((cent.x, cent.y))
+                    except Exception:
+                        pass
+
     def plot_timevarying_goals(
         self, ax: Axes, player_name: PlayerName, t: float, goal_box: Optional = None, **style_kwargs
     ) -> Optional[Polygon]:
@@ -197,7 +212,7 @@ class SimRenderer(SimRendererABC):
 
         # Update shared goals visuals and collection point counters if manager is present
         if self.sim_context.shared_goals_manager is not None:
-            self._update_shared_goals_visuals(ax=ax)
+            self._update_shared_goals_visuals(ax=ax, t=t)
             # update collection point counters
             for cp_id, cp in self.sim_context.shared_goals_manager.collection_points.items():
                 txt = self._collection_point_texts.get(cp_id)

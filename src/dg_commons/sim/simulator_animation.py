@@ -112,10 +112,22 @@ def create_animation(
                 bbox=dict(facecolor="lightgreen", alpha=0.5),
                 zorder=ZOrders.TIME_TEXT,
             )
+            # initialize shared goals and collection point counters for the initial frame
+            if sim_context.shared_goals_manager is not None:
+                try:
+                    sim_viz.update_shared_goals_frame(ax=ax, t=time_begin)
+                except Exception:
+                    pass
         return _get_list()
 
     def update_plot(frame: int = 0) -> Iterable[Artist]:
         t: float = frame * dt / 1000.0
+        # update shared goals and collection point counters once per frame
+        if sim_context.shared_goals_manager is not None:
+            try:
+                sim_viz.update_shared_goals_frame(ax=ax, t=t)
+            except Exception:
+                pass
         log_at_t: Mapping[PlayerName, LogEntry] = sim_context.log.at_interp(t)
         for pname, box_handle in states.items():
             lights_colors: LightsColors = get_lights_colors_from_cmds(log_at_t[pname].commands, t=t)
