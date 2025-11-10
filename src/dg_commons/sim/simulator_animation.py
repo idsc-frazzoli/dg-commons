@@ -57,6 +57,7 @@ def create_animation(
     ax.set_aspect("equal")
     # dictionaries with the handles of the plotting stuff
     states, actions, extra, texts, goals = {}, {}, {}, {}, {}
+    collection_point_texts = {}
     traj_lines, traj_points = {}, {}
     history = {}
     # some parameters
@@ -88,6 +89,7 @@ def create_animation(
             + list(traj_points.values())
             + list(texts.values())
             + list(chain.from_iterable(_as_artists(v) for v in goals.values()))
+            + list(collection_point_texts.values())
         )
 
     def init_plot() -> Iterable[Artist]:
@@ -119,6 +121,18 @@ def create_animation(
                 plot_limits=plot_limits,
                 players_states={p: log_entry.state for p, log_entry in init_log_entry.items()},
             )
+            if getattr(sim_context, "shared_goals_manager", None):
+                for cp_id, cp in sim_context.shared_goals_manager.collection_points.items():
+                    centroid = cp.polygon.centroid
+                    collection_point_texts[cp_id] = ax.text(
+                        centroid.x,
+                        centroid.y,
+                        "0",
+                        ha="center",
+                        va="center",
+                        fontsize=30,
+                        zorder=ZOrders.TIME_TEXT,
+                    )
             texts["time"] = ax.text(
                 0.02,
                 0.96,
@@ -182,6 +196,12 @@ def create_animation(
         )
         texts["time"].set_text(f"t = {t:.1f}s")
         texts["time"].set_transform(ax.transAxes)
+        if getattr(sim_context, "shared_goals_manager", None):
+            for cp_id, cp in sim_context.shared_goals_manager.collection_points.items():
+                if cp_id not in collection_point_texts:
+                    continue
+                collected_until_t = sum(1 for time in cp.collection_times.values() if time is not None and time <= t)
+                collection_point_texts[cp_id].set_text(str(collected_until_t))
         return _get_list()
 
     # Min frame rate is 1 fps

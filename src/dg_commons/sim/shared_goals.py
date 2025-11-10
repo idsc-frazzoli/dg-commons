@@ -25,6 +25,7 @@ class CollectionPoint:
     point_id: str
     polygon: Polygon
     collected_goals: List[str] = field(default_factory=list)
+    collection_times: Dict[str, float] = field(default_factory=dict)
 
 
 class SharedPolygonGoalsManager:
@@ -107,6 +108,7 @@ class SharedPolygonGoalsManager:
                     if collection_point.polygon.contains(agent_point):
                         # Agent delivered the goal
                         collection_point.collected_goals.append(carrying_goal_id)
+                        collection_point.collection_times[carrying_goal_id] = simulation_time
                         self.agent_carrying[agent_name] = None
                         # Mark goal as completed (remove from shared goals or mark as delivered)
                         if carrying_goal_id in self.shared_goals:
