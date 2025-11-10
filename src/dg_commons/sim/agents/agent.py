@@ -1,25 +1,17 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Optional, Any, TypeVar
+from typing import Callable, Optional, Any, TypeVar, Mapping
 
 from dg_commons import DgSampledSequence, U, PlayerName, X
 from dg_commons.sim import SimTime
-from dg_commons.sim.simulator_structures import SimObservations, InitSimObservations
+from dg_commons.sim.simulator_structures import SimObservations, InitSimObservations, InitSimGlobalObservations
 
-__all__ = ["TAgent", "Agent", "NPAgent", "PolicyAgent"]
+__all__ = ["TAgent", "Agent", "NPAgent", "PolicyAgent", "GlobalPlanner"]
 
 TAgent = TypeVar("TAgent", bound="Agent")
 
 
 class Agent(ABC):
     """This provides the abstract interface of an agent"""
-
-    @abstractmethod
-    def on_episode_init(self, init_sim_obs: InitSimObservations):
-        """This method will get called once for each player at the beginning of the simulation"""
-        pass
-
-    # todo make this agent be able to take a map, static obstacles and a goal
-    # a DgScenario object? or simply pass them via the init method?!
 
     @abstractmethod
     def get_commands(self, sim_obs: SimObservations) -> U:
@@ -67,3 +59,13 @@ class PolicyAgent(Agent):
     def get_commands(self, sim_obs: SimObservations) -> U:
         my_state: X = sim_obs.players[self.my_name]
         return self.policy(my_state)
+    
+
+class GlobalPlanner(ABC):
+    """
+    Global planner with the observation of all the agents used for the initial planning
+    """
+
+    def on_episode_init(self, init_sim_obs: InitSimGlobalObservations, players: Mapping[PlayerName, Agent]):
+        """This method will get called once for each player at the beginning of the simulation"""
+        pass

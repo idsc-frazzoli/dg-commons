@@ -8,14 +8,14 @@ from typing import Mapping, MutableMapping, Optional
 
 from dg_commons import PlayerName, U, fd
 from dg_commons.sim import CollisionReport, SimTime, logger
-from dg_commons.sim.agents.agent import Agent, TAgent
+from dg_commons.sim.agents.agent import Agent, TAgent, GlobalPlanner
 from dg_commons.sim.collision_utils import CollisionException
 from dg_commons.sim.goals import PlanningGoal, TPlanningGoal
 from dg_commons.sim.models.obstacles_dyn import DynObstacleModel
 from dg_commons.sim.scenarios.structures import DgScenario
 from dg_commons.sim.sim_perception import IdObsFilter, ObsFilter
 from dg_commons.sim.simulator_structures import *
-from dg_commons.sim.simulator_structures import InitSimObservations
+from dg_commons.sim.simulator_structures import InitSimObservations, InitSimGlobalObservations
 from dg_commons.sim.shared_goals import SharedPolygonGoalsManager
 from dg_commons.time import time_function
 
@@ -33,6 +33,8 @@ class SimContext:
     """The simulation models for each player"""
     players: MutableMapping[PlayerName, TAgent]
     """The players in the simulation (Agents mapping observations to commands)"""
+    global_planner: GlobalPlanner 
+    "Optional global planner for on_episode_init"
     param: SimParameters
     """The simulation parameters"""
     missions: Mapping[PlayerName, TPlanningGoal] = field(default_factory=dict)
@@ -86,18 +88,24 @@ class Simulator:
     def run(self, sim_context: SimContext):
         logger.info("~~~~~> Beginning simulation")
         # initialize the simulation
+        init_obs = {}
         for player_name, player in sim_context.players.items():
-            scenario = deepcopy(sim_context.dg_scenario)
-            init_obs = InitSimObservations(
+            init_obs[player_name] = InitSimObservations(
                 my_name=player_name,
                 seed=sim_context.seed,
-                dg_scenario=scenario,
                 goal=deepcopy(sim_context.missions.get(player_name)),
                 model_geometry=sim_context.models[player_name].model_geometry,
                 model_params=sim_context.models[player_name].model_params,
             )
-            player.on_episode_init(init_obs)
             self.simlogger[player_name] = PlayerLogger()
+        scenario = deepcopy(sim_context.dg_scenario)
+        init_global_obs = InitSimGlobalObservations(
+            players_obs=init_obs,
+            seed=sim_context.seed,
+            dg_scenario=scenario,
+            shared_goals_manager=sim_context.shared_goals_manager
+        )
+        sim_context.global_planner.on_episode_init(init_global_obs, sim_context.players)
         # actual simulation loop
         while not sim_context.sim_terminated:
             self.pre_update(sim_context)

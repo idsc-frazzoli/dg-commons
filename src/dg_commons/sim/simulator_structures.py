@@ -13,6 +13,7 @@ from dg_commons.sim import SimTime, ImpactLocation
 from dg_commons.sim.goals import TPlanningGoal
 from dg_commons.sim.models.model_structures import ModelType, TModelGeometry, TModelParameters
 from dg_commons.sim.scenarios import DgScenario
+from dg_commons.sim.shared_goals import SharedPolygonGoalsManager
 
 __all__ = [
     "SimObservations",
@@ -25,6 +26,7 @@ __all__ = [
     "PlayerLogger",
     "PlayerObservations",
     "SharedGoalObservation",
+    "InitSimGlobalObservations",
 ]
 
 
@@ -71,6 +73,16 @@ class InitSimObservations:
     goal: Optional[TPlanningGoal] = None
     model_geometry: Optional[TModelGeometry] = None
     model_params: Optional[TModelParameters] = None
+
+
+@dataclass(frozen=True)
+class InitSimGlobalObservations:
+    """The observations passed to the simulator on episode init"""
+
+    players_obs: Mapping[PlayerName, InitSimObservations]
+    seed: int
+    dg_scenario: Optional[DgScenario] = None
+    shared_goals_manager: Optional[SharedPolygonGoalsManager] = None
 
 
 @dataclass(frozen=True)
