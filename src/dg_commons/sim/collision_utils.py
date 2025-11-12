@@ -45,7 +45,10 @@ def _find_intersection_points(a_shape: Polygon, b_shape: BaseGeometry) -> list[t
             f"Try a smaller physics step for improved accuracy."
         )
         # this could still lead to some ill-posed cases
-        points = list(int_shape.exterior.coords[:-1])
+        if isinstance(int_shape, Polygon):
+            points = list(int_shape.exterior.coords[:-1])
+        elif isinstance(int_shape, LineString):
+            points = list(int_shape.coords)
     else:
         raise CollisionException(f"Unable to handle intersection shape: {int_shape}")
 

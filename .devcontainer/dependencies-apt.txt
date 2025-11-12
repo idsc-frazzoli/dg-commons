@@ -1,0 +1,23 @@
+#curl
+build-essential
+cmake
+ffmpeg
+
+# for arm64
+gdal-bin
+libgdal-dev
+libeigen3-dev
+libboost-dev
+libboost-thread-dev
+libboost-test-dev
+libboost-filesystem-dev
+libomp-dev
+libcgal-dev
+libffi-dev
+
+libsuitesparse-dev
+libc6-dev
+libopenblas-dev
+libatlas-base-dev
+libblas-dev
+liblapack-dev
