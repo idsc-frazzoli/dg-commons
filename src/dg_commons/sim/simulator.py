@@ -83,7 +83,8 @@ class Simulator:
     last_get_commands_ts: SimTime = SimTime("-Infinity")
     last_commands: dict[PlayerName, U] = {}
     simlogger: dict[PlayerName, PlayerLogger] = {}
-
+    disabled_players: list[PlayerName] = []
+    """List of players that have been disabled due to collisions"""
     @time_function
     def run(self, sim_context: SimContext):
         logger.info("~~~~~> Beginning simulation")
@@ -167,6 +168,8 @@ class Simulator:
             state = sim_context.models[player_name].get_state()
             self.simlogger[player_name].states.add(t=t, v=state)
             if self._need_to_update_commands(sim_context):
+                if player_name in self.disabled_players:
+                    continue
                 p_observations = sim_context.sensors[player_name].sense(
                     sim_context.dg_scenario, self.last_observations, player_name
                 )
@@ -197,6 +200,8 @@ class Simulator:
         # update shared goals manager
         if sim_context.shared_goals_manager is not None:
             self._update_shared_goals_manager(sim_context)
+        # update disabled players
+        self._update_disabled_players(sim_context)
         # check if the simulation is over
         self._maybe_terminate_simulation(sim_context)
         if sim_context.sim_terminated:
@@ -226,9 +231,17 @@ class Simulator:
 
         # Check if all objects have been collected and delivered
         if sim_context.shared_goals_manager is not None:
-            if sim_context.shared_goals_manager.is_all_goals_collected():
+            if sim_context.shared_goals_manager.is_all_goals_delivered():
                 termination_condition = True
-
+        # Check if all players have collided
+        has_uncollided_players = False
+        for model in sim_context.models.values():
+            if not model.has_collided:
+                has_uncollided_players = True
+                break
+        if not has_uncollided_players:
+            termination_condition = True
+        
         sim_context.sim_terminated = termination_condition
 
     @staticmethod
@@ -306,6 +319,14 @@ class Simulator:
                     self.simlogger[p].states.add(t=t, v=p_state)
                     sim_context.players.pop(p)
 
+    def _update_disabled_players(self, sim_context: SimContext):
+        """We update the list of disabled players"""
+        for pname, pmodel in sim_context.models.items():
+            if pmodel.has_collided:
+                if pname not in self.disabled_players:
+                    self.disabled_players.append(pname)
+                    logger.info(f"Player {pname} has been disabled due to collision")
+    
     @staticmethod
     def _ensure_agent_within_capacity(agent: Agent, player_name: PlayerName) -> None:
         """Verify that an agent does not exceed its declared capacity."""

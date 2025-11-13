@@ -134,10 +134,10 @@ class SharedPolygonGoalsManager:
         """Get the goal_id that an agent is currently carrying, if any"""
         return self.agent_carrying.get(agent_name)
 
-    def get_total_goals_collected(self) -> int:
+    def get_total_goals_delivered(self) -> int:
         """Get total number of goals that have been delivered to collection points"""
         return sum(len(cp.collected_goals) for cp in self.collection_points.values())
 
-    def is_all_goals_collected(self) -> bool:
+    def is_all_goals_delivered(self) -> bool:
         """Check if all goals have been delivered to collection points"""
         return len(self.shared_goals) == 0
