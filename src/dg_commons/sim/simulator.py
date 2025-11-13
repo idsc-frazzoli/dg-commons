@@ -96,6 +96,7 @@ class Simulator:
                 goal=deepcopy(sim_context.missions.get(player_name)),
                 model_geometry=sim_context.models[player_name].model_geometry,
                 model_params=sim_context.models[player_name].model_params,
+                initial_state=sim_context.models[player_name].get_state()
             )
             self.simlogger[player_name] = PlayerLogger()
         scenario = deepcopy(sim_context.dg_scenario)
@@ -103,7 +104,8 @@ class Simulator:
             players_obs=init_obs,
             seed=sim_context.seed,
             dg_scenario=scenario,
-            shared_goals_manager=sim_context.shared_goals_manager
+            goals=sim_context.shared_goals_manager.all_goals,
+            collection_points=sim_context.shared_goals_manager.collection_points
         )
         sim_context.global_planner.on_episode_init(init_global_obs, sim_context.players)
         # actual simulation loop
