@@ -67,6 +67,7 @@ class ZOrders(IntEnum):
     ENV_OBSTACLE = 32
     LIGHTS = 34
     MODEL = 35
+    OBJECT = 36
     PLAYER_NAME = 40
     TRAJECTORY = 45
     TRAJECTORY_MARKER = 46
@@ -106,35 +107,15 @@ class SimRenderer(SimRendererABC):
                     pass
         yield
 
-    def plot_timevarying_goals(
-        self, ax: Axes, player_name: PlayerName, t: float, goal_box: Optional = None, **style_kwargs
-    ) -> Optional[Polygon]:
-        goal = self.sim_context.missions[player_name]
-        if goal.is_static:
-            return None
-        color = self.sim_context.models[player_name].model_geometry.color
-        goal_poly: SPolygon = goal.get_plottable_geometry(t)
-        if goal_box is None:
-            goal_box = ax.fill([], [], color=color, alpha=0.8, zorder=ZOrders.GOAL, **style_kwargs)[0]
+    def plot_shapely_polygon(
+        self, ax: Axes, spolygon: SPolygon, artist: Optional[Polygon] = None, **style_kwargs
+    ) -> Polygon:
+        if artist is None:
+            artist = ax.fill([], [], **style_kwargs)[0]
+        outline = tuple(zip(spolygon.exterior.coords.xy[0], spolygon.exterior.coords.xy[1]))
+        artist.set_xy(outline)
+        return artist
 
-        outline = tuple(zip(goal_poly.exterior.coords.xy[0], goal_poly.exterior.coords.xy[1]))
-        goal_box.set_xy(outline)
-
-        return goal_box
-
-    def plot_shared_goals(
-        self, ax: Axes, t: float, goal_box: Optional = None, goal: Optional = None, **style_kwargs
-    ) -> Optional[Polygon]:
-        color = "yellow" if t < goal.collection_time else "white"
-        goal_poly: Polygon = goal.polygon
-        if goal_box is None:
-            goal_box = ax.fill([], [], color=color, alpha=0.8, zorder=ZOrders.GOAL, **style_kwargs)[0]
-
-        outline = tuple(zip(goal_poly.exterior.coords.xy[0], goal_poly.exterior.coords.xy[1]))
-        goal_box.set_xy(outline)
-
-        return goal_box
-    
     def plot_player(
         self,
         ax: Axes,
@@ -547,9 +528,7 @@ def plot_satellite(
     satellite_poly[0].set_xy(outline_xy)
     satellite_poly[1].set_position((x4, y4))
     # thrusters
-    thrusters_outline = np.array(
-        [transform_xy(q, t_outline) for t_outline in rg.thrusters_outline_in_body_frame()]
-    )
+    thrusters_outline = np.array([transform_xy(q, t_outline) for t_outline in rg.thrusters_outline_in_body_frame()])
     for t_idx, thruster in enumerate(satellite_poly[2 : 2 + rg.n_thrusters]):
         xy_poly = thrusters_outline[t_idx]
         thruster.set_xy(xy_poly)
@@ -563,6 +542,7 @@ def plot_satellite(
         flame.set_xy(xy_poly)
 
     return satellite_poly
+
 
 def plot_spaceship(
     ax: Axes,

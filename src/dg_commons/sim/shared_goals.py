@@ -10,10 +10,12 @@ from geometry import translation_from_SE2
 @dataclass
 class SharedPolygonGoal:
     """Represents a shared goal that can be collected by any agent"""
+
     goal_id: str
     polygon: Polygon
     collected_by: Optional[PlayerName] = None
     collection_time: Optional[float] = None
+    delivery_time: Optional[float] = None
 
     def is_collected(self) -> bool:
         return self.collected_by is not None
@@ -22,6 +24,7 @@ class SharedPolygonGoal:
 @dataclass
 class CollectionPoint:
     """Represents a collection point where goals should be delivered"""
+
     point_id: str
     polygon: Polygon
     collected_goals: List[str] = field(default_factory=list)
@@ -72,8 +75,8 @@ class SharedPolygonGoalsManager:
             - 'goals_delivered': List of (agent_name, goal_id, collection_point_id) tuples
         """
         events = {
-            'goals_collected': [],
-            'goals_delivered': [],
+            "goals_collected": [],
+            "goals_delivered": [],
         }
 
         # Initialize agent carrying state if not present
@@ -100,7 +103,7 @@ class SharedPolygonGoalsManager:
                         self.all_goals[goal_id].collected_by = agent_name
                         self.all_goals[goal_id].collection_time = simulation_time
                         self.agent_carrying[agent_name] = goal_id
-                        events['goals_collected'].append((agent_name, goal_id))
+                        events["goals_collected"].append((agent_name, goal_id))
                         break  # Agent can only collect one goal at a time
             else:
                 # Agent is carrying a goal - check for delivery at collection points
@@ -109,11 +112,12 @@ class SharedPolygonGoalsManager:
                         # Agent delivered the goal
                         collection_point.collected_goals.append(carrying_goal_id)
                         collection_point.collection_times[carrying_goal_id] = simulation_time
+                        self.all_goals[carrying_goal_id].delivery_time = simulation_time
                         self.agent_carrying[agent_name] = None
                         # Mark goal as completed (remove from shared goals or mark as delivered)
                         if carrying_goal_id in self.shared_goals:
                             del self.shared_goals[carrying_goal_id]
-                        events['goals_delivered'].append((agent_name, carrying_goal_id, cp_id))
+                        events["goals_delivered"].append((agent_name, carrying_goal_id, cp_id))
                         break  # Agent can only deliver to one point at a time
 
         return events
