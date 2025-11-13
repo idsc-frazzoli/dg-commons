@@ -100,12 +100,18 @@ class Simulator:
             )
             self.simlogger[player_name] = PlayerLogger()
         scenario = deepcopy(sim_context.dg_scenario)
+        if sim_context.shared_goals_manager is not None:
+            goals = sim_context.shared_goals_manager.all_goals
+            collection_points = sim_context.shared_goals_manager.collection_points
+        else:
+            goals = None
+            collection_points = None
         init_global_obs = InitSimGlobalObservations(
             players_obs=init_obs,
             seed=sim_context.seed,
             dg_scenario=scenario,
-            goals=sim_context.shared_goals_manager.all_goals,
-            collection_points=sim_context.shared_goals_manager.collection_points
+            goals=goals,
+            collection_points=collection_points
         )
         sim_context.global_planner.on_episode_init(init_global_obs, sim_context.players)
         # actual simulation loop
@@ -189,7 +195,8 @@ class Simulator:
         # after all the computations advance simulation time
         sim_context.time += sim_context.param.dt
         # update shared goals manager
-        self._update_shared_goals_manager(sim_context)
+        if sim_context.shared_goals_manager is not None:
+            self._update_shared_goals_manager(sim_context)
         # check if the simulation is over
         self._maybe_terminate_simulation(sim_context)
         if sim_context.sim_terminated:
@@ -315,17 +322,16 @@ class Simulator:
     @staticmethod
     def _update_shared_goals_manager(sim_context: SimContext):
         """Update shared goals manager if present"""
-        if sim_context.shared_goals_manager is not None:
-            agents_states = {pn: sim_context.models[pn].get_state() for pn in sim_context.players}
-            events = sim_context.shared_goals_manager.update(agents_states, sim_context.time)
-            if events['goals_collected']:
-                logger.info(f"Goals collected: {events['goals_collected']}")
-                for agent_name, _ in events['goals_collected']:
-                    sim_context.players[agent_name].grab_goal()
-            if events['goals_delivered']:
-                logger.info(f"Goals delivered: {events['goals_delivered']}")
-                for agent_name, _, _ in events['goals_delivered']:
-                    sim_context.players[agent_name].deliver_goal()
+        agents_states = {pn: sim_context.models[pn].get_state() for pn in sim_context.players}
+        events = sim_context.shared_goals_manager.update(agents_states, sim_context.time)
+        if events['goals_collected']:
+            logger.info(f"Goals collected: {events['goals_collected']}")
+            for agent_name, _ in events['goals_collected']:
+                sim_context.players[agent_name].grab_goal()
+        if events['goals_delivered']:
+            logger.info(f"Goals delivered: {events['goals_delivered']}")
+            for agent_name, _, _ in events['goals_delivered']:
+                sim_context.players[agent_name].deliver_goal()
 
     def _need_to_update_commands(self, sim_context: SimContext) -> bool:
         """Checks if we need to update the commands of the players"""
