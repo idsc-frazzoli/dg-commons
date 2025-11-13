@@ -14,8 +14,8 @@ from dg_commons.sim.goals import PlanningGoal, TPlanningGoal
 from dg_commons.sim.models.obstacles_dyn import DynObstacleModel
 from dg_commons.sim.scenarios.structures import DgScenario
 from dg_commons.sim.sim_perception import IdObsFilter, ObsFilter
+
 from dg_commons.sim.simulator_structures import *
-from dg_commons.sim.simulator_structures import InitSimObservations, InitSimGlobalObservations
 from dg_commons.sim.shared_goals import SharedPolygonGoalsManager
 from dg_commons.time import time_function
 
