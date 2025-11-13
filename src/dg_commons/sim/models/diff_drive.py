@@ -202,10 +202,11 @@ class DiffDriveModel(SimModel[DiffDriveState, DiffDriveCommands]):
         return [0, 0], 0
 
     def set_velocity(self, vel: T2value, omega: float, in_model_frame: bool):
-        logger.warn(
-            "It is NOT possible to set the lateral and rotational velocity for the Differential Drive model\n"
-            "Try using a dynamic model."
-        )
+        # logger.warn(
+        #     "It is NOT possible to set the lateral and rotational velocity for the Differential Drive model\n"
+        #     "Try using a dynamic model."
+        # )
+        pass
 
     @property
     def model_type(self) -> ModelType:

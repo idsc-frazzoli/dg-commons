@@ -58,7 +58,7 @@ def create_animation(
     ax.set_aspect("equal")
     # dictionaries with the handles of the plotting stuff
     states, actions, extra, texts, goals, collection_points = {}, {}, {}, {}, {}, {}
-    collection_point_texts = {}
+    goal_texts, collection_point_texts = {}, {}
     traj_lines, traj_points = {}, {}
     history = {}
     # some parameters
@@ -91,6 +91,7 @@ def create_animation(
             + list(texts.values())
             # + list(chain.from_iterable(_as_artists(v) for v in goals.values()))
             + list(goals.values())
+            + list(goal_texts.values())
             + list(collection_point_texts.values())
             + list(collection_points.values())
         )
@@ -188,7 +189,17 @@ def create_animation(
                     # goal hasn't been collected yet
                     if not (goal_id in goals):
                         goals[goal_id] = sim_viz.plot_shapely_polygon(ax=ax, spolygon=goal.polygon, color="yellow", zorder=ZOrders.OBJECT)
+                        goal_texts[goal_id] = ax.text(
+                        goal.polygon.centroid.x,
+                        goal.polygon.centroid.y,
+                        goal_id,
+                        ha="center",
+                        va="center",
+                        fontsize=10,
+                        zorder=ZOrders.TIME_TEXT,
+                    )
                     _set_visible(goals[goal_id], True)
+                    _set_visible(goal_texts[goal_id], True)
                 elif t < delivery_time:
                     # goal is being delivered, move with the agent
                     if goal.collected_by is not None:
@@ -198,6 +209,7 @@ def create_animation(
                         translation = [agent_position[0] - goal_position[0], agent_position[1] - goal_position[1]]
                         moving_goal = translate(goal.polygon, xoff=translation[0], yoff=translation[1])
                         sim_viz.plot_shapely_polygon(ax=ax, spolygon=moving_goal, artist=goals[goal_id])
+                    _set_visible(goal_texts[goal_id], False)
                 else:
                     # goal has been delivered
                     _set_visible(goals[goal_id], False)
