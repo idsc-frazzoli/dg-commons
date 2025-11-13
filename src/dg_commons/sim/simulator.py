@@ -33,7 +33,7 @@ class SimContext:
     """The simulation models for each player"""
     players: MutableMapping[PlayerName, TAgent]
     """The players in the simulation (Agents mapping observations to commands)"""
-    global_planner: GlobalPlanner 
+    global_planner: GlobalPlanner
     "Optional global planner for on_episode_init"
     param: SimParameters
     """The simulation parameters"""
@@ -85,6 +85,7 @@ class Simulator:
     simlogger: dict[PlayerName, PlayerLogger] = {}
     disabled_players: list[PlayerName] = []
     """List of players that have been disabled due to collisions"""
+
     @time_function
     def run(self, sim_context: SimContext):
         logger.info("~~~~~> Beginning simulation")
@@ -97,7 +98,7 @@ class Simulator:
                 goal=deepcopy(sim_context.missions.get(player_name)),
                 model_geometry=sim_context.models[player_name].model_geometry,
                 model_params=sim_context.models[player_name].model_params,
-                initial_state=sim_context.models[player_name].get_state()
+                initial_state=sim_context.models[player_name].get_state(),
             )
             self.simlogger[player_name] = PlayerLogger()
         scenario = deepcopy(sim_context.dg_scenario)
@@ -112,7 +113,7 @@ class Simulator:
             seed=sim_context.seed,
             dg_scenario=scenario,
             goals=goals,
-            collection_points=collection_points
+            collection_points=collection_points,
         )
         sim_context.global_planner.on_episode_init(init_global_obs, sim_context.players)
         # actual simulation loop
@@ -151,7 +152,7 @@ class Simulator:
                 self.last_observations,
                 players=fd(players_observations),
                 time=sim_context.time,
-                available_goals=fd(available_goals_obs) if available_goals_obs else None
+                available_goals=fd(available_goals_obs) if available_goals_obs else None,
             )
 
             logger.debug(f"Pre update function, sim time {sim_context.time}")
@@ -200,8 +201,6 @@ class Simulator:
         # update shared goals manager
         if sim_context.shared_goals_manager is not None:
             self._update_shared_goals_manager(sim_context)
-        # update disabled players
-        self._update_disabled_players(sim_context)
         # check if the simulation is over
         self._maybe_terminate_simulation(sim_context)
         if sim_context.sim_terminated:
@@ -209,6 +208,8 @@ class Simulator:
         # collision checking
         _ = self._check_collisions_with_environment(sim_context)
         _ = self._check_collisions_among_players(sim_context)
+        # update disabled players
+        self._update_disabled_players(sim_context)
         return
 
     @staticmethod
@@ -241,7 +242,7 @@ class Simulator:
                 break
         if not has_uncollided_players:
             termination_condition = True
-        
+
         sim_context.sim_terminated = termination_condition
 
     @staticmethod
@@ -254,7 +255,9 @@ class Simulator:
         env_obstacles = sim_context.dg_scenario.strtree_obstacles
         collision = False
         for p in sim_context.players:
-            if isinstance(sim_context.models[p], DynObstacleModel) and (sim_context.models[p].tag == "asteroid" or sim_context.models[p].tag == "satellite"):
+            if isinstance(sim_context.models[p], DynObstacleModel) and (
+                sim_context.models[p].tag == "asteroid" or sim_context.models[p].tag == "satellite"
+            ):
                 # dynamic obstacles that impact everywhere do not collide with the environment
                 continue
             p_model = sim_context.models[p]
@@ -290,7 +293,12 @@ class Simulator:
 
         collision = False
         for p1, p2 in combinations(sim_context.players, 2):
-            if isinstance(sim_context.models[p1], DynObstacleModel) and isinstance(sim_context.models[p2], DynObstacleModel) and sim_context.models[p1].tag == "asteroid" and sim_context.models[p2].tag == "asteroid":
+            if (
+                isinstance(sim_context.models[p1], DynObstacleModel)
+                and isinstance(sim_context.models[p2], DynObstacleModel)
+                and sim_context.models[p1].tag == "asteroid"
+                and sim_context.models[p2].tag == "asteroid"
+            ):
                 continue
             a_shape = sim_context.models[p1].get_footprint()
             b_shape = sim_context.models[p2].get_footprint()
@@ -325,8 +333,8 @@ class Simulator:
             if pmodel.has_collided:
                 if pname not in self.disabled_players:
                     self.disabled_players.append(pname)
-                    logger.info(f"Player {pname} has been disabled due to collision")
-    
+                    logger.info(f"Player {pname} has been disabled due to collision at time {sim_context.time:.2f}s")
+
     @staticmethod
     def _ensure_agent_within_capacity(agent: Agent, player_name: PlayerName) -> None:
         """Verify that an agent does not exceed its declared capacity."""
@@ -336,22 +344,20 @@ class Simulator:
             current_load = get_current_load()
             capacity = get_capacity()
             if current_load > capacity:
-                raise RuntimeError(
-                    f"Agent '{player_name}' load {current_load} exceeds capacity {capacity}"
-                )
+                raise RuntimeError(f"Agent '{player_name}' load {current_load} exceeds capacity {capacity}")
 
     @staticmethod
     def _update_shared_goals_manager(sim_context: SimContext):
         """Update shared goals manager if present"""
         agents_states = {pn: sim_context.models[pn].get_state() for pn in sim_context.players}
         events = sim_context.shared_goals_manager.update(agents_states, sim_context.time)
-        if events['goals_collected']:
-            logger.info(f"Goals collected: {events['goals_collected']}")
-            for agent_name, _ in events['goals_collected']:
+        if events["goals_collected"]:
+            logger.info(f"Goals collected: {events['goals_collected']} at time {sim_context.time:.2f}s")
+            for agent_name, _ in events["goals_collected"]:
                 sim_context.players[agent_name].grab_goal()
-        if events['goals_delivered']:
-            logger.info(f"Goals delivered: {events['goals_delivered']}")
-            for agent_name, _, _ in events['goals_delivered']:
+        if events["goals_delivered"]:
+            logger.info(f"Goals delivered: {events['goals_delivered']} at time {sim_context.time:.2f}s")
+            for agent_name, _, _ in events["goals_delivered"]:
                 sim_context.players[agent_name].deliver_goal()
 
     def _need_to_update_commands(self, sim_context: SimContext) -> bool:

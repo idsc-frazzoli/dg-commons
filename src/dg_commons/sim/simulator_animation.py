@@ -71,13 +71,13 @@ def create_animation(
         if isinstance(x, (list, tuple)):
             return list(x)
         return [x]
-    
+
     def _set_visible(artists, vis: bool):
-            for a in _as_artists(artists):
-                try:
-                    a.set_visible(vis)
-                except Exception:
-                    pass
+        for a in _as_artists(artists):
+            try:
+                a.set_visible(vis)
+            except Exception:
+                pass
 
     # self.f.set_size_inches(*fig_size)
     def _get_list() -> list[Artist]:
@@ -127,7 +127,9 @@ def create_animation(
             )
             if getattr(sim_context, "shared_goals_manager", None):
                 for cp_id, cp in sim_context.shared_goals_manager.collection_points.items():
-                    collection_points[cp_id] = sim_viz.plot_shapely_polygon(ax=ax, spolygon=cp.polygon, color="blue", alpha=0.5, zorder=ZOrders.GOAL)
+                    collection_points[cp_id] = sim_viz.plot_shapely_polygon(
+                        ax=ax, spolygon=cp.polygon, color="blue", alpha=0.5, zorder=ZOrders.GOAL
+                    )
                     centroid = cp.polygon.centroid
                     collection_point_texts[cp_id] = ax.text(
                         centroid.x,
@@ -183,21 +185,23 @@ def create_animation(
             #     goals[pname] = sim_viz.plot_timevarying_goals(ax=ax, player_name=pname, goal_box=goal_box, t=t)
         if sim_context.shared_goals_manager is not None:
             for goal_id, goal in sim_context.shared_goals_manager.all_goals.items():
-                collection_time = goal.collection_time if goal.collection_time is not None else float('inf')
-                delivery_time = goal.delivery_time if goal.delivery_time is not None else float('inf')        
+                collection_time = goal.collection_time if goal.collection_time is not None else float("inf")
+                delivery_time = goal.delivery_time if goal.delivery_time is not None else float("inf")
                 if t < collection_time:
                     # goal hasn't been collected yet
                     if not (goal_id in goals):
-                        goals[goal_id] = sim_viz.plot_shapely_polygon(ax=ax, spolygon=goal.polygon, color="yellow", zorder=ZOrders.OBJECT)
+                        goals[goal_id] = sim_viz.plot_shapely_polygon(
+                            ax=ax, spolygon=goal.polygon, color="yellow", zorder=ZOrders.OBJECT
+                        )
                         goal_texts[goal_id] = ax.text(
-                        goal.polygon.centroid.x,
-                        goal.polygon.centroid.y,
-                        goal_id,
-                        ha="center",
-                        va="center",
-                        fontsize=10,
-                        zorder=ZOrders.TIME_TEXT,
-                    )
+                            goal.polygon.centroid.x,
+                            goal.polygon.centroid.y,
+                            goal_id,
+                            ha="center",
+                            va="center",
+                            fontsize=10,
+                            zorder=ZOrders.TIME_TEXT,
+                        )
                     _set_visible(goals[goal_id], True)
                     _set_visible(goal_texts[goal_id], True)
                 elif t < delivery_time:
@@ -222,14 +226,16 @@ def create_animation(
         adjust_axes_limits(
             ax=ax, plot_limits=plot_limits, players_states={p: log_entry.state for p, log_entry in log_at_t.items()}
         )
-        texts["time"].set_text(f"t = {t:.1f}s")
+        texts["time"].set_text(f"t = {t:.2f}s")
         texts["time"].set_transform(ax.transAxes)
-            
+
         return _get_list()
 
     # Min frame rate is 1 fps
     dt = min(1000.0, dt)
-    frame_count: int = int(float(time_end - time_begin) // (dt / 1000.0))
+    frame_count: int = int(
+        np.ceil(float(time_end - time_begin) / (dt / 1000.0)) + 1
+    )  # add buffer to ensure all simulation steps are visualized
     plt.ioff()
     # Interval determines the duration of each frame in ms
     anim = FuncAnimation(fig=fig, func=update_plot, init_func=init_plot, frames=frame_count, blit=True, interval=dt)
