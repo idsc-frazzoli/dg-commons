@@ -184,7 +184,8 @@ def create_animation(
             #     goal_box = goals[pname] if pname in goals else None
             #     goals[pname] = sim_viz.plot_timevarying_goals(ax=ax, player_name=pname, goal_box=goal_box, t=t)
         if sim_context.shared_goals_manager is not None:
-            for goal_id, goal in sim_context.shared_goals_manager.all_goals.items():
+            goal_manager = sim_context.shared_goals_manager
+            for goal_id, goal in goal_manager.all_goals.items():
                 collection_time = goal.collection_time if goal.collection_time is not None else float("inf")
                 delivery_time = goal.delivery_time if goal.delivery_time is not None else float("inf")
                 if t < collection_time:
@@ -217,10 +218,10 @@ def create_animation(
                 else:
                     # goal has been delivered
                     _set_visible(goals[goal_id], False)
-            for cp_id, cp in sim_context.shared_goals_manager.collection_points.items():
+            for cp_id, cp in goal_manager.collection_points.items():
                 if cp_id not in collection_point_texts:
                     continue
-                collected_until_t = sum(1 for time in cp.collection_times.values() if time is not None and time <= t)
+                collected_until_t = sum(1 for goal_id in cp.collected_goals if goal_manager.all_goals[goal_id].delivery_time <= t)
                 collection_point_texts[cp_id].set_text(str(collected_until_t))
 
         adjust_axes_limits(

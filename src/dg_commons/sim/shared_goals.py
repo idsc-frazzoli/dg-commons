@@ -28,7 +28,6 @@ class CollectionPoint:
     point_id: str
     polygon: Polygon
     collected_goals: List[str] = field(default_factory=list)
-    collection_times: Dict[str, float] = field(default_factory=dict)
 
 
 class SharedPolygonGoalsManager:
@@ -111,7 +110,6 @@ class SharedPolygonGoalsManager:
                     if collection_point.polygon.contains(agent_point):
                         # Agent delivered the goal
                         collection_point.collected_goals.append(carrying_goal_id)
-                        collection_point.collection_times[carrying_goal_id] = simulation_time
                         self.all_goals[carrying_goal_id].delivery_time = simulation_time
                         self.agent_carrying[agent_name] = None
                         # Mark goal as completed (remove from shared goals or mark as delivered)
@@ -137,6 +135,15 @@ class SharedPolygonGoalsManager:
     def get_total_goals_delivered(self) -> int:
         """Get total number of goals that have been delivered to collection points"""
         return sum(len(cp.collected_goals) for cp in self.collection_points.values())
+
+    def get_goals_delivered_by_agent(self, agent_name: PlayerName) -> list[str]:
+        """Get total number of goals that have been delivered by an agent"""
+        return [
+            goal_id
+            for cp in self.collection_points.values()
+            for goal_id in cp.collected_goals
+            if self.all_goals[goal_id].collected_by == agent_name
+        ]
 
     def is_all_goals_delivered(self) -> bool:
         """Check if all goals have been delivered to collection points"""
