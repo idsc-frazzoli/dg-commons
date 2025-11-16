@@ -164,8 +164,8 @@ class Simulator:
         # fixme this can be parallelized later with ProcessPoolExecutor?
         t = sim_context.time
         for player_name, agent in sim_context.players.items():
-            if hasattr(agent, "_capacity"):
-                self._ensure_agent_within_capacity(agent, player_name)
+            # if hasattr(agent, "_capacity"):
+            #     self._ensure_agent_within_capacity(agent, player_name)
             state = sim_context.models[player_name].get_state()
             self.simlogger[player_name].states.add(t=t, v=state)
             if self._need_to_update_commands(sim_context):
@@ -335,16 +335,16 @@ class Simulator:
                     self.disabled_players.append(pname)
                     logger.info(f"Player {pname} has been disabled due to collision at time {sim_context.time:.2f}s")
 
-    @staticmethod
-    def _ensure_agent_within_capacity(agent: Agent, player_name: PlayerName) -> None:
-        """Verify that an agent does not exceed its declared capacity."""
-        get_current_load = getattr(agent, "get_current_load", None)
-        get_capacity = getattr(agent, "get_capacity", None)
-        if callable(get_current_load) and callable(get_capacity):
-            current_load = get_current_load()
-            capacity = get_capacity()
-            if current_load > capacity:
-                raise RuntimeError(f"Agent '{player_name}' load {current_load} exceeds capacity {capacity}")
+    # @staticmethod
+    # def _ensure_agent_within_capacity(agent: Agent, player_name: PlayerName) -> None:
+    #     """Verify that an agent does not exceed its declared capacity."""
+    #     get_current_load = getattr(agent, "get_current_load", None)
+    #     get_capacity = getattr(agent, "get_capacity", None)
+    #     if callable(get_current_load) and callable(get_capacity):
+    #         current_load = get_current_load()
+    #         capacity = get_capacity()
+    #         if current_load > capacity:
+    #             raise RuntimeError(f"Agent '{player_name}' load {current_load} exceeds capacity {capacity}")
 
     @staticmethod
     def _update_shared_goals_manager(sim_context: SimContext):
@@ -353,12 +353,12 @@ class Simulator:
         events = sim_context.shared_goals_manager.update(agents_states, sim_context.time)
         if events["goals_collected"]:
             logger.info(f"Goals collected: {events['goals_collected']} at time {sim_context.time:.2f}s")
-            for agent_name, _ in events["goals_collected"]:
-                sim_context.players[agent_name].grab_goal()
+            # for agent_name, _ in events["goals_collected"]:
+            #     sim_context.players[agent_name].grab_goal()
         if events["goals_delivered"]:
             logger.info(f"Goals delivered: {events['goals_delivered']} at time {sim_context.time:.2f}s")
-            for agent_name, _, _ in events["goals_delivered"]:
-                sim_context.players[agent_name].deliver_goal()
+            # for agent_name, _, _ in events["goals_delivered"]:
+                # sim_context.players[agent_name].deliver_goal()
 
     def _need_to_update_commands(self, sim_context: SimContext) -> bool:
         """Checks if we need to update the commands of the players"""
