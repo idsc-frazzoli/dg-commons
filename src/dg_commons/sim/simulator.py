@@ -33,8 +33,6 @@ class SimContext:
     """The simulation models for each player"""
     players: MutableMapping[PlayerName, TAgent]
     """The players in the simulation (Agents mapping observations to commands)"""
-    global_planner: GlobalPlanner
-    "Optional global planner for on_episode_init"
     param: SimParameters
     """The simulation parameters"""
     missions: Mapping[PlayerName, TPlanningGoal] = field(default_factory=dict)
@@ -55,6 +53,8 @@ class SimContext:
     "The first collision time"
     description: str = ""
     "A string description for the specific simulation context"
+    global_planner: Optional[GlobalPlanner] = None
+    "Optional global planner for on_episode_init"
     shared_goals_manager: Optional[SharedPolygonGoalsManager] = None
     "Optional manager for shared goals and collection points"
 
@@ -101,21 +101,21 @@ class Simulator:
                 initial_state=sim_context.models[player_name].get_state(),
             )
             self.simlogger[player_name] = PlayerLogger()
-        scenario = deepcopy(sim_context.dg_scenario)
-        if sim_context.shared_goals_manager is not None:
-            goals = sim_context.shared_goals_manager.all_goals
-            collection_points = sim_context.shared_goals_manager.collection_points
+        if sim_context.global_planner is None:
+            for player_name, player in sim_context.players.items():
+                player.on_episode_init(init_obs[player_name])
         else:
-            goals = None
-            collection_points = None
-        init_global_obs = InitSimGlobalObservations(
-            players_obs=init_obs,
-            seed=sim_context.seed,
-            dg_scenario=scenario,
-            goals=goals,
-            collection_points=collection_points,
-        )
-        sim_context.global_planner.on_episode_init(init_global_obs, sim_context.players)
+            scenario = deepcopy(sim_context.dg_scenario)
+            goals = sim_context.shared_goals_manager.all_goals if sim_context.shared_goals_manager is not None else None
+            collection_points = sim_context.shared_goals_manager.collection_points if sim_context.shared_goals_manager is not None else None
+            init_global_obs = InitSimGlobalObservations(
+                players_obs=init_obs,
+                seed=sim_context.seed,
+                dg_scenario=scenario,
+                goals=goals,
+                collection_points=collection_points,
+            )
+            sim_context.global_planner.on_episode_init(init_global_obs, sim_context.players)
         # actual simulation loop
         while not sim_context.sim_terminated:
             self.pre_update(sim_context)
