@@ -92,19 +92,26 @@ class Simulator:
         # initialize the simulation
         init_obs = {}
         for player_name, player in sim_context.players.items():
+            scenario = deepcopy(sim_context.dg_scenario)
             init_obs[player_name] = InitSimObservations(
                 my_name=player_name,
                 seed=sim_context.seed,
+                dg_scenario=scenario,
                 goal=deepcopy(sim_context.missions.get(player_name)),
                 model_geometry=sim_context.models[player_name].model_geometry,
                 model_params=sim_context.models[player_name].model_params,
-                initial_state=sim_context.models[player_name].get_state(),
+                initial_state=None,
+            )
+            player.on_episode_init(init_obs[player_name])
+
+            # NOTE: The inital state is not exposed to the agent at initialization.
+            # But it need to be exposed to the global planner later. We set it here after on_episode_init.
+            init_obs[player_name] = replace(
+                init_obs[player_name], initial_state=sim_context.models[player_name].get_state()
             )
             self.simlogger[player_name] = PlayerLogger()
-        if sim_context.global_planner is None:
-            for player_name, player in sim_context.players.items():
-                player.on_episode_init(init_obs[player_name])
-        else:
+
+        if sim_context.global_planner is not None:
             scenario = deepcopy(sim_context.dg_scenario)
             goals = sim_context.shared_goals_manager.all_goals if sim_context.shared_goals_manager is not None else None
             collection_points = (
@@ -119,7 +126,12 @@ class Simulator:
                 goals=goals,
                 collection_points=collection_points,
             )
-            sim_context.global_planner.on_episode_init(init_global_obs, sim_context.players)
+            serialzied_global_plan = sim_context.global_planner.send_plan(init_global_obs, sim_context.players)
+            if not isinstance(serialzied_global_plan, str):
+                raise TypeError(f"Global planner returned a plan of type {type(serialzied_global_plan)}, expected str")
+            for player_name, player in sim_context.players.items():
+                player.on_receive_global_plan(serialzied_global_plan)
+
         # actual simulation loop
         while not sim_context.sim_terminated:
             self.pre_update(sim_context)
