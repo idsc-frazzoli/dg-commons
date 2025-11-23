@@ -46,7 +46,7 @@ class SimParameters:
 class PlayerObservations:
     state: X
     occupancy: Optional[Polygon]
-    collected_goal: Optional[str] = None
+    collected_goal_id: Optional[str] = None
 
 
 @dataclass(frozen=True)

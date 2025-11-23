@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Optional, Any, TypeVar, Mapping
+from typing import Callable, Optional, Any, TypeVar
 
 from dg_commons import DgSampledSequence, U, PlayerName, X
 from dg_commons.sim import SimTime
@@ -80,6 +80,6 @@ class GlobalPlanner(ABC):
     """
 
     @abstractmethod
-    def send_plan(self, init_sim_obs: InitSimGlobalObservations, players: Mapping[PlayerName, Agent]) -> str:
+    def send_plan(self, init_sim_global_obs: InitSimGlobalObservations) -> str:
         """This method will get called once at the beginning of the simulation to send the serialized global plan to all agents"""
         pass

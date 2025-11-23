@@ -92,11 +92,10 @@ class Simulator:
         # initialize the simulation
         init_obs = {}
         for player_name, player in sim_context.players.items():
-            scenario = deepcopy(sim_context.dg_scenario)
             init_obs[player_name] = InitSimObservations(
                 my_name=player_name,
                 seed=sim_context.seed,
-                dg_scenario=scenario,
+                dg_scenario=deepcopy(sim_context.dg_scenario),
                 goal=deepcopy(sim_context.missions.get(player_name)),
                 model_geometry=sim_context.models[player_name].model_geometry,
                 model_params=sim_context.models[player_name].model_params,
@@ -112,7 +111,6 @@ class Simulator:
             self.simlogger[player_name] = PlayerLogger()
 
         if sim_context.global_planner is not None:
-            scenario = deepcopy(sim_context.dg_scenario)
             goals = sim_context.shared_goals_manager.all_goals if sim_context.shared_goals_manager is not None else None
             collection_points = (
                 sim_context.shared_goals_manager.collection_points
@@ -122,11 +120,11 @@ class Simulator:
             init_global_obs = InitSimGlobalObservations(
                 players_obs=init_obs,
                 seed=sim_context.seed,
-                dg_scenario=scenario,
-                goals=goals,
-                collection_points=collection_points,
+                dg_scenario=deepcopy(sim_context.dg_scenario),
+                goals=deepcopy(goals),
+                collection_points=deepcopy(collection_points),
             )
-            serialzied_global_plan = sim_context.global_planner.send_plan(init_global_obs, sim_context.players)
+            serialzied_global_plan = sim_context.global_planner.send_plan(init_global_obs)
             if not isinstance(serialzied_global_plan, str):
                 raise TypeError(f"Global planner returned a plan of type {type(serialzied_global_plan)}, expected str")
             for player_name, player in sim_context.players.items():
@@ -158,7 +156,7 @@ class Simulator:
                     collected_goal = sim_context.shared_goals_manager.agent_carrying.get(player_name)
 
                 player_obs = PlayerObservations(
-                    state=model.get_state(), occupancy=model.get_footprint(), collected_goal=collected_goal
+                    state=model.get_state(), occupancy=model.get_footprint(), collected_goal_id=collected_goal
                 )
                 players_observations.update({player_name: player_obs})
 

@@ -4,6 +4,7 @@ from shapely.geometry import Point, Polygon
 from dg_commons import PlayerName
 from dg_commons.geo import PoseState
 from dg_commons.sim.models import extract_pose_from_state
+from dg_commons.sim import SimTime
 from geometry import translation_from_SE2
 
 
@@ -57,7 +58,7 @@ class SharedPolygonGoalsManager:
         self.collection_points: Dict[str, CollectionPoint] = {cp.point_id: cp for cp in collection_points}
         self.agent_carrying: Dict[PlayerName, Optional[str]] = {}  # Maps agent to goal_id they're carrying
 
-    def update(self, agents_states: Dict[PlayerName, PoseState], simulation_time: float) -> Dict[str, any]:
+    def update(self, agents_states: Dict[PlayerName, PoseState], simulation_time_decimal: SimTime) -> Dict[str, dict]:
         """
         Update the state of goals and collection points based on agent positions.
 
@@ -73,6 +74,8 @@ class SharedPolygonGoalsManager:
             - 'goals_collected': List of (agent_name, goal_id) tuples
             - 'goals_delivered': List of (agent_name, goal_id, collection_point_id) tuples
         """
+        simulation_time = float(simulation_time_decimal)
+
         events = {
             "goals_collected": [],
             "goals_delivered": [],
