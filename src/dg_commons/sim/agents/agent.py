@@ -14,8 +14,21 @@ class Agent(ABC):
     """This provides the abstract interface of an agent"""
 
     @abstractmethod
+    def on_episode_init(self, init_sim_obs: InitSimObservations):
+        """This method will get called once for each player at the beginning of the simulation"""
+        pass
+
+    @abstractmethod
     def get_commands(self, sim_obs: SimObservations) -> U:
         """This method gets called for each player inside the update loop of the simulator"""
+        pass
+
+    def on_receive_global_plan(
+        self,
+        serialized_msg: str,
+    ):
+        """This method will get called once for each player at the beginning of the simulation to receive
+        the global plan from the global planner"""
         pass
 
     def on_get_extra(
@@ -59,13 +72,14 @@ class PolicyAgent(Agent):
     def get_commands(self, sim_obs: SimObservations) -> U:
         my_state: X = sim_obs.players[self.my_name]
         return self.policy(my_state)
-    
+
 
 class GlobalPlanner(ABC):
     """
     Global planner with the observation of all the agents used for the initial planning
     """
 
-    def on_episode_init(self, init_sim_obs: InitSimGlobalObservations, players: Mapping[PlayerName, Agent]):
-        """This method will get called once for each player at the beginning of the simulation"""
+    @abstractmethod
+    def send_plan(self, init_sim_obs: InitSimGlobalObservations, players: Mapping[PlayerName, Agent]) -> str:
+        """This method will get called once at the beginning of the simulation to send the serialized global plan to all agents"""
         pass

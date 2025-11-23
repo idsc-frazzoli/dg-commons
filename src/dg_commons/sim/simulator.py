@@ -107,7 +107,11 @@ class Simulator:
         else:
             scenario = deepcopy(sim_context.dg_scenario)
             goals = sim_context.shared_goals_manager.all_goals if sim_context.shared_goals_manager is not None else None
-            collection_points = sim_context.shared_goals_manager.collection_points if sim_context.shared_goals_manager is not None else None
+            collection_points = (
+                sim_context.shared_goals_manager.collection_points
+                if sim_context.shared_goals_manager is not None
+                else None
+            )
             init_global_obs = InitSimGlobalObservations(
                 players_obs=init_obs,
                 seed=sim_context.seed,
@@ -136,7 +140,14 @@ class Simulator:
             players_observations: dict[PlayerName, PlayerObservations] = {}
             for player_name in sim_context.players:
                 model = sim_context.models[player_name]
-                player_obs = PlayerObservations(state=model.get_state(), occupancy=model.get_footprint())
+
+                collected_goal = None
+                if sim_context.shared_goals_manager is not None:
+                    collected_goal = sim_context.shared_goals_manager.agent_carrying.get(player_name)
+
+                player_obs = PlayerObservations(
+                    state=model.get_state(), occupancy=model.get_footprint(), collected_goal=collected_goal
+                )
                 players_observations.update({player_name: player_obs})
 
             # Get available shared goals if manager exists
@@ -176,11 +187,11 @@ class Simulator:
                 )
                 tic = perf_counter()
                 cmds = agent.get_commands(p_observations)
+                extra = agent.on_get_extra()
                 toc = perf_counter()
                 self.last_commands[player_name] = cmds
                 self.simlogger[player_name].commands.add(t=t, v=cmds)
                 self.simlogger[player_name].info.add(t=t, v=toc - tic)
-                extra = agent.on_get_extra()
                 if extra is not None:
                     self.simlogger[player_name].extra.add(t=t, v=extra)
             cmds = self.last_commands[player_name]
@@ -231,16 +242,11 @@ class Simulator:
             termination_condition = True
 
         # Check if all objects have been collected and delivered
-        if sim_context.shared_goals_manager is not None:
-            if sim_context.shared_goals_manager.is_all_goals_delivered():
-                termination_condition = True
-        # Check if all players have collided
-        has_uncollided_players = False
-        for model in sim_context.models.values():
-            if not model.has_collided:
-                has_uncollided_players = True
-                break
-        if not has_uncollided_players:
+        if sim_context.shared_goals_manager is not None and sim_context.shared_goals_manager.is_all_goals_delivered():
+            termination_condition = True
+
+        # Terminate if all players have collided
+        if all(model.has_collided for model in sim_context.models.values()):
             termination_condition = True
 
         sim_context.sim_terminated = termination_condition
@@ -353,12 +359,8 @@ class Simulator:
         events = sim_context.shared_goals_manager.update(agents_states, sim_context.time)
         if events["goals_collected"]:
             logger.info(f"Goals collected: {events['goals_collected']} at time {sim_context.time:.2f}s")
-            # for agent_name, _ in events["goals_collected"]:
-            #     sim_context.players[agent_name].grab_goal()
         if events["goals_delivered"]:
             logger.info(f"Goals delivered: {events['goals_delivered']} at time {sim_context.time:.2f}s")
-            # for agent_name, _, _ in events["goals_delivered"]:
-                # sim_context.players[agent_name].deliver_goal()
 
     def _need_to_update_commands(self, sim_context: SimContext) -> bool:
         """Checks if we need to update the commands of the players"""

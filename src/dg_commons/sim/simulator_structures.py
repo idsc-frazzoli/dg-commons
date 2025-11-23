@@ -46,11 +46,13 @@ class SimParameters:
 class PlayerObservations:
     state: X
     occupancy: Optional[Polygon]
+    collected_goal: Optional[str] = None
 
 
 @dataclass(frozen=True)
 class SharedGoalObservation:
     """Observation of a shared goal"""
+
     occupancy: Polygon
 
 
@@ -74,6 +76,7 @@ class InitSimObservations:
     model_geometry: Optional[TModelGeometry] = None
     model_params: Optional[TModelParameters] = None
     initial_state: Optional[X] = None
+
 
 @dataclass(frozen=True)
 class InitSimGlobalObservations:
