@@ -1,4 +1,5 @@
 from collections import defaultdict
+from concurrent.futures import ProcessPoolExecutor
 from copy import deepcopy
 from dataclasses import dataclass, field, replace
 from decimal import Decimal
@@ -57,6 +58,8 @@ class SimContext:
     "Optional global planner for on_episode_init"
     shared_goals_manager: Optional[SharedPolygonGoalsManager] = None
     "Optional manager for shared goals and collection points"
+    global_plan_execution_time: Optional[float] = None
+    "Time taken by the global planner to compute and send the plan"
 
     def __post_init__(self):
         assert self.models.keys() == self.players.keys()
@@ -124,11 +127,18 @@ class Simulator:
                 goals=deepcopy(goals),
                 collection_points=deepcopy(collection_points),
             )
-            serialzied_global_plan = sim_context.global_planner.send_plan(init_global_obs)
-            if not isinstance(serialzied_global_plan, str):
-                raise TypeError(f"Global planner returned a plan of type {type(serialzied_global_plan)}, expected str")
+            # Run send_plan in a separate process for safety
+            with ProcessPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(sim_context.global_planner.send_plan, init_global_obs)
+                tic = perf_counter()
+                serialized_global_plan = future.result()
+                toc = perf_counter()
+                sim_context.global_plan_execution_time = toc - tic
+                logger.info(f"Global planner send_plan took {sim_context.global_plan_execution_time:.3f} seconds")
+            if not isinstance(serialized_global_plan, str):
+                raise TypeError(f"Global planner returned a plan of type {type(serialized_global_plan)}, expected str")
             for player_name, player in sim_context.players.items():
-                player.on_receive_global_plan(serialzied_global_plan)
+                player.on_receive_global_plan(serialized_global_plan)
 
         # actual simulation loop
         while not sim_context.sim_terminated:
