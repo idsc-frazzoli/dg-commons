@@ -161,12 +161,12 @@ class Simulator:
             for player_name in sim_context.players:
                 model = sim_context.models[player_name]
 
-                collected_goal = None
+                collected_goal_id = None
                 if sim_context.shared_goals_manager is not None:
-                    collected_goal = sim_context.shared_goals_manager.agent_carrying.get(player_name)
+                    collected_goal_id = sim_context.shared_goals_manager.agent_carrying.get(player_name)
 
                 player_obs = PlayerObservations(
-                    state=model.get_state(), occupancy=model.get_footprint(), collected_goal_id=collected_goal
+                    state=model.get_state(), occupancy=model.get_footprint(), collected_goal_id=collected_goal_id
                 )
                 players_observations.update({player_name: player_obs})
 
