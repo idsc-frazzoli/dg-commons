@@ -11,7 +11,6 @@ from toolz.sandbox import unzip
 from tqdm import tqdm
 from zuper_commons.types import ZValueError
 from shapely.affinity import translate
-from geometry import SE2_from_xytheta
 from dg_commons import PlayerName, X, Timestamp
 from dg_commons.sim import logger
 from dg_commons.sim.models.vehicle import VehicleCommands

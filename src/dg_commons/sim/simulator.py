@@ -194,8 +194,6 @@ class Simulator:
         # fixme this can be parallelized later with ProcessPoolExecutor?
         t = sim_context.time
         for player_name, agent in sim_context.players.items():
-            # if hasattr(agent, "_capacity"):
-            #     self._ensure_agent_within_capacity(agent, player_name)
             state = sim_context.models[player_name].get_state()
             self.simlogger[player_name].states.add(t=t, v=state)
             if self._need_to_update_commands(sim_context):
@@ -206,11 +204,11 @@ class Simulator:
                 )
                 tic = perf_counter()
                 cmds = agent.get_commands(p_observations)
-                extra = agent.on_get_extra()
                 toc = perf_counter()
                 self.last_commands[player_name] = cmds
                 self.simlogger[player_name].commands.add(t=t, v=cmds)
                 self.simlogger[player_name].info.add(t=t, v=toc - tic)
+                extra = agent.on_get_extra()
                 if extra is not None:
                     self.simlogger[player_name].extra.add(t=t, v=extra)
             cmds = self.last_commands[player_name]
@@ -228,6 +226,8 @@ class Simulator:
         """
         # after all the computations advance simulation time
         sim_context.time += sim_context.param.dt
+        # remove finished players
+        self._remove_finished_players(sim_context)
         # update shared goals manager
         if sim_context.shared_goals_manager is not None:
             self._update_shared_goals_manager(sim_context)
@@ -246,9 +246,10 @@ class Simulator:
     def _maybe_terminate_simulation(sim_context: SimContext):
         """Evaluates if the simulation needs to terminate.
         The simulation is considered terminated if:
-        - All objects have been collected and delivered to the collection area
-        - The time limit is reached
-        - A robot collides with an obstacle or another robot
+        - The maximum simulation time is reached.
+        - The minimum time after the first collision is reached.
+        - All missions have been fulfilled or all agents have been disabled due to collisions.
+        - (If applicable) All objects have been collected and delivered to the collection area
         """
         termination_condition: bool = False
 
@@ -359,17 +360,6 @@ class Simulator:
                 if pname not in self.disabled_players:
                     self.disabled_players.append(pname)
                     logger.info(f"Player {pname} has been disabled due to collision at time {sim_context.time:.2f}s")
-
-    # @staticmethod
-    # def _ensure_agent_within_capacity(agent: Agent, player_name: PlayerName) -> None:
-    #     """Verify that an agent does not exceed its declared capacity."""
-    #     get_current_load = getattr(agent, "get_current_load", None)
-    #     get_capacity = getattr(agent, "get_capacity", None)
-    #     if callable(get_current_load) and callable(get_capacity):
-    #         current_load = get_current_load()
-    #         capacity = get_capacity()
-    #         if current_load > capacity:
-    #             raise RuntimeError(f"Agent '{player_name}' load {current_load} exceeds capacity {capacity}")
 
     @staticmethod
     def _update_shared_goals_manager(sim_context: SimContext):
