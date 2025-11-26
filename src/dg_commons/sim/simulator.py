@@ -9,15 +9,14 @@ from typing import Mapping, MutableMapping, Optional
 
 from dg_commons import PlayerName, U, fd
 from dg_commons.sim import CollisionReport, SimTime, logger
-from dg_commons.sim.agents.agent import Agent, TAgent, GlobalPlanner
+from dg_commons.sim.agents.agent import Agent, GlobalPlanner, TAgent
 from dg_commons.sim.collision_utils import CollisionException
 from dg_commons.sim.goals import PlanningGoal, TPlanningGoal
 from dg_commons.sim.models.obstacles_dyn import DynObstacleModel
 from dg_commons.sim.scenarios.structures import DgScenario
-from dg_commons.sim.sim_perception import IdObsFilter, ObsFilter
-
-from dg_commons.sim.simulator_structures import *
 from dg_commons.sim.shared_goals import SharedPolygonGoalsManager
+from dg_commons.sim.sim_perception import IdObsFilter, ObsFilter
+from dg_commons.sim.simulator_structures import *
 from dg_commons.time import time_function
 
 
@@ -128,12 +127,9 @@ class Simulator:
             )
             # Run send_plan in a separate process for safety
             with ProcessPoolExecutor(max_workers=1) as executor:
-                future = executor.submit(sim_context.global_planner.send_plan, init_global_obs)
-                tic = perf_counter()
-                serialized_global_plan = future.result()
-                toc = perf_counter()
-                sim_context.global_plan_execution_time = toc - tic
-                logger.info(f"Global planner send_plan took {sim_context.global_plan_execution_time:.3f} seconds")
+                future = executor.submit(sim_context.global_planner.send_plan_timed, init_global_obs)
+                serialized_global_plan, sim_context.global_plan_execution_time = future.result()
+                logger.info(f"Global planner send_plan took {sim_context.global_plan_execution_time} seconds")
             if not isinstance(serialized_global_plan, str):
                 raise TypeError(f"Global planner returned a plan of type {type(serialized_global_plan)}, expected str")
             for player_name, player in sim_context.players.items():
@@ -274,9 +270,8 @@ class Simulator:
     @staticmethod
     def _check_collisions_with_environment(sim_context: SimContext) -> bool:
         """Check collisions of the players with the environment"""
-        from dg_commons.sim.collision import (
-            resolve_collision_with_environment,  # import here to avoid circular imports
-        )
+        # import here to avoid circular imports
+        from dg_commons.sim.collision import resolve_collision_with_environment
 
         env_obstacles = sim_context.dg_scenario.strtree_obstacles
         collision = False
@@ -313,9 +308,8 @@ class Simulator:
         :param sim_context:
         :return: True if at least one collision happened, False otherwise
         """
-        from dg_commons.sim.collision import (
-            resolve_collision,  # import here to avoid circular imports
-        )
+        # import here to avoid circular imports
+        from dg_commons.sim.collision import resolve_collision
 
         collision = False
         for p1, p2 in combinations(sim_context.players, 2):

@@ -14,9 +14,7 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
 ]
-packages = [
-    { include = "dg_commons", from = "src" },
-]
+packages = [{ include = "dg_commons", from = "src" }]
 repository = "https://github.com/idsc-frazzoli/dg-commons"
 exclude = ["src/dg_commons_tests/**"]
 
@@ -64,17 +62,13 @@ sphinx-autodoc-annotation = "*"
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "-ra -q --pyargs"
-testpaths = [
-    "src/dg_commons_tests",
-]
+testpaths = ["src/dg_commons_tests"]
 
 [tool.coverage.run]
 branch = true
 # concurrency = "multiprocessing"
 parallel = true
-source = [
-    "src/dg_commons",
-]
+source = ["src/dg_commons"]
 
 [tool.coverage.report]
 # Regexes for lines to exclude from consideration
@@ -101,4 +95,4 @@ target-version = ['py311']
 
 [tool.isort]
 profile = "black"
-line-length = 120
+line_length = 120

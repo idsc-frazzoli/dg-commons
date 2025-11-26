@@ -1,9 +1,10 @@
+import time
 from abc import ABC, abstractmethod
-from typing import Callable, Optional, Any, TypeVar
+from typing import Any, Callable, Optional, TypeVar
 
-from dg_commons import DgSampledSequence, U, PlayerName, X
+from dg_commons import DgSampledSequence, PlayerName, U, X
 from dg_commons.sim import SimTime
-from dg_commons.sim.simulator_structures import SimObservations, InitSimObservations, InitSimGlobalObservations
+from dg_commons.sim.simulator_structures import InitSimGlobalObservations, InitSimObservations, SimObservations
 
 __all__ = ["TAgent", "Agent", "NPAgent", "PolicyAgent", "GlobalPlanner"]
 
@@ -83,3 +84,11 @@ class GlobalPlanner(ABC):
     def send_plan(self, init_sim_global_obs: InitSimGlobalObservations) -> str:
         """This method will get called once at the beginning of the simulation to send the serialized global plan to all agents"""
         pass
+
+    def send_plan_timed(self, init_sim_global_obs: InitSimGlobalObservations) -> tuple[str, float]:
+        """This method will get called once at the beginning of the simulation to send the serialized global plan to all agents.
+        It also returns the time taken to compute the plan in seconds."""
+        start_time = time.perf_counter()
+        plan = self.send_plan(init_sim_global_obs)
+        end_time = time.perf_counter()
+        return plan, end_time - start_time
