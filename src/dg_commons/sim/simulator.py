@@ -123,7 +123,7 @@ class Simulator:
                 initial_states=init_states,
                 seed=sim_context.seed,
                 dg_scenario=deepcopy(sim_context.dg_scenario),
-                goals=deepcopy(goals),
+                shared_goals=deepcopy(goals),
                 collection_points=deepcopy(collection_points),
             )
             # Run send_plan in a separate process for safety

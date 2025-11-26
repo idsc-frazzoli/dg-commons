@@ -85,7 +85,7 @@ class InitSimGlobalObservations:
     initial_states: Mapping[PlayerName, X]
     seed: int
     dg_scenario: Optional[DgScenario] = None
-    goals: Optional[Mapping[str, SharedPolygonGoal]] = None
+    shared_goals: Optional[Mapping[str, SharedPolygonGoal]] = None
     collection_points: Optional[Mapping[str, CollectionPoint]] = None
 
 
