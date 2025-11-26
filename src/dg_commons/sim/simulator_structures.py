@@ -75,7 +75,6 @@ class InitSimObservations:
     goal: Optional[TPlanningGoal] = None
     model_geometry: Optional[TModelGeometry] = None
     model_params: Optional[TModelParameters] = None
-    initial_state: Optional[X] = None
 
 
 @dataclass(frozen=True)
@@ -83,6 +82,7 @@ class InitSimGlobalObservations:
     """The observations passed to the simulator on episode init"""
 
     players_obs: Mapping[PlayerName, InitSimObservations]
+    initial_states: Mapping[PlayerName, X]
     seed: int
     dg_scenario: Optional[DgScenario] = None
     goals: Optional[Mapping[str, SharedPolygonGoal]] = None

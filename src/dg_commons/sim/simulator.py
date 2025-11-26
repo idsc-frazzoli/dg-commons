@@ -94,6 +94,7 @@ class Simulator:
         logger.info("~~~~~> Beginning simulation")
         # initialize the simulation
         init_obs = {}
+        init_states = {}
         for player_name, player in sim_context.players.items():
             init_obs[player_name] = InitSimObservations(
                 my_name=player_name,
@@ -102,15 +103,12 @@ class Simulator:
                 goal=deepcopy(sim_context.missions.get(player_name)),
                 model_geometry=sim_context.models[player_name].model_geometry,
                 model_params=sim_context.models[player_name].model_params,
-                initial_state=None,
             )
             player.on_episode_init(init_obs[player_name])
 
             # NOTE: The inital state is not exposed to the agent at initialization.
             # But it need to be exposed to the global planner later. We set it here after on_episode_init.
-            init_obs[player_name] = replace(
-                init_obs[player_name], initial_state=sim_context.models[player_name].get_state()
-            )
+            init_states[player_name] = sim_context.models[player_name].get_state()
             self.simlogger[player_name] = PlayerLogger()
 
         if sim_context.global_planner is not None:
@@ -122,6 +120,7 @@ class Simulator:
             )
             init_global_obs = InitSimGlobalObservations(
                 players_obs=init_obs,
+                initial_states=init_states,
                 seed=sim_context.seed,
                 dg_scenario=deepcopy(sim_context.dg_scenario),
                 goals=deepcopy(goals),
