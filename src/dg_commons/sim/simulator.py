@@ -192,9 +192,7 @@ class Simulator:
         for player_name, agent in sim_context.players.items():
             state = sim_context.models[player_name].get_state()
             self.simlogger[player_name].states.add(t=t, v=state)
-            if self._need_to_update_commands(sim_context):
-                if player_name in self.disabled_players:
-                    continue
+            if self._need_to_update_commands(sim_context) and player_name not in self.disabled_players:
                 p_observations = sim_context.sensors[player_name].sense(
                     sim_context.dg_scenario, self.last_observations, player_name
                 )
@@ -351,7 +349,7 @@ class Simulator:
         """We update the list of disabled players"""
         for pname, pmodel in sim_context.models.items():
             if pmodel.has_collided:
-                if pname not in self.disabled_players:
+                if pname not in self.disabled_players and not isinstance(pmodel, DynObstacleModel):
                     self.disabled_players.append(pname)
                     logger.info(f"Player {pname} has been disabled due to collision at time {sim_context.time:.2f}s")
 
