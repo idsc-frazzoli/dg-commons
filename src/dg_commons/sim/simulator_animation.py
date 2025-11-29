@@ -10,7 +10,7 @@ from matplotlib.axes import Axes
 from toolz.sandbox import unzip
 from tqdm import tqdm
 from zuper_commons.types import ZValueError
-
+from shapely.affinity import translate
 from dg_commons import PlayerName, X, Timestamp
 from dg_commons.sim import logger
 from dg_commons.sim.models.vehicle import VehicleCommands
@@ -56,12 +56,27 @@ def create_animation(
     fig.tight_layout()
     ax.set_aspect("equal")
     # dictionaries with the handles of the plotting stuff
-    states, actions, extra, texts, goals = {}, {}, {}, {}, {}
+    states, actions, extra, texts, goals, collection_points = {}, {}, {}, {}, {}, {}
+    goal_texts, collection_point_texts = {}, {}
     traj_lines, traj_points = {}, {}
     history = {}
     # some parameters
     plot_wheels: bool = True
     plot_ligths: bool = True
+
+    def _as_artists(x):
+        if x is None:
+            return []
+        if isinstance(x, (list, tuple)):
+            return list(x)
+        return [x]
+
+    def _set_visible(artists, vis: bool):
+        for a in _as_artists(artists):
+            try:
+                a.set_visible(vis)
+            except Exception:
+                pass
 
     # self.f.set_size_inches(*fig_size)
     def _get_list() -> list[Artist]:
@@ -73,6 +88,11 @@ def create_animation(
             + list(traj_lines.values())
             + list(traj_points.values())
             + list(texts.values())
+            # + list(chain.from_iterable(_as_artists(v) for v in goals.values()))
+            + list(goals.values())
+            + list(goal_texts.values())
+            + list(collection_point_texts.values())
+            + list(collection_points.values())
         )
 
     def init_plot() -> Iterable[Artist]:
@@ -104,6 +124,21 @@ def create_animation(
                 plot_limits=plot_limits,
                 players_states={p: log_entry.state for p, log_entry in init_log_entry.items()},
             )
+            if getattr(sim_context, "shared_goals_manager", None):
+                for cp_id, cp in sim_context.shared_goals_manager.collection_points.items():
+                    collection_points[cp_id] = sim_viz.plot_shapely_polygon(
+                        ax=ax, spolygon=cp.polygon, color="blue", alpha=0.5, zorder=ZOrders.GOAL
+                    )
+                    centroid = cp.polygon.centroid
+                    collection_point_texts[cp_id] = ax.text(
+                        centroid.x,
+                        centroid.y,
+                        "0",
+                        ha="center",
+                        va="center",
+                        fontsize=30,
+                        zorder=ZOrders.TIME_TEXT,
+                    )
             texts["time"] = ax.text(
                 0.02,
                 0.96,
@@ -144,20 +179,63 @@ def create_animation(
                 except:
                     pass
 
-            if pname in sim_context.missions:
-                goal_box = goals[pname] if pname in goals else None
-                goals[pname] = sim_viz.plot_timevarying_goals(ax=ax, player_name=pname, goal_box=goal_box, t=t)
+            # if pname in sim_context.missions:
+            #     goal_box = goals[pname] if pname in goals else None
+            #     goals[pname] = sim_viz.plot_timevarying_goals(ax=ax, player_name=pname, goal_box=goal_box, t=t)
+        if sim_context.shared_goals_manager is not None:
+            goal_manager = sim_context.shared_goals_manager
+            for goal_id, goal in goal_manager.all_goals.items():
+                collection_time = goal.collection_time if goal.collection_time is not None else float("inf")
+                delivery_time = goal.delivery_time if goal.delivery_time is not None else float("inf")
+                if t < collection_time:
+                    # goal hasn't been collected yet
+                    if not (goal_id in goals):
+                        goals[goal_id] = sim_viz.plot_shapely_polygon(
+                            ax=ax, spolygon=goal.polygon, color="yellow", zorder=ZOrders.OBJECT
+                        )
+                        goal_texts[goal_id] = ax.text(
+                            goal.polygon.centroid.x,
+                            goal.polygon.centroid.y,
+                            goal_id,
+                            ha="center",
+                            va="center",
+                            fontsize=10,
+                            zorder=ZOrders.TIME_TEXT,
+                        )
+                    _set_visible(goals[goal_id], True)
+                    _set_visible(goal_texts[goal_id], True)
+                elif t < delivery_time:
+                    # goal is being delivered, move with the agent
+                    if goal.collected_by is not None:
+                        agent_state = log_at_t[goal.collected_by].state
+                        agent_position = [agent_state.x, agent_state.y]
+                        goal_position = [goal.polygon.centroid.x, goal.polygon.centroid.y]
+                        translation = [agent_position[0] - goal_position[0], agent_position[1] - goal_position[1]]
+                        moving_goal = translate(goal.polygon, xoff=translation[0], yoff=translation[1])
+                        sim_viz.plot_shapely_polygon(ax=ax, spolygon=moving_goal, artist=goals[goal_id])
+                    _set_visible(goal_texts[goal_id], False)
+                else:
+                    # goal has been delivered
+                    _set_visible(goals[goal_id], False)
+            for cp_id, cp in goal_manager.collection_points.items():
+                if cp_id not in collection_point_texts:
+                    continue
+                collected_until_t = sum(1 for goal_id in cp.collected_goals if goal_manager.all_goals[goal_id].delivery_time <= t)
+                collection_point_texts[cp_id].set_text(str(collected_until_t))
 
         adjust_axes_limits(
             ax=ax, plot_limits=plot_limits, players_states={p: log_entry.state for p, log_entry in log_at_t.items()}
         )
-        texts["time"].set_text(f"t = {t:.1f}s")
+        texts["time"].set_text(f"t = {t:.2f}s")
         texts["time"].set_transform(ax.transAxes)
+
         return _get_list()
 
     # Min frame rate is 1 fps
     dt = min(1000.0, dt)
-    frame_count: int = int(float(time_end - time_begin) // (dt / 1000.0))
+    frame_count: int = int(
+        np.ceil(float(time_end - time_begin) / (dt / 1000.0)) + 1
+    )  # add buffer to ensure all simulation steps are visualized
     plt.ioff()
     # Interval determines the duration of each frame in ms
     anim = FuncAnimation(fig=fig, func=update_plot, init_func=init_plot, frames=frame_count, blit=True, interval=dt)

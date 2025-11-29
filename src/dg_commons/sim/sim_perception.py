@@ -15,6 +15,7 @@ from dg_commons.sim.models import (
     extract_pose_from_state,
 )
 from dg_commons.sim.scenarios import DgScenario
+from dg_commons.sim.simulator_structures import SharedGoalObservation
 
 
 class ObsFilter(ABC):
@@ -91,8 +92,13 @@ class FovObsFilter(ObsFilter):
 
             # if fov_poly.intersects(p_obs.occupancy):
             #     new_players[p] = p_obs
-
-        return replace(full_obs, players=fd(new_players))
+        new_available_goals = {}
+        if full_obs.available_goals:
+            for goal_id, goal in full_obs.available_goals.items():
+                if fov_poly.intersects(goal.occupancy):
+                    new_available_goals[goal_id] =  SharedGoalObservation(occupancy=goal.occupancy)
+        
+        return replace(full_obs, players=fd(new_players), available_goals=fd(new_available_goals))
 
 
 class DelayedObsFilter(ObsFilter):

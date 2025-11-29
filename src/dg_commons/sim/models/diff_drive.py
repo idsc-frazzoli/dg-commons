@@ -10,7 +10,7 @@ from scipy.integrate import solve_ivp
 from shapely.geometry import Polygon
 
 from dg_commons import apply_SE2_to_shapely_geo, PoseState
-from dg_commons.sim import logger, ImpactLocation, IMPACT_RIGHT, IMPACT_LEFT, IMPACT_BACK, IMPACT_FRONT
+from dg_commons.sim import logger, ImpactLocation, IMPACT_EVERYWHERE
 from dg_commons.sim.models import ModelType
 from dg_commons.sim.models.diff_drive_structures import *
 from dg_commons.sim.simulator_structures import SimModel
@@ -180,10 +180,11 @@ class DiffDriveModel(SimModel[DiffDriveState, DiffDriveCommands]):
         cxy = footprint.centroid.coords[0]
         # fixme maybe we can use triangulate from shapely inferring the side from the relative angle
         impact_locations: Mapping[ImpactLocation, Polygon] = {
-            IMPACT_RIGHT: Polygon([cxy, vertices[0], vertices[3], cxy]),
-            IMPACT_LEFT: Polygon([cxy, vertices[1], vertices[2], cxy]),
-            IMPACT_BACK: Polygon([cxy, vertices[0], vertices[1], cxy]),
-            IMPACT_FRONT: Polygon([cxy, vertices[2], vertices[3], cxy]),
+            # IMPACT_RIGHT: Polygon([cxy, vertices[0], vertices[3], cxy]),
+            # IMPACT_LEFT: Polygon([cxy, vertices[1], vertices[2], cxy]),
+            # IMPACT_BACK: Polygon([cxy, vertices[0], vertices[1], cxy]),
+            # IMPACT_FRONT: Polygon([cxy, vertices[2], vertices[3], cxy]),
+            IMPACT_EVERYWHERE: footprint,
         }
         for shape in impact_locations.values():
             assert shape.is_valid
@@ -201,10 +202,11 @@ class DiffDriveModel(SimModel[DiffDriveState, DiffDriveCommands]):
         return [0, 0], 0
 
     def set_velocity(self, vel: T2value, omega: float, in_model_frame: bool):
-        logger.warn(
-            "It is NOT possible to set the lateral and rotational velocity for the Differential Drive model\n"
-            "Try using a dynamic model."
-        )
+        # logger.warn(
+        #     "It is NOT possible to set the lateral and rotational velocity for the Differential Drive model\n"
+        #     "Try using a dynamic model."
+        # )
+        pass
 
     @property
     def model_type(self) -> ModelType:
